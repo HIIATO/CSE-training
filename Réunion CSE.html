@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSE Training - Simulateur de Réunions</title>
+    <style>
+        /* --- DESIGN SYSTEM --- */
+        :root {
+            --primary-dark: #0d47a1;   /* Bleu foncé prof */
+            --primary: #1976d2;        /* Bleu standard */
+            --primary-light: #bbdefb;  /* Bleu très clair */
+            --accent: #00e5ff;         /* Cyan pour les points forts */
+            --white: #ffffff;
+            --bg: #f0f4f8;             /* Gris bleuté fond */
+            --text: #263238;
+            --success: #4caf50;
+            --danger: #f44336;
+            --warning: #ff9800;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- PAGE MENU --- */
+        .menu-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        }
+
+        .menu-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .game-title {
+            text-align: center;
+            color: var(--primary-dark);
+            font-size: 2rem;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        .game-subtitle {
+            text-align: center;
+            color: var(--primary);
+            font-size: 1rem;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        .rules-section {
+            background: var(--bg);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .rules-title {
+            color: var(--primary-dark);
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .rule-item {
+            margin-bottom: 15px;
+            padding-left: 25px;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .rule-item::before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .scoring-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .score-card {
+            background: var(--white);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid var(--primary-light);
+        }
+
+        .score-card-title {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .score-threshold {
+            font-size: 0.9rem;
+            color: var(--text);
+            margin: 5px 0;
+        }
+
+        .score-danger {
+            color: var(--danger);
+            font-weight: bold;
+        }
+
+        .score-warning {
+            color: var(--warning);
+        }
+
+        .score-success {
+            color: var(--success);
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            border: none;
+            padding: 18px 40px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
+        }
+
+        .btn-start:active {
+            transform: translateY(0);
+        }
+
+        /* --- HEADER (Jauges) --- */
+        .app-header {
+            background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
+            color: var(--white);
+            padding: 15px 20px;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            box-shadow: 0 4px 10px rgba(13, 71, 161, 0.3);
+            z-index: 10;
+            display: none; /* Caché sur le menu */
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            display: block;
+        }
+
+        .stat-value.danger {
+            color: #ffcdd2;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Barre de progression */
+        .progress-track {
+            background-color: rgba(255,255,255,0.2);
+            height: 6px;
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background-color: var(--accent);
+            height: 100%;
+            width: 0%; /* Sera changé par JS */
+            transition: width 0.5s ease;
+        }
+
+        /* --- ZONE DE JEU (Scrollable) --- */
+        .game-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: none; /* Caché sur le menu */
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .step-badge {
+            align-self: center;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .card-dialogue {
+            background-color: var(--white);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--primary);
+        }
+
+        .speaker {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .message {
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        /* --- FEEDBACK (Caché par défaut) --- */
+        .feedback-card {
+            background-color: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 10px;
+            font-size: 0.95rem;
+            display: none;
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* --- BOUTONS (Fixes en bas) --- */
+        .controls-area {
+            padding: 20px;
+            background-color: var(--white);
+            border-top: 1px solid #e0e0e0;
+            display: none; /* Caché sur le menu */
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            background-color: var(--white);
+            color: var(--primary);
+            border: 2px solid var(--primary-light);
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            position: relative;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-light);
+            transform: translateX(5px);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+            background-color: var(--primary-light);
+        }
+
+        .btn-next {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            display: none; /* Caché tant qu'on n'a pas répondu */
+            text-align: center;
+            justify-content: center;
+        }
+
+        /* --- ÉCRAN DE FIN --- */
+        .end-screen {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .final-scores {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .final-score-card {
+            padding: 20px;
+            border-radius: 12px;
+            background: var(--white);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .final-score-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .final-message {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            padding: 20px;
+            background: var(--primary-light);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PAGE MENU -->
+    <div class="menu-container" id="menu-page">
+        <div class="menu-card">
+            <h1 class="game-title">📋 CSE Training</h1>
+            <p class="game-subtitle">Simulateur de Réunions du Comité Social et Économique</p>
+            
+            <div class="rules-section">
+                <h2 class="rules-title">📖 Règles du jeu</h2>
+                
+                <div class="rule-item">
+                    <strong>Votre rôle :</strong> Vous incarnez le Secrétaire du CSE, acteur clé des réunions avec l'employeur.
+                </div>
+                
+                <div class="rule-item">
+                    <strong>Votre mission :</strong> Gérer 12 situations délicates en faisant les bons choix juridiques et relationnels.
+                </div>
+                
+                <div class="rule-item">
+                    <strong>Le défi :</strong> Chaque décision impacte deux jauges critiques : la <strong>Légalité</strong> (conformité juridique) et le <strong>Climat Social</strong> (relations avec la direction et les salariés).
+                </div>
+                
+                <div class="scoring-grid">
+                    <div class="score-card">
+                        <div class="score-card-title">⚖️ LÉGALITÉ</div>
+                        <div class="score-threshold score-success">80-100 pts : Excellent</div>
+                        <div class="score-threshold score-warning">50-79 pts : Acceptable</div>
+                        <div class="score-threshold score-danger">&lt; 50 pts : Délit d'entrave !</div>
+                    </div>
+                    
+                    <div class="score-card">
+                        <div class="score-card-title">🤝 CLIMAT SOCIAL</div>
+                        <div class="score-threshold score-success">80-100 pts : Harmonieux</div>
+                        <div class="score-threshold score-warning">50-79 pts : Acceptable</div>
+                        <div class="score-threshold score-danger">&lt; 50 pts : Grève/Démissions !</div>
+                    </div>
+                </div>
+                
+                <div class="rule-item" style="margin-top: 20px;">
+                    <strong>Objectif :</strong> Maintenir les deux jauges au-dessus de 50 points. Visez 80+ pour un mandat exemplaire !
+                </div>
+            </div>
+            
+            <button class="btn-start" onclick="startGame()">Commencer la simulation</button>
+        </div>
+    </div>
+
+    <!-- HEADER DU JEU -->
+    <div class="app-header" id="game-header">
+        <div class="stats-container">
+            <div class="stat-item">
+                <span class="stat-value" id="score-legal">100</span>
+                Légalité
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="score-social">100</span>
+                Climat
+            </div>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progress-bar"></div>
+        </div>
+    </div>
+
+    <!-- CONTENU DU JEU -->
+    <div class="game-content" id="game-content">
+        <div class="step-badge" id="step-title">Étape 1/12</div>
+        
+        <div class="card-dialogue">
+            <div class="speaker" id="speaker-name">Le Système</div>
+            <div class="message" id="scenario-text">Chargement...</div>
+        </div>
+
+        <div class="feedback-card" id="feedback-box"></div>
+    </div>
+
+    <!-- ZONE DES BOUTONS -->
+    <div class="controls-area" id="buttons-area"></div>
+
+<script>
+    // --- DONNÉES DU JEU ---
+    const scenarios = [
+        {
+            title: "Étape 1 : Périodicité & Obligation",
+            speaker: "L'Employeur",
+            text: "« C'est un mois chargé. Il n'y a pas de gros sujets urgents. Je propose d'annuler la réunion de ce mois-ci, on se verra le mois prochain. Ça vous va ? »",
+            choices: [
+                { 
+                    text: "Je propose plutôt une réunion courte de 30 minutes pour respecter la loi.", 
+                    correct: false, 
+                    legal: -5, 
+                    social: +10, 
+                    feedback: "⚠️ Compromis risqué. La réunion doit permettre de traiter vraiment les sujets, pas juste cocher une case." 
+                },
+                { 
+                    text: "D'accord, si l'ordre du jour est vide, c'est inutile de se réunir.", 
+                    correct: false, 
+                    legal: -20, 
+                    social: +5, 
+                    feedback: "❌ Erreur grave ! Dans une entreprise de +300 salariés, la réunion mensuelle est OBLIGATOIRE. L'annuler constitue un délit d'entrave (Art. L2315-27)." 
+                },
+                { 
+                    text: "Reportons à la fin du mois, on aura plus de temps.", 
+                    correct: false, 
+                    legal: -10, 
+                    social: 0, 
+                    feedback: "❌ Non ! Reporter dans le même mois reste problématique car cela peut créer des décalages récurrents. La date habituelle doit être respectée." 
+                },
+                { 
+                    text: "Attention, vous avez l'obligation légale de nous réunir chaque mois.", 
+                    correct: true, 
+                    legal: 0, 
+                    social: -5, 
+                    feedback: "✅ Exact ! L'employeur doit respecter la périodicité légale. L'initiative de convoquer lui incombe." 
+                }
+            ]
+        },
+        {
+            title: "Étape 2 : Consultation des salariés",
+            speaker: "Secrétaire CSE",
+            text: "Nous sommes à 8 jours de la réunion. Comment organise-t-on la collecte des réclamations individuelles et collectives des salariés ?",
+            choices: [
+                { 
+                    text: "On délègue la collecte aux managers de proximité pour gagner du temps.", 
+                    correct: false, 
+                    legal: -5, 
+                    social: -15, 
+                    feedback: "❌ Terrible idée ! Les managers font partie de la direction. Les salariés ne s'exprimeront pas librement." 
+                },
+                { 
+                    text: "On attend qu'ils viennent nous voir dans le local CSE.", 
+                    correct: false, 
+                    legal: 0, 
+                    social: -10, 
+                    feedback: "❌ Trop passif ! Le rôle d'élu nécessite d'aller activement au contact pour capter les vrais problèmes terrain." 
+                },
+                { 
+                    text: "On fait un tour des services et on envoie un mail de consultation.", 
+                    correct: true, 
+                    legal: 0, 
+                    social: +10, 
+                    feedback: "✅ Parfait ! La collecte active et multicanale des réclamations est la base du rôle de délégation du personnel." 
+                },
+                { 
+                    text: "On met une boîte à suggestions anonyme et on la dépouille avant la réunion.", 
+                    correct: false, 
+                    legal: 0, 
+                    social: +5, 
+                    feedback: "⚠️ Bien mais insuffisant. L'anonymat empêche le suivi individuel et le dialogue direct nécessaire." 
+                }
+            ]
+        },
+        {
+            title: "Étape 3 : Réunion Préparatoire",
+            speaker: "Élu Suppléant",
+            text: "Pour notre réunion préparatoire de demain, est-ce qu'on invite le DRH pour gagner du temps et avoir ses éclairages ?",
+            choices: [
+                { 
+                    text: "Non, c'est un moment réservé uniquement aux élus.", 
+                    correct: true, 
+                    legal: 0, 
+                    social: +5, 
+                    feedback: "✅ Tout à fait ! C'est le moment de coordonner vos positions et préparer vos arguments entre vous." 
+                },
+                { 
+                    text: "On l'invite mais uniquement pour la partie questions techniques.", 
+                    correct: false, 
+                    legal: 0, 
+                    social: -5, 
+                    feedback: "❌ Non ! Même partiellement, sa présence biaise vos échanges. Les questions techniques se posent en plénière." 
+                },
+                { 
+                    text: "Oui, comme ça on discute directement avec lui des sujets.", 
+                    correct: false, 
+                    legal: 0, 
+                    social: -10, 
+                    feedback: "❌ Mauvaise idée ! La préparatoire est un moment EXCLUSIF aux élus pour définir leur stratégie sans pression." 
+                },
+                { 
+                    text: "On fait deux parties : une entre nous, puis une avec lui.", 
+                    correct: false, 
+                    legal: 0, 
+                    social: -3, 
+                    feedback: "⚠️ Confus. La préparatoire reste entre élus. Organisez plutôt une réunion informelle séparée si besoin." 
+                }
+            ]
+        },
+        {
+            title: "Étape 4 : La Convocation",
+            speaker: "L'Employeur",
+            text: "Je vous envoie la convocation 7 jours avant. Par contre, vu l'ordre du jour limité, j'indique que la réunion durera exactement 1 heure, pas plus. Il faut être efficace !",
+            choices: [
+                { 
+                    text: "Une heure c'est trop court, prévoyez au moins 3 heures systématiquement.", 
+                    correct: false, 
+                    legal: +5, 
+                    social: -10, 
+                    feedback: "⚠️ Vous avez raison sur le principe mais imposer 3h systématiques est aussi rigide. La durée doit s'adapter aux sujets." 
+                },
+                { 
+                    text: "OK pour 1h mais envoyez tous les documents pour qu'on prépare efficacement.", 
+                    correct: false, 
+                    legal: -10, 
+                    social: 0, 
+                    feedback: "❌ Non ! Même avec les documents, accepter une limitation de durée valide cette pratique illégale d'entrave." 
+                },
+                { 
+                    text: "Le délai est bon mais vous ne pouvez pas limiter la durée à l'avance.", 
+                    correct: true, 
+                    legal: +10, 
+                    social: -5, 
+                    feedback: "✅ Exact ! Le minutage excessif ou systématique peut constituer un délit d'entrave. De plus, le Président ne peut clôturer sans avoir étudié l'intégralité de l'ODJ." 
+                },
+                { 
+                    text: "Parfait, 7 jours c'est bien et 1 heure suffira si on est organisés.", 
+                    correct: false, 
+                    legal: -15, 
+                    social: +5, 
+                    feedback: "❌ Attention ! Imposer un minutage strict à l'avance peut constituer un délit d'entrave. La durée dépend des débats nécessaires." 
+                }
+            ]
+        },
+        {
+            title: "Étape 5 : Modification de l'ODJ",
+            speaker: "Le Président",
+            text: "Nous sommes à 2 jours de la réunion et je souhaite ajouter un point urgent à l'ordre du jour concernant une restructuration. Je modifie l'ODJ et vous l'envoie.",
+            choices: [
+                { 
+                    text: "D'accord si c'est vraiment urgent, allez-y.", 
+                    correct: false, 
+                    legal: -10, 
+                    social: +5, 
+                    feedback: "❌ Non ! Dans les 3 jours avant la réunion, seul le CSE peut demander une modification de l'ODJ, pas l'employeur." 
+                },
+                { 
+                    text: "Non, seul le CSE peut modifier l'ODJ dans ce délai.", 
+                    correct: true, 
+                    legal: +10, 
+                    social: -5, 
+                    feedback: "✅ Exact ! La jurisprudence permet au CSE de modifier l'ODJ : dans les 3 jours si urgent/justifié, à l'unanimité en début de réunion, ou en cours si lien nécessaire avec les points initiaux (vote majoritaire)." 
+                },
+                { 
+                    text: "On peut le rajouter mais uniquement si tous les élus sont d'accord par mail.", 
+                    correct: false, 
+                    legal: -5, 
+                    social: 0, 
+                    feedback: "⚠️ Partiel. L'unanimité est requise mais en début de réunion, pas par mail. Dans les 3 jours, c'est le CSE qui demande." 
+                },
+                { 
+                    text: "Reportons la réunion pour avoir le temps d'intégrer ce point.", 
+                    correct: false, 
+                    legal: -8, 
+                    social: +3, 
+                    feedback: "❌ Reporter n'est pas la solution. Le président ne peut pas imposer unilatéralement une modification tardive de l'ODJ." 
+                }
+            ]
+        },
+        {
+            title: "Étape 6 : Absence du Président",
+            speaker: "Le DRH",
+            text: "Le Président est absent pour raison médicale. Je n'ai pas de délégation de pouvoir mais je connais tous les dossiers. Je propose qu'on tienne quand même la réunion pour ne pas perdre de temps.",
+            choices: [
+                { 
+                    text: "D'accord, vous connaissez les dossiers, présidez exceptionnellement.", 
+                    correct: false, 
+                    legal: -15, 
+                    social: +5, 
+                    feedback: "❌ Illégal ! Sans délégation de pouvoir formelle, le DRH ne peut pas présider. La réunion serait nulle." 
+                },
+                { 
+                    text: "On fait une réunion informelle pour préparer la vraie réunion.", 
+                    correct: false, 
+                    legal: -5, 
+                    social: +3, 
+                    feedback: "⚠️ Confusion dangereuse. Une 'fausse' réunion crée de l'ambiguïté sur les décisions prises." 
+                },
+                { 
+                    text: "Non, impossible sans présidence valable, la réunion serait annulée.", 
+                    correct: true, 
+                    legal: +10, 
+                    social: -5, 
+                    feedback: "✅ Exact ! Une réunion plénière sans présidence valable est nulle. Toutes les décisions pourraient être annulées en justice." 
+                },
+                { 
+                    text: "Le secrétaire du CSE peut présider en l'absence du président.", 
+                    correct: false, 
+                    legal: -20, 
+                    social: 0, 
+                    feedback: "❌ Faux ! Le secrétaire CSE ne peut JAMAIS présider la réunion, c'est une confusion des rôles." 
+                }
+            ]
+        },
+        {
+            title: "Étape 7 : Vote sur Déménagement",
+            speaker: "Président",
+            text: "Nous passons au vote sur le projet de déménagement de l'entreprise à 50km, ce qui impactera tous les salariés. C'est une modification importante des conditions de travail. Qui vote ?",
+            choices: [
+                { 
+                    text: "Tous les présents : titulaires, suppléants et représentants syndicaux.", 
+                    correct: false, 
+                    legal: -20, 
+                    social: 0, 
+                    feedback: "❌ Grave erreur ! Seuls les titulaires (ou suppléants remplaçant un absent) votent. Les RS n'ont jamais le droit de vote." 
+                },
+                { 
+                    text: "Les titulaires présents et les suppléants remplaçant un titulaire absent.", 
+                    correct: true, 
+                    legal: +10, 
+                    social: 0, 
+                    feedback: "✅ Parfait ! C'est la règle : titulaires présents + suppléants remplaçant effectivement un titulaire absent." 
+                },
+                { 
+                    text: "Uniquement les titulaires, les suppléants ne votent jamais.", 
+                    correct: false, 
+                    legal: -5, 
+                    social: -5, 
+                    feedback: "❌ Incomplet. Les suppléants votent s'ils remplacent un titulaire absent, c'est leur rôle." 
+                },
+                { 
+                    text: "Les titulaires plus le président pour départager si égalité.", 
+                    correct: false, 
+                    legal: -10, 
+                    social: -3, 
+                    feedback: "❌ Non ! Le président ne vote JAMAIS au CSE, même pour départager. Il n'est pas membre élu." 
+                }
+            ]
+        },
+        {
+            title: "Étape 8 : Clôture forcée",
+            speaker: "L'Employeur",
+            text: "Il est 18h, on a traité 13 points sur les 18 de l'ordre du jour. J'ai un rendez-vous important, je lève la séance. On verra les 5 derniers points le mois prochain.",
+            choices: [
+                { 
+                    text: "Non, vous devez étudier l'ODJ complet ou demander au CSE de reporter.", 
+                    correct: true, 
+                    legal: +10, 
+                    social: -5, 
+                    feedback: "✅ Exact ! L'employeur doit étudier l'intégralité de l'ODJ. Une clôture unilatérale sans accord du CSE est irrégulière." 
+                },
+                { 
+                    text: "D'accord, on reprendra ces points en priorité le mois prochain.", 
+                    correct: false, 
+                    legal: -10, 
+                    social: +5, 
+                    feedback: "❌ Non ! Accepter valide cette pratique illégale. L'employeur ne peut pas décider seul de tronquer l'ODJ." 
+                },
+                { 
+                    text: "OK mais envoyez-nous vos positions écrites sur les points restants.", 
+                    correct: false, 
+                    legal: -8, 
+                    social: +3, 
+                    feedback: "❌ Insuffisant. Le débat oral en séance est essentiel. Des positions écrites ne remplacent pas la délibération." 
+                },
+                { 
+                    text: "On vote pour savoir si on continue ou si on reporte.", 
+                    correct: false, 
+                    legal: -5, 
+                    social: 0, 
+                    feedback: "⚠️ Mieux mais incomplet. Le CSE peut accepter de reporter, mais l'employeur ne peut pas l'imposer unilatéralement." 
+                }
+            ]
+        },
+        {
+            title: "Étape 9 : Rédaction du PV",
+            speaker: "DRH",
+            text: "Pour vous aider et gagner du temps, j'ai préparé le PV de la réunion. Il est très complet, vous n'avez qu'à le valider.",
+            choices: [
+                { 
+                    text: "Je peux m'en inspirer mais je rédige ma propre version.", 
+                    correct: false, 
+                    legal: +3, 
+                    social: 0, 
+                    feedback: "⚠️ Acceptable mais méfiance : vérifiez qu'il n'oriente pas le contenu. Mieux vaut partir de vos notes." 
+                },
+                { 
+                    text: "Merci, ça m'arrange, je le signe tout de suite.", 
+                    correct: false, 
+                    legal: -10, 
+                    social: +5, 
+                    feedback: "❌ Piège ! La rédaction du PV est la prérogative EXCLUSIVE du secrétaire. Un PV rédigé par l'employeur n'a aucune valeur." 
+                },
+                { 
+                    text: "On le co-rédige ensemble pour être sûr d'être d'accord.", 
+                    correct: false, 
+                    legal: -5, 
+                    social: +3, 
+                    feedback: "❌ Non ! Le PV est la vision du secrétaire. L'employeur pourra contester après mais pas co-rédiger." 
+                },
+                { 
+                    text: "Non, c'est mon rôle légal de secrétaire de le rédiger.", 
+                    correct: true, 
+                    legal: +10, 
+                    social: -5, 
+                    feedback: "✅ Bravo ! Vous protégez votre prérogative essentielle. Le PV est VOTRE responsabilité exclusive." 
+                }
+            ]
+        },
+        {
+            title: "Étape 10 : Modification du PV",
+            speaker: "L'Employeur",
+            text: "J'ai lu votre projet de PV. Mes propos sur le projet de modification des services y sont trop détaillés. Retirez ce passage, ce n'est pas encore officiel.",
+            choices: [
+                { 
+                    text: "Je reformule de façon plus vague mais je garde l'idée.", 
+                    correct: false, 
+                    legal: -3, 
+                    social: +3, 
+                    feedback: "❌ Dénaturer les propos est aussi grave que les supprimer. Le PV doit être exact, pas diplomatique." 
+                },
+                { 
+                    text: "Je mets ce passage en annexe confidentielle.", 
+                    correct: false, 
+                    legal: +3, 
+                    social: 0, 
+                    feedback: "⚠️ Compromis bancal. Le PV forme un tout. Les annexes ne changent pas le fait que c'était dit en séance." 
+                },
+                { 
+                    text: "D'accord, je retire pour préserver la confidentialité.", 
+                    correct: false, 
+                    legal: 0, 
+                    social: +5, 
+                    feedback: "❌ Non ! Le PV doit refléter FIDÈLEMENT les débats. Censurer après coup est une falsification." 
+                },
+                { 
+                    text: "Je refuse, ces propos ont été tenus en séance.", 
+                    correct: true, 
+                    legal: +10, 
+                    social: -10, 
+                    feedback: "✅ Courageux et juste ! Le PV est la mémoire juridique. Cette information n'est pas automatiquement soumise au secret. La confidentialité doit être décrétée par le Président AU MOMENT où il communique l'information, pas après." 
+                }
+            ]
+        },
+        {
+            title: "Étape 11 : Approbation du PV",
+            speaker: "Secrétaire CSE",
+            text: "Mon PV est prêt depuis 5 jours. Quand et comment le fait-on approuver officiellement ?",
+            choices: [
+                { 
+                    text: "On organise un vote électronique cette semaine.", 
+                    correct: false, 
+                    legal: +2, 
+                    social: +3, 
+                    feedback: "⚠️ Possible si votre règlement intérieur le prévoit, sinon c'est en séance plénière uniquement." 
+                },
+                { 
+                    text: "Je le fais signer par le président immédiatement.", 
+                    correct: false, 
+                    legal: -5, 
+                    social: -3, 
+                    feedback: "❌ Le président ne valide pas seul. C'est l'instance qui approuve collectivement." 
+                },
+                { 
+                    text: "On vote l'approbation au début de la prochaine réunion.", 
+                    correct: true, 
+                    legal: 0, 
+                    social: 0, 
+                    feedback: "✅ C'est la procédure standard. Premier point de l'ODJ suivant : approbation du PV précédent." 
+                },
+                { 
+                    text: "J'envoie un mail pour approbation tacite sous 48h.", 
+                    correct: false, 
+                    legal: 0, 
+                    social: 0, 
+                    feedback: "❌ Non, l'approbation tacite n'existe pas pour les PV de CSE. Il faut un vote formel." 
+                }
+            ]
+        },
+        {
+            title: "Étape 12 : Communication du PV",
+            speaker: "Salarié",
+            text: "Le PV est approuvé depuis hier. Où et quand peut-on le consulter ? On veut savoir ce qui s'est dit sur les primes.",
+            choices: [
+                { 
+                    text: "Il faut demander l'autorisation du président pour y accéder.", 
+                    correct: false, 
+                    legal: -10, 
+                    social: -10, 
+                    feedback: "❌ Absolument pas ! L'accès au PV est un droit des salariés, pas une faveur de la direction." 
+                },
+                { 
+                    text: "Je l'envoie uniquement aux adhérents syndicaux.", 
+                    correct: false, 
+                    legal: 0, 
+                    social: -10, 
+                    feedback: "❌ Discriminatoire ! Le CSE représente TOUS les salariés, syndiqués ou non." 
+                },
+                { 
+                    text: "Désolé, c'est confidentiel, je ne peux que vous résumer oralement.", 
+                    correct: false, 
+                    legal: -5, 
+                    social: -15, 
+                    feedback: "❌ Faux ! Sauf données sensibles spécifiques, le PV est un document public pour les salariés." 
+                },
+                { 
+                    text: "Je l'affiche sur les panneaux CSE et l'intranet dans les 48h.", 
+                    correct: true, 
+                    legal: 0, 
+                    social: +10, 
+                    feedback: "✅ Parfait ! Transparence totale. Le PV approuvé (et épuré des données sensibles) doit être accessible à tous." 
+                }
+            ]
+        }
+    ];
+
+    // --- VARIABLES GLOBALES ---
+    let currentStep = 0;
+    let stats = { legal: 100, social: 100 };
+    let hasAnswered = false;
+
+    // --- FONCTIONS ---
+    function startGame() {
+        // Cacher le menu, afficher le jeu
+        document.getElementById('menu-page').style.display = 'none';
+        document.getElementById('game-header').style.display = 'block';
+        document.getElementById('game-content').style.display = 'flex';
+        document.getElementById('buttons-area').style.display = 'flex';
+        
+        // Charger la première étape
+        loadStep(0);
+    }
+
+    function loadStep(index) {
+        hasAnswered = false;
+        
+        // Mise à jour de la barre de progression
+        const progressPercent = ((index) / scenarios.length) * 100;
+        document.getElementById('progress-bar').style.width = progressPercent + '%';
+
+        if (index >= scenarios.length) {
+            showEndScreen();
+            return;
+        }
+
+        const step = scenarios[index];
+        
+        // Mise à jour textes avec le titre complet de l'étape
+        document.getElementById('step-title').innerText = step.title;
+        document.getElementById('speaker-name').innerText = step.speaker;
+        document.getElementById('scenario-text').innerText = step.text;
+        
+        // Reset Feedback
+        const feedbackBox = document.getElementById('feedback-box');
+        feedbackBox.style.display = 'none';
+        feedbackBox.innerHTML = '';
+
+        // Génération Boutons
+        const btnsArea = document.getElementById('buttons-area');
+        btnsArea.innerHTML = ''; // Clean
+
+        step.choices.forEach((choice, idx) => {
+            const btn = document.createElement('div');
+            btn.className = 'btn';
+            btn.innerHTML = `${choice.text}`;
+            btn.onclick = () => {
+                if (!hasAnswered) {
+                    handleChoice(choice);
+                }
+            };
+            btnsArea.appendChild(btn);
+        });
+    }
+
+    function handleChoice(choice) {
+        hasAnswered = true;
+        
+        // Mise à jour stats
+        stats.legal += choice.legal;
+        stats.social += choice.social;
+        
+        // Bornes 0-100
+        stats.legal = Math.max(0, Math.min(100, stats.legal));
+        stats.social = Math.max(0, Math.min(100, stats.social));
+
+        // Mise à jour affichage avec animation si critique
+        const legalElement = document.getElementById('score-legal');
+        const socialElement = document.getElementById('score-social');
+        
+        legalElement.innerText = stats.legal;
+        socialElement.innerText = stats.social;
+        
+        // Ajouter classe danger si < 50
+        if (stats.legal < 50) {
+            legalElement.classList.add('danger');
+        } else {
+            legalElement.classList.remove('danger');
+        }
+        
+        if (stats.social < 50) {
+            socialElement.classList.add('danger');
+        } else {
+            socialElement.classList.remove('danger');
+        }
+
+        // Afficher Feedback
+        const feedbackBox = document.getElementById('feedback-box');
+        feedbackBox.innerHTML = choice.feedback;
+        feedbackBox.style.display = 'block';
+        
+        // Colorer selon le résultat
+        if (choice.correct) {
+            feedbackBox.style.borderColor = 'var(--success)';
+            feedbackBox.style.backgroundColor = '#e8f5e9';
+        } else {
+            feedbackBox.style.borderColor = 'var(--danger)';
+            feedbackBox.style.backgroundColor = '#ffebee';
+        }
+
+        // Remplacer les boutons par "Suivant"
+        const btnsArea = document.getElementById('buttons-area');
+        btnsArea.innerHTML = '';
+        
+        const nextBtn = document.createElement('div');
+        nextBtn.className = 'btn btn-next';
+        nextBtn.style.display = 'flex';
+        nextBtn.innerText = (currentStep + 1 < scenarios.length) ? '→ Étape Suivante' : '🏁 Voir le bilan';
+        nextBtn.onclick = () => {
+            currentStep++;
+            loadStep(currentStep);
+        };
+        btnsArea.appendChild(nextBtn);
+    }
+
+    function showEndScreen() {
+        document.getElementById('progress-bar').style.width = '100%';
+        
+        // Préparer le message final
+        let finalTitle = "🏁 Simulation Terminée";
+        let legalStatus = "";
+        let socialStatus = "";
+        let globalMessage = "";
+        
+        // Analyse Légalité
+        if (stats.legal >= 80) {
+            legalStatus = "✅ Excellente maîtrise juridique";
+        } else if (stats.legal >= 50) {
+            legalStatus = "⚠️ Conformité acceptable mais perfectible";
+        } else {
+            legalStatus = "🚨 ALERTE : Risque de délit d'entrave !";
+        }
+        
+        // Analyse Climat Social
+        if (stats.social >= 80) {
+            socialStatus = "✅ Climat social harmonieux";
+        } else if (stats.social >= 50) {
+            socialStatus = "⚠️ Climat social acceptable";
+        } else {
+            socialStatus = "🚨 DANGER : Risque de grève/démissions !";
+        }
+        
+        // Message global
+        if (stats.legal >= 80 && stats.social >= 80) {
+            globalMessage = "🏆 EXCELLENT MANDAT ! Vous maîtrisez parfaitement l'équilibre entre respect du cadre légal et maintien d'un dialogue social constructif. Vous êtes un secrétaire CSE exemplaire !";
+        } else if (stats.legal >= 50 && stats.social >= 50) {
+            globalMessage = "👍 Mandat correct. Vous évitez les écueils majeurs mais il reste des marges de progression pour optimiser votre action.";
+        } else if (stats.legal < 50 && stats.social < 50) {
+            globalMessage = "💥 Situation critique sur tous les fronts ! Formation urgente recommandée pour éviter des conséquences graves.";
+        } else if (stats.legal < 50) {
+            globalMessage = "⚖️ Votre mandat est en danger juridique. Les erreurs légales s'accumulent et pourraient mener à des poursuites.";
+        } else {
+            globalMessage = "😤 Le dialogue social est rompu. Votre CSE risque l'implosion malgré le respect des formes légales.";
+        }
+        
+        // Affichage
+        document.getElementById('step-title').style.display = 'none';
+        document.getElementById('speaker-name').innerText = finalTitle;
+        
+        document.getElementById('scenario-text').innerHTML = `
+            <div class="end-screen">
+                <div class="final-scores">
+                    <div class="final-score-card">
+                        <div>⚖️ LÉGALITÉ</div>
+                        <div class="final-score-value" style="color: ${stats.legal >= 50 ? 'var(--success)' : 'var(--danger)'}">
+                            ${stats.legal}/100
+                        </div>
+                        <div>${legalStatus}</div>
+                    </div>
+                    <div class="final-score-card">
+                        <div>🤝 CLIMAT SOCIAL</div>
+                        <div class="final-score-value" style="color: ${stats.social >= 50 ? 'var(--success)' : 'var(--danger)'}">
+                            ${stats.social}/100
+                        </div>
+                        <div>${socialStatus}</div>
+                    </div>
+                </div>
+                <div class="final-message">
+                    ${globalMessage}
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('feedback-box').style.display = 'none';
+        document.getElementById('buttons-area').innerHTML = `
+            <div class="btn btn-next" style="display: flex" onclick="location.reload()">
+                🔄 Recommencer la simulation
+            </div>
+        `;
+    }
+
+    // Initialisation (afficher le menu au chargement)
+    // Le menu est déjà visible par défaut dans le HTML
+</script>
+
+</body>
+</html>

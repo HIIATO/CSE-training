@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Quiz CSE - Les Budgets</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 420px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            pointer-events: none;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content {
+            padding: 30px 20px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .question-section {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #f0f0f0;
+            border-radius: 2px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-counter {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .question-text {
+            font-size: 18px;
+            line-height: 1.5;
+            margin-bottom: 30px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .welcome-text {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .answers-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .answer-btn {
+            background: white;
+            border: 2px solid #e1e8ed;
+            color: #2c3e50;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            line-height: 1.4;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .answer-btn:hover {
+            border-color: #4facfe;
+            background: #f8fbff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .answer-btn:active {
+            transform: translateY(0);
+        }
+
+        .answer-btn.correct {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .answer-btn.incorrect {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        .answer-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+            min-width: 140px;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
+        }
+
+        .start-btn:active {
+            transform: translateY(0);
+        }
+
+        .score-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .score-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .score-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #4facfe;
+        }
+
+        .final-score {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .final-score h2 {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .final-score .score-circle {
+            width: 100px;
+            height: 100px;
+            border: 6px solid #4facfe;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            font-size: 24px;
+            font-weight: 700;
+            color: #4facfe;
+        }
+
+        .emoji {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .app-container {
+                max-width: 100%;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 25px 15px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .question-text {
+                font-size: 16px;
+            }
+            
+            .answer-btn {
+                padding: 14px 16px;
+                font-size: 13px;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .content {
+                min-height: 300px;
+            }
+            
+            .question-text {
+                margin-bottom: 20px;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* High contrast mode */
+        @media (prefers-contrast: high) {
+            .answer-btn {
+                border-width: 3px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1>Quiz CSE</h1>
+            <p>Les Budgets du Comité Social et Économique</p>
+        </div>
+        
+        <div class="content">
+            <div id="welcome-screen" class="question-section">
+                <div class="emoji">🎯</div>
+                <div class="welcome-text">
+                    Testez vos connaissances sur les budgets du CSE ! 
+                    <br><br>
+                    Identifiez à quel budget appartient chaque dépense.
+                </div>
+                <button id="start-btn" class="start-btn">Commencer le Quiz</button>
+            </div>
+
+            <div id="quiz-screen" class="question-section" style="display: none;">
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+                <div id="question-counter" class="question-counter"></div>
+                <div id="question-text" class="question-text"></div>
+                <div id="answers-container" class="answers-container"></div>
+            </div>
+
+            <div id="final-screen" class="question-section" style="display: none;">
+                <div class="final-score">
+                    <div id="final-emoji" class="emoji"></div>
+                    <h2>Quiz terminé !</h2>
+                    <div class="score-circle">
+                        <span id="final-score-display"></span>
+                    </div>
+                    <p id="final-message"></p>
+                    <br>
+                    <button id="restart-btn" class="start-btn">Recommencer</button>
+                </div>
+            </div>
+
+            <div id="score-section" class="score-section" style="display: none;">
+                <div class="score-text">Score</div>
+                <div id="score-value" class="score-value">0</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration du quiz
+        const questions = [
+            { question: "Achat de fournitures de bureau pour le CSE", correct: "Budget de fonctionnement" },
+            { question: "Organisation d'une sortie culturelle pour les employés", correct: "Budget ASC" },
+            { question: "Formation optionnelle des élus du CSE", correct: "Budget de fonctionnement" },
+            { question: "Subvention pour les activités sportives", correct: "Budget ASC" },
+            { question: "Achats de cadeaux ou de cartes cadeaux", correct: "Budget ASC" },
+            { question: "Financement de l'audit des comptes de l'entreprise lors de la consultation économique", correct: "Employeur" },
+            { question: "Téléphone ou ordinateur portable pour un élu du CSE", correct: "Budget de fonctionnement" },
+            { question: "Assurance responsabilité civile pour le CSE", correct: "Employeur" },
+            { question: "Ligne mobile pour un représentant syndical", correct: "Piège" },
+            { question: "Voyage au stade de France pour présenter les comptes du CSE et regarder un match", correct: "Répartition entre les deux budgets" },
+            { question: "Étude d'un avocat portant sur la fiscalité des ASC et une réclamation salariale", correct: "Répartition entre les deux budgets" },
+            { question: "Plateforme en ligne offrant des réductions aux salariés et un logiciel de comptabilité du CSE", correct: "Répartition entre les deux budgets" },
+            { question: "Masques chirurgicaux pour les salariés", correct: "Employeur" },
+            { question: "Cadeaux floqués avec le logo de l'entreprise ou du CSE", correct: "Budget ASC" },
+            { question: "Prime de naissance sous forme de virement", correct: "Budget ASC" },
+            { question: "Assistance juridique accessible aux élus uniquement", correct: "Budget de fonctionnement" },
+            { question: "Assistance juridique accessible aux salariés", correct: "Budget ASC" },
+            { question: "Chèque culture", correct: "Budget ASC" },
+            { question: "Frais de gestion des ANCV", correct: "Budget ASC" },
+            { question: "Frais d'envoi d'une carte cadeaux à un salarié", correct: "Budget ASC" }
+        ];
+
+        const possibleAnswers = [
+            "Budget de fonctionnement",
+            "Budget ASC",
+            "Employeur",
+            "Piège",
+            "Répartition entre les deux budgets"
+        ];
+
+        // Variables du jeu
+        let shuffledQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let gameStarted = false;
+
+        // Éléments DOM
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const finalScreen = document.getElementById('final-screen');
+        const scoreSection = document.getElementById('score-section');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const questionCounter = document.getElementById('question-counter');
+        const questionText = document.getElementById('question-text');
+        const answersContainer = document.getElementById('answers-container');
+        const scoreValue = document.getElementById('score-value');
+        const progressFill = document.getElementById('progress-fill');
+        const finalScoreDisplay = document.getElementById('final-score-display');
+        const finalMessage = document.getElementById('final-message');
+        const finalEmoji = document.getElementById('final-emoji');
+
+        // Gestionnaires d'événements
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', restartGame);
+
+        // Fonction pour démarrer le jeu
+        function startGame() {
+            try {
+                gameStarted = true;
+                score = 0;
+                currentQuestionIndex = 0;
+                
+                // Mélanger les questions
+                shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
+                
+                // Afficher l'écran de quiz
+                showScreen('quiz');
+                updateScore();
+                showNextQuestion();
+            } catch (error) {
+                console.error('Erreur lors du démarrage du jeu:', error);
+                alert('Une erreur est survenue. Veuillez recharger la page.');
+            }
+        }
+
+        // Fonction pour redémarrer le jeu
+        function restartGame() {
+            showScreen('welcome');
+            gameStarted = false;
+        }
+
+        // Fonction pour afficher un écran
+        function showScreen(screenName) {
+            welcomeScreen.style.display = 'none';
+            quizScreen.style.display = 'none';
+            finalScreen.style.display = 'none';
+            scoreSection.style.display = 'none';
+
+            switch (screenName) {
+                case 'welcome':
+                    welcomeScreen.style.display = 'block';
+                    break;
+                case 'quiz':
+                    quizScreen.style.display = 'block';
+                    scoreSection.style.display = 'flex';
+                    break;
+                case 'final':
+                    finalScreen.style.display = 'block';
+                    break;
+            }
+        }
+
+        // Fonction pour afficher la question suivante
+        function showNextQuestion() {
+            try {
+                if (currentQuestionIndex >= shuffledQuestions.length) {
+                    endGame();
+                    return;
+                }
+
+                const currentQuestion = shuffledQuestions[currentQuestionIndex];
+                
+                // Mettre à jour l'interface
+                questionCounter.textContent = `Question ${currentQuestionIndex + 1} sur ${shuffledQuestions.length}`;
+                questionText.textContent = currentQuestion.question;
+                
+                // Mettre à jour la barre de progression
+                const progress = ((currentQuestionIndex + 1) / shuffledQuestions.length) * 100;
+                progressFill.style.width = `${progress}%`;
+                
+                // Créer les boutons de réponse
+                createAnswerButtons();
+                
+                // Animation d'apparition
+                quizScreen.classList.add('fade-in');
+                setTimeout(() => quizScreen.classList.remove('fade-in'), 300);
+                
+            } catch (error) {
+                console.error('Erreur lors de l\'affichage de la question:', error);
+                endGame();
+            }
+        }
+
+        // Fonction pour créer les boutons de réponse
+        function createAnswerButtons() {
+            // Vider le conteneur
+            answersContainer.innerHTML = '';
+            
+            // Créer un bouton pour chaque réponse possible
+            possibleAnswers.forEach(answer => {
+                const button = document.createElement('button');
+                button.className = 'answer-btn';
+                button.textContent = answer;
+                button.addEventListener('click', () => selectAnswer(answer));
+                answersContainer.appendChild(button);
+            });
+        }
+
+        // Fonction pour sélectionner une réponse
+        function selectAnswer(selectedAnswer) {
+            try {
+                const currentQuestion = shuffledQuestions[currentQuestionIndex];
+                const correctAnswer = currentQuestion.correct;
+                const buttons = answersContainer.querySelectorAll('.answer-btn');
+                
+                // Désactiver tous les boutons
+                buttons.forEach(button => {
+                    button.disabled = true;
+                    
+                    // Colorer selon la réponse
+                    if (button.textContent === correctAnswer) {
+                        button.classList.add('correct');
+                    } else if (button.textContent === selectedAnswer && selectedAnswer !== correctAnswer) {
+                        button.classList.add('incorrect');
+                    }
+                });
+                
+                // Mettre à jour le score
+                if (selectedAnswer === correctAnswer) {
+                    score++;
+                    updateScore();
+                }
+                
+                // Passer à la question suivante après un délai
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    showNextQuestion();
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Erreur lors de la sélection de la réponse:', error);
+                // Continuer quand même
+                currentQuestionIndex++;
+                showNextQuestion();
+            }
+        }
+
+        // Fonction pour mettre à jour le score
+        function updateScore() {
+            if (scoreValue) {
+                scoreValue.textContent = score;
+            }
+        }
+
+        // Fonction pour terminer le jeu
+        function endGame() {
+            try {
+                const totalQuestions = shuffledQuestions.length;
+                const percentage = Math.round((score / totalQuestions) * 100);
+                
+                // Afficher le score final
+                finalScoreDisplay.textContent = `${score}/${totalQuestions}`;
+                
+                // Message et emoji selon le score
+                let message, emoji;
+                if (percentage >= 90) {
+                    emoji = '🏆';
+                    message = 'Excellent ! Vous maîtrisez parfaitement les budgets du CSE !';
+                } else if (percentage >= 70) {
+                    emoji = '🎉';
+                    message = 'Très bien ! Vous avez de bonnes connaissances sur les budgets du CSE.';
+                } else if (percentage >= 50) {
+                    emoji = '👍';
+                    message = 'Pas mal ! Il y a encore quelques points à revoir.';
+                } else {
+                    emoji = '📚';
+                    message = 'Il serait bon de réviser les règles des budgets du CSE.';
+                }
+                
+                finalEmoji.textContent = emoji;
+                finalMessage.textContent = message;
+                
+                // Afficher l'écran final
+                showScreen('final');
+                
+            } catch (error) {
+                console.error('Erreur lors de la fin du jeu:', error);
+                alert('Quiz terminé! Score: ' + score + '/' + shuffledQuestions.length);
+                showScreen('welcome');
+            }
+        }
+
+        // Gestion des erreurs globales
+        window.addEventListener('error', function(e) {
+            console.error('Erreur globale:', e.error);
+            if (!gameStarted) {
+                alert('Une erreur est survenue. Veuillez recharger la page.');
+            }
+        });
+
+        // Vérification de la compatibilité du navigateur
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                // Test des fonctionnalités essentielles
+                if (!Array.prototype.sort || !document.querySelector || !JSON) {
+                    throw new Error('Navigateur non compatible');
+                }
+                
+                console.log('Quiz CSE chargé avec succès');
+            } catch (error) {
+                console.error('Erreur de compatibilité:', error);
+                alert('Votre navigateur n\'est pas compatible. Veuillez utiliser une version plus récente.');
+            }
+        });
+    </script>
+</body>
+</html>
