@@ -1,0 +1,4302 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Compta Game - HIIATO</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0095D0 0%, #25CCF6 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        .game-container {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0095D0, #25CCF6);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .header-logo {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2px;
+        }
+
+        .header-logo svg {
+            height: 70px;
+            width: auto;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.95;
+            margin-top: 4px;
+        }
+
+        .content {
+            padding: 24px;
+        }
+
+        /* ============================================
+           ÉCRANS - Système de navigation
+           ============================================ */
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        /* Sous-écrans des chapitres */
+        .ch1-subscreen {
+            display: none;
+        }
+
+        .ch1-subscreen.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============================================
+           PAGE D'ACCUEIL - Styles
+           ============================================ */
+        .progress-section {
+            background: linear-gradient(135deg, #E8F8FD, #F0FBFF);
+            border-left: 4px solid #25CCF6;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .progress-section h3 {
+            color: #0095D0;
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 12px;
+        }
+
+        .progress-stat {
+            text-align: center;
+        }
+
+        .progress-stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0095D0;
+            line-height: 1;
+        }
+
+        .progress-stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .chapters-list {
+            margin-bottom: 24px;
+        }
+
+        .chapter-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .chapter-item:hover:not(.locked) {
+            border-color: #25CCF6;
+            box-shadow: 0 4px 12px rgba(37, 204, 246, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .chapter-item.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f5f5f5;
+        }
+
+        .chapter-item.completed {
+            border-color: #4CAF50;
+            background: linear-gradient(135deg, #f0fff0, #f8fff8);
+        }
+
+        .chapter-info {
+            flex: 1;
+        }
+
+        .chapter-number {
+            font-size: 12px;
+            color: #0095D0;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .chapter-item.completed .chapter-number {
+            color: #4CAF50;
+        }
+
+        .chapter-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .chapter-item.locked .chapter-title {
+            color: #999;
+        }
+
+        .chapter-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 24px;
+        }
+
+        .chapter-item.locked .chapter-status::after {
+            content: '🔒';
+        }
+
+        .chapter-item.completed .chapter-status::after {
+            content: '✅';
+        }
+
+        .chapter-item:not(.locked):not(.completed) .chapter-status::after {
+            content: '▶️';
+        }
+
+        /* ============================================
+           BOUTONS
+           ============================================ */
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0095D0, #25CCF6);
+            color: white;
+            box-shadow: 0 4px 15px rgba(37, 204, 246, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 8px rgba(37, 204, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #0095D0;
+            border: 2px solid #0095D0;
+        }
+
+        .btn-secondary:active {
+            transform: scale(0.98);
+            background: #f0f9ff;
+        }
+
+        .btn-danger {
+            background: white;
+            color: #d32f2f;
+            border: 2px solid #d32f2f;
+            font-size: 14px;
+            padding: 12px;
+        }
+
+        .btn-danger:active {
+            transform: scale(0.98);
+            background: #fff5f5;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .actions-section {
+            margin-top: 24px;
+        }
+
+        /* ============================================
+           PAGE SCORES - Styles
+           ============================================ */
+        .score-display {
+            background: linear-gradient(135deg, #E8F8FD, #F0FBFF);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .score-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: #0095D0;
+            line-height: 1;
+        }
+
+        .score-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .scores-list {
+            margin-top: 20px;
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .score-item-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .score-item-value {
+            font-weight: 700;
+            color: #0095D0;
+        }
+
+        .info-message {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #856404;
+            line-height: 1.5;
+        }
+
+        .logo-footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 12px;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 20px;
+        }
+
+        .logo-footer strong {
+            color: #0095D0;
+            font-size: 14px;
+        }
+
+        @keyframes unlock {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .chapter-item.just-unlocked {
+            animation: unlock 0.5s ease;
+        }
+
+        /* Onglets scores */
+        .score-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .score-tab {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .score-tab.active {
+            border-color: #0095D0;
+            background: linear-gradient(135deg, #E8F8FD, #F0FBFF);
+            color: #0095D0;
+        }
+
+        .score-tab:hover:not(.active) {
+            border-color: #25CCF6;
+        }
+
+        /* ============================================
+           CHAPITRE 1 - Styles spécifiques
+           ============================================ */
+        .chapter-header {
+            background: linear-gradient(135deg, #0095D0, #25CCF6);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .chapter-header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .chapter-header p {
+            font-size: 14px;
+            opacity: 0.95;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            margin-top: 16px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: white;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .score-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.25);
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-top: 12px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .intro-text {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 24px;
+        }
+
+        .intro-text strong {
+            color: #0095D0;
+        }
+
+        .objective-box {
+            background: linear-gradient(135deg, #E8F8FD, #F0FBFF);
+            border-left: 4px solid #25CCF6;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .objective-box h3 {
+            color: #0095D0;
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .objective-box p {
+            font-size: 15px;
+            color: #555;
+        }
+
+        .draggable-card-container {
+            margin: 40px 0 24px 0;
+            text-align: center;
+        }
+
+        .draggable-instruction {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 16px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .draggable-card {
+            background: linear-gradient(135deg, #25CCF6, #0095D0);
+            color: white;
+            border-radius: 20px;
+            padding: 24px 20px;
+            cursor: move;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(37, 204, 246, 0.4);
+            display: inline-block;
+            min-width: 90%;
+            max-width: 400px;
+            touch-action: none;
+            position: relative;
+            user-select: none;
+        }
+
+        .draggable-card.dragging {
+            transform: scale(1.02) rotate(1deg);
+            box-shadow: 0 12px 30px rgba(37, 204, 246, 0.5);
+            opacity: 0.95;
+            z-index: 1000;
+        }
+
+        .draggable-card.used {
+            opacity: 0.3;
+            pointer-events: none;
+            transform: scale(0.95);
+        }
+
+        .card-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .card-text {
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .drop-zones {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .drop-zone {
+            background: white;
+            border: 3px dashed #dee2e6;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .drop-zone h4 {
+            font-size: 16px;
+            margin-bottom: 4px;
+            color: #0095D0;
+        }
+
+        .zone-hint {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+
+        .drop-zone.drag-over {
+            background: #E8F8FD;
+            border-color: #25CCF6;
+            border-style: solid;
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(37, 204, 246, 0.3);
+        }
+
+        .drop-zone.has-answer {
+            border-style: solid;
+            border-color: #25CCF6;
+            background: linear-gradient(135deg, #E8F8FD, #F0FBFF);
+        }
+
+        .answer-text {
+            font-size: 14px;
+            color: #555;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 15px;
+            line-height: 1.6;
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .explanation {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            font-size: 14px;
+        }
+
+        .result-content h2 {
+            color: #0095D0;
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .final-score {
+            text-align: center;
+            font-size: 48px;
+            font-weight: 700;
+            color: #25CCF6;
+            margin: 24px 0;
+        }
+
+        .badge-earned {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            margin: 24px 0;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .badge-earned h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .badge-icon {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 24px 0;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0095D0;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .next-btn {
+            margin-top: 16px;
+        }
+
+        .emoji {
+            font-size: 24px;
+            display: inline-block;
+        }
+
+        /* Bouton retour accueil dans les chapitres */
+        .back-to-home {
+            display: inline-block;
+            margin-bottom: 16px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-to-home:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* ============================================
+           CHAPITRE 2 - Styles spécifiques
+           ============================================ */
+        .ch2-subscreen {
+            display: none;
+        }
+
+        .ch2-subscreen.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .ch2-content {
+            padding-bottom: 140px;
+        }
+
+        /* Structure du Bilan */
+        .document-structure {
+            margin: 20px 0;
+        }
+
+        .document-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: #0095D0;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: linear-gradient(135deg, #E8F8FD, #F0FBFF);
+            border-radius: 12px;
+        }
+
+        .bilan-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            border: 4px solid #000;
+            position: relative;
+        }
+
+        .bilan-grid::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+            background: #000;
+            transform: translateX(-50%);
+            z-index: 1;
+        }
+
+        .bilan-column {
+            background: white;
+        }
+
+        .bilan-column-title {
+            text-align: center;
+            font-weight: 900;
+            font-size: 20px;
+            padding: 20px;
+            border-bottom: 4px solid #000;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .bilan-column.actif .bilan-column-title {
+            background: #1565C0;
+            color: white;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+        }
+
+        .bilan-column.passif .bilan-column-title {
+            background: #E65100;
+            color: white;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+        }
+
+        .ch2-drop-zone {
+            background: white;
+            border: none;
+            border-bottom: 2px solid #666;
+            border-radius: 0;
+            padding: 12px;
+            min-height: 70px;
+            margin-bottom: 0;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .bilan-column .ch2-drop-zone:last-child {
+            border-bottom: none;
+        }
+
+        .ch2-drop-zone-hint {
+            font-size: 11px;
+            color: #999;
+            line-height: 1.3;
+            font-style: italic;
+            margin-bottom: 4px;
+        }
+
+        .ch2-drop-zone.drag-over {
+            background: #E8F8FD;
+            box-shadow: inset 0 0 10px rgba(37, 204, 246, 0.5);
+        }
+
+        .ch2-drop-zone.filled {
+            background: linear-gradient(135deg, #E8F8FD, #F0FBFF);
+        }
+
+        .ch2-drop-zone.error {
+            animation: errorShake 0.5s ease, errorFlash 0.5s ease;
+        }
+
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+
+        @keyframes errorFlash {
+            0% { background: #ffebee; }
+            25% { background: #ef5350; }
+            50% { background: #e53935; }
+            75% { background: #ef5350; }
+            100% { background: white; }
+        }
+
+        .dropped-term {
+            font-weight: 700;
+            font-size: 14px;
+            color: #0095D0;
+            margin-top: 4px;
+        }
+
+        .dropped-term.error {
+            color: #C62828;
+            animation: errorPulse 0.5s ease;
+        }
+
+        @keyframes errorPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Structure Compte de Résultat */
+        .resultat-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0;
+            border: 4px solid #000;
+        }
+
+        .resultat-section {
+            background: white;
+            border-bottom: 4px solid #000;
+        }
+
+        .resultat-section:last-child {
+            border-bottom: none;
+        }
+
+        .resultat-section-title {
+            text-align: center;
+            font-weight: 900;
+            font-size: 20px;
+            padding: 20px;
+            border-bottom: 4px solid #000;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+        }
+
+        .resultat-section.produits .resultat-section-title {
+            background: #2E7D32;
+            color: white;
+        }
+
+        .resultat-section.charges .resultat-section-title {
+            background: #C62828;
+            color: white;
+        }
+
+        .resultat-section.resultat .resultat-section-title {
+            background: #E65100;
+            color: white;
+            font-size: 18px;
+        }
+
+        .resultat-section .ch2-drop-zone {
+            border-bottom: 2px solid #666;
+        }
+
+        .resultat-section .ch2-drop-zone:last-child {
+            border-bottom: none;
+        }
+
+        /* Cartes à glisser - Chapitre 2 */
+        .ch2-draggable-cards-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 3px solid #0095D0;
+            padding: 12px 20px;
+            display: none;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            min-height: 100px;
+            max-height: 30vh;
+            overflow-y: auto;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+        }
+
+        .ch2-draggable-cards-container.active {
+            display: flex;
+        }
+
+        .ch2-draggable-card {
+            background: linear-gradient(135deg, #25CCF6, #0095D0);
+            color: white;
+            border-radius: 10px;
+            padding: 12px 16px;
+            cursor: move;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(37, 204, 246, 0.3);
+            touch-action: none;
+            font-weight: 600;
+            font-size: 14px;
+            text-align: center;
+            flex-shrink: 0;
+            user-select: none;
+        }
+
+        .ch2-draggable-card.dragging {
+            transform: scale(1.02) rotate(1deg);
+            box-shadow: 0 8px 25px rgba(37, 204, 246, 0.5);
+            opacity: 0.95;
+            z-index: 1000;
+        }
+
+        .ch2-draggable-card.used {
+            opacity: 0.3;
+            pointer-events: none;
+            transform: scale(0.9);
+        }
+
+        .instruction-text {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            margin: 16px 0;
+            animation: pulse 2s ease-in-out infinite;
+            background: white;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        /* ============================================
+           CHAPITRE 3 - Styles spécifiques
+           ============================================ */
+        .ch3-subscreen {
+            display: none;
+        }
+
+        .ch3-subscreen.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .ch3-content {
+            padding-bottom: 140px;
+        }
+
+        /* Sections du chapitre 3 */
+        .ch3-section-container {
+            border: 4px solid #000;
+            margin-bottom: 20px;
+            background: white;
+        }
+
+        .ch3-section-title {
+            text-align: center;
+            font-weight: 900;
+            font-size: 18px;
+            padding: 16px;
+            border-bottom: 4px solid #000;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: white;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+        }
+
+        .ch3-section-title.actif-immobilise {
+            background: #1565C0;
+        }
+
+        .ch3-section-title.actif-circulant {
+            background: #1976D2;
+        }
+
+        .ch3-section-title.capitaux-propres {
+            background: #E65100;
+        }
+
+        .ch3-section-title.dettes {
+            background: #F57C00;
+        }
+
+        .ch3-section-title.exploitation {
+            background: #2E7D32;
+        }
+
+        .ch3-section-title.financier {
+            background: #1976D2;
+        }
+
+        .ch3-section-title.exceptionnel {
+            background: #7B1FA2;
+        }
+
+        .ch3-drop-zone {
+            background: white;
+            border: none;
+            border-bottom: 2px solid #666;
+            border-radius: 0;
+            padding: 12px;
+            min-height: 70px;
+            margin-bottom: 0;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .ch3-section-container .ch3-drop-zone:last-child {
+            border-bottom: none;
+        }
+
+        .ch3-drop-zone-hint {
+            font-size: 11px;
+            color: #999;
+            line-height: 1.3;
+            font-style: italic;
+            margin-bottom: 4px;
+        }
+
+        /* Fonds colorés pour produits et charges */
+        .ch3-drop-zone.produit-bg {
+            background: #F1F8E9;
+        }
+
+        .ch3-drop-zone.produit-bg.drag-over {
+            background: #C5E1A5;
+        }
+
+        .ch3-drop-zone.produit-bg.filled {
+            background: linear-gradient(135deg, #E8F5E9, #F1F8E9);
+        }
+
+        .ch3-drop-zone.charge-bg {
+            background: #FFF3E0;
+        }
+
+        .ch3-drop-zone.charge-bg.drag-over {
+            background: #FFCCBC;
+        }
+
+        .ch3-drop-zone.charge-bg.filled {
+            background: linear-gradient(135deg, #FFEBEE, #FFF3E0);
+        }
+
+        .ch3-drop-zone.drag-over {
+            background: #E8F8FD;
+            box-shadow: inset 0 0 10px rgba(37, 204, 246, 0.5);
+        }
+
+        .ch3-drop-zone.filled {
+            background: linear-gradient(135deg, #E8F8FD, #F0FBFF);
+        }
+
+        .ch3-drop-zone.error {
+            animation: errorShake 0.5s ease, errorFlash 0.5s ease;
+        }
+
+        /* Cartes à glisser - Chapitre 3 */
+        .ch3-draggable-cards-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 3px solid #0095D0;
+            padding: 12px 20px;
+            display: none;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            min-height: 100px;
+            max-height: 30vh;
+            overflow-y: auto;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+        }
+
+        .ch3-draggable-cards-container.active {
+            display: flex;
+        }
+
+        .ch3-draggable-card {
+            background: linear-gradient(135deg, #25CCF6, #0095D0);
+            color: white;
+            border-radius: 10px;
+            padding: 10px 14px;
+            cursor: move;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(37, 204, 246, 0.3);
+            touch-action: none;
+            font-weight: 600;
+            font-size: 13px;
+            text-align: center;
+            flex-shrink: 0;
+            user-select: none;
+        }
+
+        .ch3-draggable-card.dragging {
+            transform: scale(1.02) rotate(1deg);
+            box-shadow: 0 8px 25px rgba(37, 204, 246, 0.5);
+            opacity: 0.95;
+            z-index: 1000;
+        }
+
+        .ch3-draggable-card.used {
+            opacity: 0.3;
+            pointer-events: none;
+            transform: scale(0.9);
+        }
+
+        /* ============================================
+           CHAPITRE 4 - Styles spécifiques
+           ============================================ */
+        .ch4-subscreen {
+            display: none;
+        }
+
+        .ch4-subscreen.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        /* Question card */
+        .ch4-question-card {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 2px solid #e9ecef;
+        }
+
+        .ch4-question-type {
+            display: inline-block;
+            background: linear-gradient(135deg, #0095D0, #25CCF6);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .ch4-question-text {
+            font-size: 18px;
+            color: #333;
+            font-weight: 500;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .ch4-context-box {
+            background: #FFF3E0;
+            border-left: 4px solid #FF9800;
+            padding: 12px;
+            margin: 16px 0;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Choix multiples */
+        .ch4-choices-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .ch4-choice-btn {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+
+        .ch4-choice-btn:hover {
+            border-color: #25CCF6;
+            background: #E8F8FD;
+        }
+
+        .ch4-choice-btn.selected {
+            border-color: #25CCF6;
+            background: linear-gradient(135deg, #E8F8FD, #F0FBFF);
+            font-weight: 600;
+        }
+
+        .ch4-choice-btn.correct {
+            border-color: #4CAF50;
+            background: #E8F5E9;
+            animation: correctPulse 0.5s ease;
+        }
+
+        .ch4-choice-btn.incorrect {
+            border-color: #F44336;
+            background: #FFEBEE;
+            animation: incorrectShake 0.5s ease;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes incorrectShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .ch4-choice-letter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: #E8F8FD;
+            border-radius: 50%;
+            font-weight: 700;
+            color: #0095D0;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .ch4-choice-btn.selected .ch4-choice-letter {
+            background: #25CCF6;
+            color: white;
+        }
+
+        .ch4-choice-btn.correct .ch4-choice-letter {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .ch4-choice-btn.incorrect .ch4-choice-letter {
+            background: #F44336;
+            color: white;
+        }
+
+        .ch4-validate-btn {
+            margin-top: 20px;
+        }
+
+        .ch4-feedback-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .ch4-feedback-explanation {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .ch4-next-question-btn {
+            margin-top: 16px;
+        }
+
+        /* ============================================
+           PAGE SCORES FINAUX - Styles
+           ============================================ */
+        .final-celebration {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .trophy-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .final-celebration h2 {
+            color: #0095D0;
+            font-size: 24px;
+        }
+
+        .final-scores-detail {
+            margin-top: 20px;
+        }
+
+        .final-score-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .final-score-item.best {
+            border-color: #FFD700;
+            background: linear-gradient(135deg, #FFFDE7, #FFF9C4);
+        }
+
+        .final-score-chapter {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .final-score-value {
+            font-weight: 700;
+            color: #0095D0;
+            font-size: 18px;
+        }
+
+        .final-badges {
+            margin-top: 24px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .final-badge {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .final-badge.locked {
+            background: #e0e0e0;
+            color: #999;
+        }
+
+        .final-badge-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .final-badge-name {
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        /* Bouton recommencer section */
+        .btn-restart-section {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            color: white;
+            margin-top: 16px;
+            font-size: 14px;
+            padding: 12px 16px;
+        }
+
+        .btn-restart-section:active {
+            transform: scale(0.98);
+        }
+
+        /* Section badges dans page scores */
+        .badges-section {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .badge-item {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: white;
+            padding: 16px 12px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+        }
+
+        .badge-item.locked {
+            background: linear-gradient(135deg, #e0e0e0, #bdbdbd);
+            color: #999;
+            box-shadow: none;
+        }
+
+        .badge-item-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .badge-item-name {
+            font-weight: 600;
+            font-size: 12px;
+            line-height: 1.3;
+        }
+
+        .badge-item-chapter {
+            font-size: 10px;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        
+        <!-- ============================================
+             EN-TÊTE DYNAMIQUE
+             ============================================ -->
+        <div class="header" id="mainHeader">
+            <div class="header-logo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1904.42 963.08" width="120" height="60">
+                    <path fill="#fff" d="M1281.38,290.16v93h75v83h-75v146.5c0,4.54,4.98,14.31,8.51,17.49,5.2,4.7,19.17,9.01,25.99,9.01h40.5v77c-16.53,1.49-33.91,3.18-50.54,3.04-74.73-.62-107.93-30.49-110.51-105.49-1.68-48.82,1.35-98.64.05-147.55h-58v250h-85v-37c-1.77-.26-2.19-.06-3.46,1.04-3.28,2.84-7.21,8.57-11.01,11.99-47.15,42.34-123.19,43.71-176.05,10.99-110.23-68.23-108.12-247.89,6.5-310.54,55.44-30.3,130.87-25.02,176.05,20.99,2.18,2.22,3.48,6.38,6.97,6.53v-35.5l1.5-1.5h142.5v-68l86-25h0ZM946.17,456.46c-92.05,8.86-107.58,144.55-26.15,179.56,57.71,24.82,126.22-9.75,131.34-74.37,5.23-65.92-38.7-111.59-105.19-105.19h0Z"/>
+                    <polygon fill="#fff" points="383.38 250.16 383.38 435.16 556.38 435.16 556.38 384.16 648.38 384.16 648.38 716.16 556.38 716.16 556.38 523.16 383.38 523.16 383.38 716.16 291.38 716.16 291.38 250.16 383.38 250.16"/>
+                    <path fill="#fff" d="M1518.17,374.46c122.63-6.83,213.97,99.76,184.13,220.13-37.26,150.32-245.86,179.21-323.73,45.88-65.91-112.85,7.59-258.66,139.6-266.01h0ZM1519.17,458.46c-57.91,5.89-88.64,64.09-74.51,117.92,22.76,86.7,149.5,87.03,173.43,1,18.55-66.68-29.62-125.98-98.92-118.92h0Z"/>
+                    <rect fill="#fff" x="684.38" y="383.16" width="85" height="333"/>
+                    <path fill="#028fd0" d="M719.15,237.44c45.71-5.23,76.87,44.84,51.45,83.45-23.56,35.79-79.14,30.53-94.99-9.47-12.93-32.63,8.66-69.99,43.54-73.98h0Z"/>
+                    <path fill="#028fd0" d="M592.13,238.42c41.61-5.63,74.75,28.66,61.7,69.7-14.75,46.36-81.29,49.41-100.64,4.72-13.07-30.19,5.15-69.84,38.94-74.42Z"/>
+                </svg>
+            </div>
+            <h1>Compta Game</h1>
+            <p>Apprends la comptabilité en t'amusant</p>
+        </div>
+
+        <!-- ============================================
+             ÉCRAN ACCUEIL
+             ============================================ -->
+        <div class="screen active" id="homeScreen">
+            <div class="content">
+                <div class="progress-section">
+                    <h3>📊 Ta Progression</h3>
+                    <div class="progress-stats">
+                        <div class="progress-stat">
+                            <div class="progress-stat-value" id="chaptersCompleted">0</div>
+                            <div class="progress-stat-label">Chapitres terminés</div>
+                        </div>
+                        <div class="progress-stat">
+                            <div class="progress-stat-value" id="totalScore">0</div>
+                            <div class="progress-stat-label">Points totaux</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chapters-list" id="chaptersList">
+                </div>
+
+                <div class="actions-section">
+                    <button class="btn btn-secondary" onclick="showScores()">
+                        📈 Voir mes scores
+                    </button>
+                    <button class="btn btn-danger" onclick="confirmReset()">
+                        🔄 Réinitialiser ma progression
+                    </button>
+                </div>
+
+                <div class="logo-footer">
+                    Une création <strong>HIIATO</strong><br>
+                    Apprendre la compta autrement
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================
+             ÉCRAN SCORES
+             ============================================ -->
+        <div class="screen" id="scoresScreen">
+            <div class="content">
+                <div class="score-tabs">
+                    <div class="score-tab active" id="tabBest" onclick="switchScoreTab('best')">🏆 Meilleurs scores</div>
+                    <div class="score-tab" id="tabLast" onclick="switchScoreTab('last')">📋 Derniers scores</div>
+                </div>
+
+                <div class="score-display">
+                    <div class="score-value" id="displayTotalScore">0</div>
+                    <div class="score-label" id="displayScoreLabel">Meilleur score total</div>
+                </div>
+
+                <div class="scores-list" id="scoresList">
+                </div>
+
+                <div class="badges-section">
+                    <h3 style="text-align: center; color: #0095D0; margin-bottom: 16px;">🎖️ Mes badges</h3>
+                    <div class="badges-grid" id="badgesGrid">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="showHome()" style="margin-top: 20px;">
+                    ← Retour à l'accueil
+                </button>
+
+                <button class="btn btn-danger" style="margin-top: 12px;" onclick="confirmReset()">
+                    🔄 Réinitialiser progression et scores
+                </button>
+            </div>
+        </div>
+
+        <!-- ============================================
+             CHAPITRE 1 - ÉCRAN COMPLET
+             ============================================ -->
+        <div class="screen" id="chapter1Screen">
+            <!-- Header du chapitre 1 -->
+            <div class="chapter-header" id="chapter1Header">
+                <button class="back-to-home" onclick="confirmQuitChapter()">← Accueil</button>
+                <h1>Chapitre 1 : À quoi ça sert ?</h1>
+                <p>Découvre les fonctions du bilan et du compte de résultat</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="ch1ProgressBar" style="width: 0%"></div>
+                </div>
+                <div class="score-badge">
+                    <span class="emoji">⭐</span> Score : <span id="ch1ScoreDisplay">0</span>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Intro pédagogique chapitre 1 -->
+                <div id="ch1IntroScreen" class="ch1-subscreen">
+                    <div class="intro-text">
+                        <p>Bienvenue dans ton aventure comptable ! <span class="emoji">🎯</span></p>
+                        <p style="margin-top: 12px;">
+                            Avant de jouer, comprends bien ces deux documents essentiels :
+                        </p>
+                    </div>
+
+                    <div class="objective-box" style="background: linear-gradient(135deg, #FFF8E1, #FFF9C4); border-left-color: #FFB300;">
+                        <h3 style="color: #F57C00;">📊 LE BILAN</h3>
+                        <p style="margin-top: 8px;">C'est la <strong>photo de ton patrimoine</strong> à un instant précis (ex: le 31 décembre).</p>
+                        <p style="margin-top: 8px; font-size: 14px; font-style: italic;">
+                            → Qu'est-ce que je <strong>possède</strong> aujourd'hui ? (argent, machines, stocks...)<br>
+                            → Qu'est-ce que je <strong>dois</strong> aujourd'hui ? (dettes, emprunts...)
+                        </p>
+                    </div>
+
+                    <div class="objective-box" style="margin-top: 16px; background: linear-gradient(135deg, #E8F5E9, #F1F8E9); border-left-color: #66BB6A;">
+                        <h3 style="color: #388E3C;">📈 LE COMPTE DE RÉSULTAT</h3>
+                        <p style="margin-top: 8px;">C'est le <strong>film de ton activité</strong> sur une période (ex: toute l'année).</p>
+                        <p style="margin-top: 8px; font-size: 14px; font-style: italic;">
+                            → Combien j'ai <strong>gagné</strong> ? (ventes, chiffre d'affaires...)<br>
+                            → Combien j'ai <strong>dépensé</strong> ? (loyer, salaires, achats...)
+                        </p>
+                    </div>
+
+                    <div class="objective-box" style="margin-top: 20px;">
+                        <h3>🎯 TON OBJECTIF</h3>
+                        <p>Glisse chaque situation vers le bon document !</p>
+                        <p style="margin-top: 8px; font-size: 14px;">Obtiens au moins 600 points pour débloquer le badge !</p>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="startChapter1Game()">J'ai compris, je joue ! 🚀</button>
+                </div>
+
+                <!-- Jeu chapitre 1 -->
+                <div id="ch1GameScreen" class="ch1-subscreen">
+                    <div class="drop-zones">
+                        <div class="drop-zone" id="dropBilan" data-zone="bilan">
+                            <h4>📊 Bilan</h4>
+                            <div class="zone-hint">Photo instantanée</div>
+                            <div class="answer-text" id="answerBilan"></div>
+                        </div>
+                        <div class="drop-zone" id="dropResultat" data-zone="resultat">
+                            <h4>📈 Compte de résultat</h4>
+                            <div class="zone-hint">Film de l'activité</div>
+                            <div class="answer-text" id="answerResultat"></div>
+                        </div>
+                    </div>
+
+                    <div class="draggable-card-container">
+                        <div class="draggable-instruction">👆 Glisse cette carte vers le bon document</div>
+                        <div class="draggable-card" id="draggableCard" data-active="true">
+                            <div class="card-icon">📋</div>
+                            <div class="card-text" id="questionText">Glisse-moi !</div>
+                        </div>
+                    </div>
+
+                    <div id="feedbackContainer"></div>
+                </div>
+
+                <!-- Résultat chapitre 1 -->
+                <div id="ch1ResultScreen" class="ch1-subscreen">
+                    <div class="result-content">
+                        <h2>🎉 Chapitre 1 terminé !</h2>
+                        
+                        <div class="final-score" id="ch1FinalScore">0</div>
+
+                        <div id="ch1BadgeContainer"></div>
+
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="ch1CorrectAnswers">0</div>
+                                <div class="stat-label">Bonnes réponses</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="ch1TotalQuestions">8</div>
+                                <div class="stat-label">Questions</div>
+                            </div>
+                        </div>
+
+                        <div class="intro-text" style="text-align: center; margin: 24px 0;">
+                            <p id="ch1FinalMessage"></p>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="restartChapter1()">
+                            Recommencer 🔄
+                        </button>
+                        <button class="btn btn-primary next-btn" id="ch1NextBtn" style="background: linear-gradient(135deg, #6c757d, #868e96);" onclick="goToNextChapter(2)">
+                            Chapitre 2 : La grande structure 🔒
+                        </button>
+                        <button class="btn btn-secondary" style="margin-top: 8px;" onclick="showHome()">
+                            ← Retour à l'accueil
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================
+             CHAPITRE 2 - ÉCRAN COMPLET
+             ============================================ -->
+        <div class="screen" id="chapter2Screen">
+            <!-- Header du chapitre 2 -->
+            <div class="chapter-header" id="chapter2Header">
+                <button class="back-to-home" onclick="confirmQuitChapter()">← Accueil</button>
+                <h1>Chapitre 2 : La grande structure</h1>
+                <p>Construis le bilan et le compte de résultat</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="ch2ProgressBar" style="width: 0%"></div>
+                </div>
+                <div class="score-badge">
+                    <span class="emoji">⭐</span> Score : <span id="ch2ScoreDisplay">0</span>
+                </div>
+            </div>
+
+            <div class="content ch2-content">
+                <!-- Intro pédagogique chapitre 2 -->
+                <div id="ch2IntroScreen" class="ch2-subscreen">
+                    <div class="intro-text">
+                        <p>Tu vas maintenant <strong>construire</strong> les documents comptables ! 🏗️</p>
+                        <p style="margin-top: 12px;">Place chaque notion au bon endroit en suivant les <strong>indices</strong> dans les cases vides.</p>
+                    </div>
+
+                    <div class="objective-box" style="background: linear-gradient(135deg, #FFF8E1, #FFF9C4); border-left-color: #FFB300;">
+                        <h3 style="color: #F57C00;">📊 LE BILAN - Structure</h3>
+                        <p style="margin-top: 8px;">Le bilan se divise en <strong>2 grandes colonnes</strong> :</p>
+                        <p style="margin-top: 8px; font-size: 14px;">
+                            → <strong>ACTIF</strong> (à gauche) : ce que l'entreprise possède<br>
+                            → <strong>PASSIF</strong> (à droite) : comment c'est financé
+                        </p>
+                    </div>
+
+                    <div class="objective-box" style="margin-top: 16px; background: linear-gradient(135deg, #E8F5E9, #F1F8E9); border-left-color: #66BB6A;">
+                        <h3 style="color: #388E3C;">📈 LE COMPTE DE RÉSULTAT - Structure</h3>
+                        <p style="margin-top: 8px;">Il compare les <strong>produits</strong> et les <strong>charges</strong> :</p>
+                        <p style="margin-top: 8px; font-size: 14px;">
+                            → <strong>PRODUITS</strong> : ce que l'entreprise gagne<br>
+                            → <strong>CHARGES</strong> : ce que l'entreprise dépense<br>
+                            → <strong>RÉSULTAT</strong> = Produits - Charges
+                        </p>
+                    </div>
+
+                    <div class="objective-box" style="margin-top: 20px;">
+                        <h3>🎯 TON OBJECTIF</h3>
+                        <p>Construis les documents en 2 phases :</p>
+                        <p style="margin-top: 8px;"><strong>Phase 1 :</strong> Le BILAN (6 notions)</p>
+                        <p style="margin-top: 4px;"><strong>Phase 2 :</strong> Le COMPTE DE RÉSULTAT (6 notions)</p>
+                        <p style="margin-top: 12px; font-size: 14px;">💡 Lis bien les indices dans chaque case pour savoir où placer chaque terme.</p>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="startChapter2Game()">Construire le bilan ! 🚀</button>
+                </div>
+
+                <!-- Jeu chapitre 2 -->
+                <div id="ch2GameScreen" class="ch2-subscreen">
+                    <div id="ch2DocumentStructure"></div>
+
+                    <div class="instruction-text" id="ch2InstructionText">👆 Glisse chaque terme à sa place</div>
+
+                    <button class="btn btn-restart-section" onclick="restartCh2CurrentPhase()">
+                        🔄 Recommencer cette section
+                    </button>
+
+                    <div id="ch2FeedbackContainer"></div>
+                </div>
+
+                <!-- Résultat chapitre 2 -->
+                <div id="ch2ResultScreen" class="ch2-subscreen">
+                    <div class="result-content">
+                        <h2>🎉 Chapitre 2 terminé !</h2>
+                        
+                        <div class="final-score" id="ch2FinalScore">0</div>
+
+                        <div id="ch2BadgeContainer"></div>
+
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="ch2CorrectAnswers">0</div>
+                                <div class="stat-label">Placements corrects</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">12</div>
+                                <div class="stat-label">Notions totales</div>
+                            </div>
+                        </div>
+
+                        <div class="intro-text" style="text-align: center; margin: 24px 0;">
+                            <p id="ch2FinalMessage"></p>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="restartChapter2()">
+                            Recommencer 🔄
+                        </button>
+                        <button class="btn btn-primary next-btn" id="ch2NextBtn" style="margin-top: 12px; background: linear-gradient(135deg, #6c757d, #868e96);" onclick="goToNextChapter(3)">
+                            Chapitre 3 : Écritures comptables 🔒
+                        </button>
+                        <button class="btn btn-secondary" style="margin-top: 8px;" onclick="showHome()">
+                            ← Retour à l'accueil
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cartes draggables en bas de l'écran (fixe) -->
+            <div class="ch2-draggable-cards-container" id="ch2CardsContainer"></div>
+        </div>
+
+        <!-- ============================================
+             CHAPITRE 3 - ÉCRAN COMPLET
+             ============================================ -->
+        <div class="screen" id="chapter3Screen">
+            <!-- Header du chapitre 3 -->
+            <div class="chapter-header" id="chapter3Header">
+                <button class="back-to-home" onclick="confirmQuitChapter()">← Accueil</button>
+                <h1>Chapitre 3 : Les détails</h1>
+                <p>Place les postes comptables dans les bonnes catégories</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="ch3ProgressBar" style="width: 0%"></div>
+                </div>
+                <div class="score-badge">
+                    <span class="emoji">⭐</span> Score : <span id="ch3ScoreDisplay">0</span>
+                </div>
+            </div>
+
+            <div class="content ch3-content">
+                <!-- Intro pédagogique chapitre 3 -->
+                <div id="ch3IntroScreen" class="ch3-subscreen">
+                    <div class="intro-text">
+                        <p>Dernier niveau ! 🎯</p>
+                        <p style="margin-top: 12px;">Tu vas maintenant placer les <strong>postes comptables détaillés</strong> dans les bonnes catégories.</p>
+                    </div>
+
+                    <div class="objective-box" style="background: linear-gradient(135deg, #FFF8E1, #FFF9C4); border-left-color: #FFB300;">
+                        <h3 style="color: #F57C00;">📊 BILAN - Les postes détaillés</h3>
+                        <p style="margin-top: 8px;">L'<strong>Actif</strong> se divise en :</p>
+                        <p style="margin-top: 4px; font-size: 14px;">→ Actif immobilisé (biens durables)<br>→ Actif circulant (éléments qui tournent)</p>
+                        <p style="margin-top: 8px;">Le <strong>Passif</strong> se divise en :</p>
+                        <p style="margin-top: 4px; font-size: 14px;">→ Capitaux propres (financement interne)<br>→ Dettes (financement externe)</p>
+                    </div>
+
+                    <div class="objective-box" style="margin-top: 16px; background: linear-gradient(135deg, #E8F5E9, #F1F8E9); border-left-color: #66BB6A;">
+                        <h3 style="color: #388E3C;">📈 COMPTE DE RÉSULTAT - Les postes détaillés</h3>
+                        <p style="margin-top: 8px;">Il se décompose en 3 résultats :</p>
+                        <p style="margin-top: 4px; font-size: 14px;">
+                            → <strong>Exploitation</strong> : activité normale<br>
+                            → <strong>Financier</strong> : placements et emprunts<br>
+                            → <strong>Exceptionnel</strong> : événements rares
+                        </p>
+                    </div>
+
+                    <div class="objective-box" style="margin-top: 20px;">
+                        <h3>🎯 TON OBJECTIF</h3>
+                        <p>Remplis progressivement chaque catégorie :</p>
+                        <p style="margin-top: 8px;"><strong>BILAN :</strong> 4 sections (14 postes)</p>
+                        <p style="margin-top: 4px;"><strong>COMPTE DE RÉSULTAT :</strong> 3 sections (13 postes)</p>
+                        <p style="margin-top: 12px; font-size: 14px;">💡 Lis bien les indices pour placer chaque poste !</p>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="startChapter3Game()">Commencer ! 🚀</button>
+                </div>
+
+                <!-- Jeu chapitre 3 -->
+                <div id="ch3GameScreen" class="ch3-subscreen">
+                    <div id="ch3DocumentStructure"></div>
+
+                    <div class="instruction-text" id="ch3InstructionText">👆 Glisse chaque poste à sa place</div>
+
+                    <button class="btn btn-restart-section" onclick="restartCh3CurrentSection()">
+                        🔄 Recommencer cette section
+                    </button>
+
+                    <div id="ch3FeedbackContainer"></div>
+                </div>
+
+                <!-- Résultat chapitre 3 -->
+                <div id="ch3ResultScreen" class="ch3-subscreen">
+                    <div class="result-content">
+                        <h2>🎉 Chapitre 3 terminé !</h2>
+                        
+                        <div class="final-score" id="ch3FinalScore">0</div>
+
+                        <div id="ch3BadgeContainer"></div>
+
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="ch3CorrectAnswers">0</div>
+                                <div class="stat-label">Placements corrects</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="ch3TotalPlacements">27</div>
+                                <div class="stat-label">Postes totaux</div>
+                            </div>
+                        </div>
+
+                        <div class="intro-text" style="text-align: center; margin: 24px 0;">
+                            <p id="ch3FinalMessage"></p>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="restartChapter3()">
+                            Recommencer 🔄
+                        </button>
+                        <button class="btn btn-primary next-btn" id="ch3NextBtn" style="margin-top: 12px; background: linear-gradient(135deg, #6c757d, #868e96);" onclick="goToNextChapter(4)">
+                            Chapitre 4 : Analyse financière 🔒
+                        </button>
+                        <button class="btn btn-secondary" style="margin-top: 8px;" onclick="showHome()">
+                            ← Retour à l'accueil
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cartes draggables en bas de l'écran (fixe) -->
+            <div class="ch3-draggable-cards-container" id="ch3CardsContainer"></div>
+        </div>
+
+        <!-- ============================================
+             CHAPITRE 4 - ÉCRAN COMPLET
+             ============================================ -->
+        <div class="screen" id="chapter4Screen">
+            <!-- Header du chapitre 4 -->
+            <div class="chapter-header" id="chapter4Header">
+                <button class="back-to-home" onclick="confirmQuitChapter()">← Accueil</button>
+                <h1>Chapitre 4 : Les ajustements</h1>
+                <p>Quiz et cas pratiques</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="ch4ProgressBar" style="width: 0%"></div>
+                </div>
+                <div class="score-badge">
+                    <span class="emoji">⭐</span> Score : <span id="ch4ScoreDisplay">0</span>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Intro pédagogique chapitre 4 -->
+                <div id="ch4IntroScreen" class="ch4-subscreen">
+                    <div class="intro-text">
+                        <p>Dernier chapitre ! 🏆</p>
+                        <p style="margin-top: 12px;">Tu vas maintenant maîtriser les <strong>ajustements comptables</strong> : ces opérations qui permettent d'obtenir une image fidèle de la situation de l'entreprise.</p>
+                    </div>
+
+                    <div class="objective-box" style="background: linear-gradient(135deg, #FFF8E1, #FFF9C4); border-left-color: #FFB300;">
+                        <h3 style="color: #F57C00;">📉 AMORTISSEMENTS</h3>
+                        <p style="margin-top: 8px;">Constatation de la perte de valeur <strong>irréversible</strong> des immobilisations due à l'usage ou au temps.</p>
+                    </div>
+
+                    <div class="objective-box" style="margin-top: 16px; background: linear-gradient(135deg, #E8F5E9, #F1F8E9); border-left-color: #66BB6A;">
+                        <h3 style="color: #388E3C;">📊 DÉPRÉCIATIONS</h3>
+                        <p style="margin-top: 8px;">Constatation de la perte de valeur <strong>réversible</strong> des actifs (stocks, créances, immobilisations).</p>
+                    </div>
+
+                    <div class="objective-box" style="margin-top: 16px; background: linear-gradient(135deg, #FCE4EC, #F8BBD9); border-left-color: #E91E63;">
+                        <h3 style="color: #C2185B;">⚠️ PROVISIONS</h3>
+                        <p style="margin-top: 8px;">Constatation de passifs dont l'échéance ou le montant sont <strong>incertains</strong> (litiges, garanties...).</p>
+                    </div>
+
+                    <div class="objective-box" style="margin-top: 20px;">
+                        <h3>🎮 FORMAT DU JEU</h3>
+                        <p>12 questions mêlant définitions et cas pratiques</p>
+                        <p style="margin-top: 8px;">Choix multiples avec explications détaillées</p>
+                        <p style="margin-top: 12px; font-size: 14px;">💡 Obtiens 11+ bonnes réponses pour le badge "Maître Comptable" !</p>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="startChapter4Game()">Commencer le quiz ! 🚀</button>
+                </div>
+
+                <!-- Jeu chapitre 4 -->
+                <div id="ch4GameScreen" class="ch4-subscreen">
+                    <div id="ch4QuestionContainer"></div>
+                </div>
+
+                <!-- Résultat chapitre 4 -->
+                <div id="ch4ResultScreen" class="ch4-subscreen">
+                    <div class="result-content">
+                        <h2>🎉 Parcours terminé !</h2>
+                        
+                        <div class="final-score" id="ch4FinalScore">0</div>
+
+                        <div id="ch4BadgeContainer"></div>
+
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="ch4CorrectAnswers">0</div>
+                                <div class="stat-label">Bonnes réponses</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">12</div>
+                                <div class="stat-label">Questions</div>
+                            </div>
+                        </div>
+
+                        <div class="intro-text" style="text-align: center; margin: 24px 0;">
+                            <p id="ch4FinalMessage"></p>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="restartChapter4()">
+                            Recommencer 🔄
+                        </button>
+                        <button class="btn btn-primary" id="ch4FinalScoresBtn" style="margin-top: 12px; background: linear-gradient(135deg, #2E7D32, #4CAF50);" onclick="showFinalScores()">
+                            🏆 Voir mes scores finaux
+                        </button>
+                        <button class="btn btn-secondary" style="margin-top: 8px;" onclick="showHome()">
+                            ← Retour à l'accueil
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================
+             ÉCRAN SCORES FINAUX (après chapitre 4)
+             ============================================ -->
+        <div class="screen" id="finalScoresScreen">
+            <div class="header">
+                <h1>🏆 Félicitations !</h1>
+                <p>Tu as terminé tout le parcours Compta Game</p>
+            </div>
+            <div class="content">
+                <div class="final-celebration">
+                    <div class="trophy-icon">🎉</div>
+                    <h2>Parcours complété !</h2>
+                </div>
+
+                <div class="score-display" style="margin-top: 20px;">
+                    <div class="score-value" id="finalTotalScore">0</div>
+                    <div class="score-label">Score total</div>
+                </div>
+
+                <div class="final-scores-detail" id="finalScoresDetail">
+                </div>
+
+                <div class="final-badges" id="finalBadges">
+                </div>
+
+                <button class="btn btn-primary" onclick="showHome()" style="margin-top: 20px;">
+                    ← Retour à l'accueil
+                </button>
+
+                <button class="btn btn-danger" style="margin-top: 12px;" onclick="confirmReset()">
+                    🔄 Recommencer tout le parcours
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION GLOBALE
+        // ============================================
+        const GAME_CONFIG = {
+            chapters: [
+                { id: 1, title: 'Fondamentaux', description: 'À quoi ça sert ?' },
+                { id: 2, title: 'La grande structure', description: 'Bilan et Compte de résultat' },
+                { id: 3, title: 'Les détails', description: 'Postes comptables' },
+                { id: 4, title: 'Les ajustements', description: 'Quiz et cas pratiques' }
+            ],
+            storageKeys: {
+                progress: 'compta_game_progress',
+                bestScores: 'compta_game_best_scores',
+                lastScores: 'compta_game_last_scores'
+            }
+        };
+
+        // Variable pour suivre l'onglet actif dans les scores
+        let currentScoreTab = 'best';
+
+        // ============================================
+        // GESTION DU LOCALSTORAGE
+        // ============================================
+        function getProgress() {
+            const stored = localStorage.getItem(GAME_CONFIG.storageKeys.progress);
+            if (stored) {
+                return JSON.parse(stored);
+            }
+            return {
+                chapter1: false,
+                chapter2: false,
+                chapter3: false,
+                chapter4: false
+            };
+        }
+
+        function saveProgress(progress) {
+            localStorage.setItem(GAME_CONFIG.storageKeys.progress, JSON.stringify(progress));
+        }
+
+        function getBestScores() {
+            const stored = localStorage.getItem(GAME_CONFIG.storageKeys.bestScores);
+            if (stored) {
+                return JSON.parse(stored);
+            }
+            return {
+                total: 0,
+                chapter1: 0,
+                chapter2: 0,
+                chapter3: 0,
+                chapter4: 0
+            };
+        }
+
+        function saveBestScores(scores) {
+            localStorage.setItem(GAME_CONFIG.storageKeys.bestScores, JSON.stringify(scores));
+        }
+
+        function getLastScores() {
+            const stored = localStorage.getItem(GAME_CONFIG.storageKeys.lastScores);
+            if (stored) {
+                return JSON.parse(stored);
+            }
+            return {
+                total: 0,
+                chapter1: 0,
+                chapter2: 0,
+                chapter3: 0,
+                chapter4: 0
+            };
+        }
+
+        function saveLastScores(scores) {
+            localStorage.setItem(GAME_CONFIG.storageKeys.lastScores, JSON.stringify(scores));
+        }
+
+        // ============================================
+        // LOGIQUE DE DÉVERROUILLAGE
+        // ============================================
+        function isChapterUnlocked(chapterId) {
+            const progress = getProgress();
+            if (chapterId === 1) return true;
+            const previousChapter = `chapter${chapterId - 1}`;
+            return progress[previousChapter] === true;
+        }
+
+        function isChapterCompleted(chapterId) {
+            const progress = getProgress();
+            return progress[`chapter${chapterId}`] === true;
+        }
+
+        function markChapterCompleted(chapterId, score) {
+            const progress = getProgress();
+            progress[`chapter${chapterId}`] = true;
+            saveProgress(progress);
+
+            // Mettre à jour les derniers scores
+            const lastScores = getLastScores();
+            lastScores[`chapter${chapterId}`] = score;
+            lastScores.total = 0;
+            for (let i = 1; i <= 4; i++) {
+                lastScores.total += lastScores[`chapter${i}`] || 0;
+            }
+            saveLastScores(lastScores);
+
+            // Mettre à jour les meilleurs scores si nécessaire
+            const bestScores = getBestScores();
+            if (score > (bestScores[`chapter${chapterId}`] || 0)) {
+                bestScores[`chapter${chapterId}`] = score;
+                bestScores.total = 0;
+                for (let i = 1; i <= 4; i++) {
+                    bestScores.total += bestScores[`chapter${i}`] || 0;
+                }
+                saveBestScores(bestScores);
+            }
+
+            updateHomeUI();
+        }
+
+        // ============================================
+        // NAVIGATION ENTRE ÉCRANS
+        // ============================================
+        function hideAllScreens() {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+        }
+
+        function showScreen(screenId) {
+            hideAllScreens();
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showHome() {
+            showScreen('homeScreen');
+            updateHeader('main');
+            updateHomeUI();
+        }
+
+        function showScores() {
+            showScreen('scoresScreen');
+            updateHeader('main');
+            renderScores();
+        }
+
+        function updateHeader(type) {
+            const header = document.getElementById('mainHeader');
+            if (type === 'main') {
+                header.innerHTML = `
+                    <div class="header-logo">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1904.42 963.08" width="120" height="60">
+                            <path fill="#fff" d="M1281.38,290.16v93h75v83h-75v146.5c0,4.54,4.98,14.31,8.51,17.49,5.2,4.7,19.17,9.01,25.99,9.01h40.5v77c-16.53,1.49-33.91,3.18-50.54,3.04-74.73-.62-107.93-30.49-110.51-105.49-1.68-48.82,1.35-98.64.05-147.55h-58v250h-85v-37c-1.77-.26-2.19-.06-3.46,1.04-3.28,2.84-7.21,8.57-11.01,11.99-47.15,42.34-123.19,43.71-176.05,10.99-110.23-68.23-108.12-247.89,6.5-310.54,55.44-30.3,130.87-25.02,176.05,20.99,2.18,2.22,3.48,6.38,6.97,6.53v-35.5l1.5-1.5h142.5v-68l86-25h0ZM946.17,456.46c-92.05,8.86-107.58,144.55-26.15,179.56,57.71,24.82,126.22-9.75,131.34-74.37,5.23-65.92-38.7-111.59-105.19-105.19h0Z"/>
+                            <polygon fill="#fff" points="383.38 250.16 383.38 435.16 556.38 435.16 556.38 384.16 648.38 384.16 648.38 716.16 556.38 716.16 556.38 523.16 383.38 523.16 383.38 716.16 291.38 716.16 291.38 250.16 383.38 250.16"/>
+                            <path fill="#fff" d="M1518.17,374.46c122.63-6.83,213.97,99.76,184.13,220.13-37.26,150.32-245.86,179.21-323.73,45.88-65.91-112.85,7.59-258.66,139.6-266.01h0ZM1519.17,458.46c-57.91,5.89-88.64,64.09-74.51,117.92,22.76,86.7,149.5,87.03,173.43,1,18.55-66.68-29.62-125.98-98.92-118.92h0Z"/>
+                            <rect fill="#fff" x="684.38" y="383.16" width="85" height="333"/>
+                            <path fill="#028fd0" d="M719.15,237.44c45.71-5.23,76.87,44.84,51.45,83.45-23.56,35.79-79.14,30.53-94.99-9.47-12.93-32.63,8.66-69.99,43.54-73.98h0Z"/>
+                            <path fill="#028fd0" d="M592.13,238.42c41.61-5.63,74.75,28.66,61.7,69.7-14.75,46.36-81.29,49.41-100.64,4.72-13.07-30.19,5.15-69.84,38.94-74.42Z"/>
+                        </svg>
+                    </div>
+                    <h1>Compta Game</h1>
+                    <p>Apprends la comptabilité en t'amusant</p>
+                `;
+                header.style.display = 'block';
+            } else {
+                header.style.display = 'none';
+            }
+        }
+
+        // ============================================
+        // AFFICHAGE DES CHAPITRES SUR L'ACCUEIL
+        // ============================================
+        function renderChapters() {
+            const container = document.getElementById('chaptersList');
+            container.innerHTML = '';
+
+            GAME_CONFIG.chapters.forEach(chapter => {
+                const isUnlocked = isChapterUnlocked(chapter.id);
+                const isCompleted = isChapterCompleted(chapter.id);
+                
+                const chapterElement = document.createElement('div');
+                chapterElement.className = 'chapter-item';
+                
+                if (!isUnlocked) {
+                    chapterElement.classList.add('locked');
+                } else if (isCompleted) {
+                    chapterElement.classList.add('completed');
+                }
+
+                chapterElement.innerHTML = `
+                    <div class="chapter-info">
+                        <div class="chapter-number">Chapitre ${chapter.id}</div>
+                        <div class="chapter-title">${chapter.title}</div>
+                    </div>
+                    <div class="chapter-status"></div>
+                `;
+
+                if (isUnlocked) {
+                    chapterElement.onclick = () => playChapter(chapter.id);
+                }
+
+                container.appendChild(chapterElement);
+            });
+        }
+
+        // ============================================
+        // LANCEMENT D'UN CHAPITRE
+        // ============================================
+        function playChapter(chapterId) {
+            if (!isChapterUnlocked(chapterId)) {
+                alert('Ce chapitre est verrouillé. Termine le chapitre précédent pour le débloquer !');
+                return;
+            }
+
+            updateHeader('chapter');
+            showScreen(`chapter${chapterId}Screen`);
+
+            // Réinitialiser l'état du chapitre
+            if (chapterId === 1) {
+                resetChapter1State();
+            } else if (chapterId === 2) {
+                resetChapter2State();
+            } else if (chapterId === 3) {
+                resetChapter3State();
+            } else if (chapterId === 4) {
+                resetChapter4State();
+            }
+        }
+
+        function confirmQuitChapter() {
+            if (confirm('Tu veux vraiment quitter le chapitre ? Ta progression actuelle sera perdue.')) {
+                showHome();
+            }
+        }
+
+        function goToNextChapter(chapterId) {
+            if (isChapterUnlocked(chapterId)) {
+                playChapter(chapterId);
+            } else {
+                alert('Ce chapitre n\'est pas encore disponible.');
+            }
+        }
+
+        // ============================================
+        // AFFICHAGE DES SCORES
+        // ============================================
+        function switchScoreTab(tab) {
+            currentScoreTab = tab;
+            document.getElementById('tabBest').classList.toggle('active', tab === 'best');
+            document.getElementById('tabLast').classList.toggle('active', tab === 'last');
+            renderScores();
+        }
+
+        function renderScores() {
+            const scores = currentScoreTab === 'best' ? getBestScores() : getLastScores();
+            const bestScores = getBestScores();
+            const container = document.getElementById('scoresList');
+            
+            document.getElementById('displayTotalScore').textContent = scores.total;
+            document.getElementById('displayScoreLabel').textContent = 
+                currentScoreTab === 'best' ? 'Meilleur score total' : 'Dernier score total';
+            
+            container.innerHTML = '';
+
+            GAME_CONFIG.chapters.forEach(chapter => {
+                const score = scores[`chapter${chapter.id}`] || 0;
+                const isCompleted = isChapterCompleted(chapter.id);
+                
+                const scoreElement = document.createElement('div');
+                scoreElement.className = 'score-item';
+                scoreElement.innerHTML = `
+                    <div class="score-item-label">
+                        ${isCompleted ? '✅' : '🔒'} Chapitre ${chapter.id} - ${chapter.title}
+                    </div>
+                    <div class="score-item-value">${score} pts</div>
+                `;
+                
+                container.appendChild(scoreElement);
+            });
+
+            // Afficher les badges
+            const badgesGrid = document.getElementById('badgesGrid');
+            const badges = [
+                { name: 'Détective Comptable', icon: '🔍', chapter: 1, threshold: 600 },
+                { name: 'Architecte Comptable', icon: '🏗️', chapter: 2, threshold: 900 },
+                { name: 'Expert Comptable', icon: '📊', chapter: 3, threshold: 2000 },
+                { name: 'Maître Comptable', icon: '🏆', chapter: 4, threshold: 900 }
+            ];
+
+            badgesGrid.innerHTML = '';
+            badges.forEach(badge => {
+                const score = bestScores[`chapter${badge.chapter}`] || 0;
+                const unlocked = score >= badge.threshold;
+                
+                const badgeEl = document.createElement('div');
+                badgeEl.className = 'badge-item' + (unlocked ? '' : ' locked');
+                badgeEl.innerHTML = `
+                    <div class="badge-item-icon">${unlocked ? badge.icon : '🔒'}</div>
+                    <div class="badge-item-name">${badge.name}</div>
+                    <div class="badge-item-chapter">Ch.${badge.chapter} - ${unlocked ? score + ' pts' : badge.threshold + ' pts requis'}</div>
+                `;
+                badgesGrid.appendChild(badgeEl);
+            });
+        }
+
+        // ============================================
+        // MISE À JOUR DE L'INTERFACE ACCUEIL
+        // ============================================
+        function updateHomeUI() {
+            renderChapters();
+            
+            const progress = getProgress();
+            let completed = 0;
+            for (let i = 1; i <= 4; i++) {
+                if (progress[`chapter${i}`]) completed++;
+            }
+            document.getElementById('chaptersCompleted').textContent = completed;
+            
+            const bestScores = getBestScores();
+            document.getElementById('totalScore').textContent = bestScores.total;
+        }
+
+        // ============================================
+        // RÉINITIALISATION
+        // ============================================
+        function confirmReset() {
+            if (confirm('⚠️ Attention !\n\nCette action va effacer toute ta progression et tous tes scores.\n\nTu devras recommencer depuis le début.\n\nConfirmes-tu ?')) {
+                resetGame();
+            }
+        }
+
+        function resetGame() {
+            localStorage.removeItem(GAME_CONFIG.storageKeys.progress);
+            localStorage.removeItem(GAME_CONFIG.storageKeys.bestScores);
+            localStorage.removeItem(GAME_CONFIG.storageKeys.lastScores);
+            
+            alert('✅ Ta progression a été réinitialisée !');
+            showHome();
+        }
+
+        // ============================================
+        // CHAPITRE 1 - QUESTIONS
+        // ============================================
+        const ch1Questions = [
+            {
+                id: 1,
+                question: "Je veux savoir combien d'argent j'ai en banque aujourd'hui",
+                correct: "bilan",
+                explanation: "Le bilan est comme une <strong>photo à un instant T</strong>. Il te montre ce que l'entreprise possède (dont l'argent en banque) à une date précise."
+            },
+            {
+                id: 2,
+                question: "Je veux savoir si mon entreprise a gagné de l'argent cette année",
+                correct: "resultat",
+                explanation: "Le compte de résultat est comme un <strong>film de l'activité</strong>. Il montre si tu as gagné ou perdu de l'argent sur toute l'année."
+            },
+            {
+                id: 3,
+                question: "Je veux connaître le montant de mes dettes actuelles",
+                correct: "bilan",
+                explanation: "Les dettes font partie de ce que tu dois <strong>à un moment donné</strong>. Le bilan te donne cette photo instantanée de ta situation."
+            },
+            {
+                id: 4,
+                question: "Je veux savoir combien j'ai vendu de marchandises cette année",
+                correct: "resultat",
+                explanation: "Les ventes sont une <strong>activité qui se déroule dans le temps</strong>. Le compte de résultat enregistre toutes ces opérations sur une période."
+            },
+            {
+                id: 5,
+                question: "Je veux voir si je possède des machines ou des véhicules",
+                correct: "bilan",
+                explanation: "Les machines et véhicules sont des <strong>biens que tu possèdes</strong>. Le bilan liste tout ce que l'entreprise a à un instant donné."
+            },
+            {
+                id: 6,
+                question: "Je veux calculer mes dépenses de loyer et de salaires sur l'année",
+                correct: "resultat",
+                explanation: "Les dépenses comme le loyer et les salaires sont des <strong>charges qui s'accumulent dans le temps</strong>. Le compte de résultat les enregistre."
+            },
+            {
+                id: 7,
+                question: "Je veux savoir si quelqu'un me doit de l'argent (clients)",
+                correct: "bilan",
+                explanation: "Les créances clients représentent de l'argent que tu vas recevoir : c'est quelque chose que tu <strong>possèdes maintenant</strong>, donc ça va au bilan."
+            },
+            {
+                id: 8,
+                question: "Je veux vérifier si mon activité est rentable",
+                correct: "resultat",
+                explanation: "La rentabilité se calcule en comparant ce que tu as gagné et dépensé <strong>sur une période</strong>. C'est le rôle du compte de résultat !"
+            }
+        ];
+
+        // ============================================
+        // CHAPITRE 1 - ÉTAT DU JEU
+        // ============================================
+        let ch1CurrentQuestionIndex = 0;
+        let ch1Score = 0;
+        let ch1CorrectCount = 0;
+        let ch1CurrentAnswer = null;
+        let ch1ShuffledQuestions = [];
+        let ch1DraggedElement = null;
+        let ch1TouchStartY = 0;
+        let ch1TouchStartX = 0;
+        let ch1InitialCardPosition = null;
+
+        // ============================================
+        // CHAPITRE 1 - FONCTIONS
+        // ============================================
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function resetChapter1State() {
+            ch1CurrentQuestionIndex = 0;
+            ch1Score = 0;
+            ch1CorrectCount = 0;
+            ch1CurrentAnswer = null;
+            ch1ShuffledQuestions = [];
+            
+            document.getElementById('ch1ScoreDisplay').textContent = '0';
+            document.getElementById('ch1ProgressBar').style.width = '0%';
+            
+            // Afficher l'écran d'intro pédagogique
+            document.querySelectorAll('.ch1-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch1IntroScreen').classList.add('active');
+        }
+
+        function startChapter1Game() {
+            ch1ShuffledQuestions = shuffleArray(ch1Questions);
+            ch1CurrentQuestionIndex = 0;
+            ch1Score = 0;
+            ch1CorrectCount = 0;
+            document.getElementById('ch1ScoreDisplay').textContent = '0';
+            
+            // Afficher l'écran de jeu
+            document.querySelectorAll('.ch1-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch1GameScreen').classList.add('active');
+            
+            // Charger la première question
+            loadCh1Question();
+        }
+
+        function restartChapter1() {
+            startChapter1Game();
+        }
+
+        function loadCh1Question() {
+            if (ch1CurrentQuestionIndex >= ch1ShuffledQuestions.length) {
+                showCh1Results();
+                return;
+            }
+
+            const question = ch1ShuffledQuestions[ch1CurrentQuestionIndex];
+            
+            document.getElementById('questionText').textContent = question.question;
+            
+            // Réinitialiser les zones de dépôt
+            document.getElementById('answerBilan').textContent = '';
+            document.getElementById('answerResultat').textContent = '';
+            document.getElementById('dropBilan').classList.remove('has-answer');
+            document.getElementById('dropResultat').classList.remove('has-answer');
+            
+            // Réinitialiser la carte draggable
+            const card = document.getElementById('draggableCard');
+            card.classList.remove('used');
+            card.dataset.active = 'true';
+            
+            // Réinitialiser le feedback
+            document.getElementById('feedbackContainer').innerHTML = '';
+            ch1CurrentAnswer = null;
+
+            setupCh1DragAndDrop();
+            updateCh1Progress();
+        }
+
+        function setupCh1DragAndDrop() {
+            const card = document.getElementById('draggableCard');
+            
+            // Retirer les anciens listeners
+            card.removeEventListener('touchstart', handleCh1TouchStart);
+            card.removeEventListener('touchmove', handleCh1TouchMove);
+            card.removeEventListener('touchend', handleCh1TouchEnd);
+            card.removeEventListener('mousedown', handleCh1MouseDown);
+            
+            // Ajouter les nouveaux listeners
+            card.addEventListener('touchstart', handleCh1TouchStart, { passive: false });
+            card.addEventListener('touchmove', handleCh1TouchMove, { passive: false });
+            card.addEventListener('touchend', handleCh1TouchEnd, { passive: false });
+            card.addEventListener('mousedown', handleCh1MouseDown);
+        }
+
+        // ============================================
+        // CHAPITRE 1 - DRAG & DROP TACTILE
+        // ============================================
+        function handleCh1TouchStart(e) {
+            e.preventDefault();
+            ch1DraggedElement = e.target.closest('.draggable-card');
+            if (!ch1DraggedElement || ch1DraggedElement.dataset.active !== 'true') return;
+            
+            const touch = e.touches[0];
+            ch1TouchStartX = touch.clientX;
+            ch1TouchStartY = touch.clientY;
+            
+            const rect = ch1DraggedElement.getBoundingClientRect();
+            ch1InitialCardPosition = {
+                left: rect.left,
+                top: rect.top
+            };
+            
+            ch1DraggedElement.classList.add('dragging');
+            
+            const clone = ch1DraggedElement.cloneNode(true);
+            clone.id = 'dragClone';
+            clone.style.position = 'fixed';
+            clone.style.left = rect.left + 'px';
+            clone.style.top = rect.top + 'px';
+            clone.style.width = rect.width + 'px';
+            clone.style.pointerEvents = 'none';
+            clone.style.zIndex = '9999';
+            clone.style.transition = 'none';
+            document.body.appendChild(clone);
+        }
+
+        function handleCh1TouchMove(e) {
+            e.preventDefault();
+            if (!ch1DraggedElement) return;
+
+            const touch = e.touches[0];
+            const clone = document.getElementById('dragClone');
+            
+            if (clone) {
+                const deltaX = touch.clientX - ch1TouchStartX;
+                const deltaY = touch.clientY - ch1TouchStartY;
+                clone.style.left = (ch1InitialCardPosition.left + deltaX) + 'px';
+                clone.style.top = (ch1InitialCardPosition.top + deltaY) + 'px';
+            }
+            
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            const dropZone = element?.closest('.drop-zone');
+            if (dropZone) {
+                dropZone.classList.add('drag-over');
+            }
+        }
+
+        function handleCh1TouchEnd(e) {
+            e.preventDefault();
+            if (!ch1DraggedElement) return;
+
+            const touch = e.changedTouches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            const dropZone = element?.closest('.drop-zone');
+
+            const clone = document.getElementById('dragClone');
+            if (clone) clone.remove();
+
+            if (dropZone) {
+                processCh1Drop(dropZone.dataset.zone);
+            }
+
+            ch1DraggedElement.classList.remove('dragging');
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+            ch1DraggedElement = null;
+            ch1InitialCardPosition = null;
+        }
+
+        // ============================================
+        // CHAPITRE 1 - DRAG & DROP SOURIS
+        // ============================================
+        function handleCh1MouseDown(e) {
+            ch1DraggedElement = e.target.closest('.draggable-card');
+            if (!ch1DraggedElement || ch1DraggedElement.dataset.active !== 'true') return;
+            
+            e.preventDefault();
+            
+            const rect = ch1DraggedElement.getBoundingClientRect();
+            ch1InitialCardPosition = {
+                left: rect.left,
+                top: rect.top
+            };
+            ch1TouchStartX = e.clientX;
+            ch1TouchStartY = e.clientY;
+            
+            ch1DraggedElement.classList.add('dragging');
+            
+            const clone = ch1DraggedElement.cloneNode(true);
+            clone.id = 'dragClone';
+            clone.style.position = 'fixed';
+            clone.style.left = rect.left + 'px';
+            clone.style.top = rect.top + 'px';
+            clone.style.width = rect.width + 'px';
+            clone.style.pointerEvents = 'none';
+            clone.style.zIndex = '9999';
+            clone.style.transition = 'none';
+            document.body.appendChild(clone);
+            
+            document.addEventListener('mousemove', handleCh1MouseMove);
+            document.addEventListener('mouseup', handleCh1MouseUp);
+        }
+
+        function handleCh1MouseMove(e) {
+            if (!ch1DraggedElement) return;
+
+            const clone = document.getElementById('dragClone');
+            
+            if (clone) {
+                const deltaX = e.clientX - ch1TouchStartX;
+                const deltaY = e.clientY - ch1TouchStartY;
+                clone.style.left = (ch1InitialCardPosition.left + deltaX) + 'px';
+                clone.style.top = (ch1InitialCardPosition.top + deltaY) + 'px';
+            }
+            
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+
+            const element = document.elementFromPoint(e.clientX, e.clientY);
+            const dropZone = element?.closest('.drop-zone');
+            if (dropZone) {
+                dropZone.classList.add('drag-over');
+            }
+        }
+
+        function handleCh1MouseUp(e) {
+            if (!ch1DraggedElement) return;
+
+            const element = document.elementFromPoint(e.clientX, e.clientY);
+            const dropZone = element?.closest('.drop-zone');
+
+            const clone = document.getElementById('dragClone');
+            if (clone) clone.remove();
+
+            if (dropZone) {
+                processCh1Drop(dropZone.dataset.zone);
+            }
+
+            ch1DraggedElement.classList.remove('dragging');
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+            ch1DraggedElement = null;
+            ch1InitialCardPosition = null;
+            
+            document.removeEventListener('mousemove', handleCh1MouseMove);
+            document.removeEventListener('mouseup', handleCh1MouseUp);
+        }
+
+        // ============================================
+        // CHAPITRE 1 - TRAITEMENT DU DROP
+        // ============================================
+        function processCh1Drop(zone) {
+            ch1CurrentAnswer = zone;
+            
+            if (zone === 'bilan') {
+                document.getElementById('answerBilan').textContent = '✓ Ma réponse';
+                document.getElementById('answerResultat').textContent = '';
+                document.getElementById('dropBilan').classList.add('has-answer');
+                document.getElementById('dropResultat').classList.remove('has-answer');
+            } else {
+                document.getElementById('answerResultat').textContent = '✓ Ma réponse';
+                document.getElementById('answerBilan').textContent = '';
+                document.getElementById('dropResultat').classList.add('has-answer');
+                document.getElementById('dropBilan').classList.remove('has-answer');
+            }
+
+            document.getElementById('draggableCard').classList.add('used');
+            
+            setTimeout(() => {
+                validateCh1Answer();
+            }, 300);
+        }
+
+        function validateCh1Answer() {
+            const question = ch1ShuffledQuestions[ch1CurrentQuestionIndex];
+            const isCorrect = ch1CurrentAnswer === question.correct;
+            const feedbackContainer = document.getElementById('feedbackContainer');
+
+            if (isCorrect) {
+                ch1CorrectCount++;
+                ch1Score += 100;
+                
+                feedbackContainer.innerHTML = `
+                    <div class="feedback correct">
+                        <strong>🎉 Excellent !</strong>
+                        <div style="margin-top: 8px;">+100 points</div>
+                        <div class="explanation">${question.explanation}</div>
+                    </div>
+                `;
+            } else {
+                feedbackContainer.innerHTML = `
+                    <div class="feedback incorrect">
+                        <strong>🤔 Pas tout à fait...</strong>
+                        <div class="explanation">${question.explanation}</div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('ch1ScoreDisplay').textContent = ch1Score;
+
+            setTimeout(() => {
+                ch1CurrentQuestionIndex++;
+                loadCh1Question();
+            }, 3000);
+        }
+
+        function updateCh1Progress() {
+            const progress = ((ch1CurrentQuestionIndex + 1) / ch1ShuffledQuestions.length) * 100;
+            document.getElementById('ch1ProgressBar').style.width = progress + '%';
+        }
+
+        function showCh1Results() {
+            document.querySelectorAll('.ch1-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch1ResultScreen').classList.add('active');
+
+            document.getElementById('ch1FinalScore').textContent = ch1Score + ' points';
+            document.getElementById('ch1CorrectAnswers').textContent = ch1CorrectCount;
+
+            const badgeContainer = document.getElementById('ch1BadgeContainer');
+            let message = '';
+
+            if (ch1Score >= 600) {
+                badgeContainer.innerHTML = `
+                    <div class="badge-earned">
+                        <div class="badge-icon">🏆</div>
+                        <h3>Badge débloqué !</h3>
+                        <p>Détective Comptable</p>
+                    </div>
+                `;
+                message = "Bravo ! Tu as compris l'essentiel. Le bilan fait le bilan de ce que tu as, le compte de résultat fait le compte de ce que tu as gagné ou perdu. Simple, non ? 🎯";
+            } else {
+                badgeContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <div style="font-size: 48px;">💪</div>
+                        <p style="margin-top: 8px;">Continue, tu y es presque !</p>
+                    </div>
+                `;
+                message = "Pas mal ! Avec un peu plus de pratique, tu vas vite maîtriser ces concepts. N'hésite pas à recommencer pour améliorer ton score ! 💪";
+            }
+
+            document.getElementById('ch1FinalMessage').textContent = message;
+
+            // Marquer le chapitre comme terminé et sauvegarder le score
+            markChapterCompleted(1, ch1Score);
+
+            // Mettre à jour le bouton suivant
+            const nextBtn = document.getElementById('ch1NextBtn');
+            if (isChapterUnlocked(2)) {
+                nextBtn.style.background = 'linear-gradient(135deg, #0095D0, #25CCF6)';
+                nextBtn.textContent = 'Chapitre 2 : La grande structure →';
+                nextBtn.disabled = false;
+            }
+        }
+
+        function restartChapter1() {
+            ch1CurrentQuestionIndex = 0;
+            ch1Score = 0;
+            ch1CorrectCount = 0;
+            ch1CurrentAnswer = null;
+            document.getElementById('ch1ScoreDisplay').textContent = '0';
+            
+            document.querySelectorAll('.ch1-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch1IntroScreen').classList.add('active');
+        }
+
+        // ============================================
+        // CHAPITRE 2 - DONNÉES DU JEU
+        // ============================================
+        const ch2GamePhases = [
+            {
+                name: 'bilan',
+                title: 'BILAN',
+                terms: [
+                    { term: 'ACTIF', zone: 'actif-title' },
+                    { term: 'PASSIF', zone: 'passif-title' },
+                    { term: 'Actif immobilisé', zone: 'actif-immobilise' },
+                    { term: 'Actif circulant', zone: 'actif-circulant' },
+                    { term: 'Capitaux propres', zone: 'capitaux-propres' },
+                    { term: 'Dettes', zone: 'dettes' }
+                ]
+            },
+            {
+                name: 'resultat',
+                title: 'COMPTE DE RÉSULTAT',
+                terms: [
+                    { term: 'PRODUITS', zone: 'produits-title' },
+                    { term: 'CHARGES', zone: 'charges-title' },
+                    { term: "Résultat d'exploitation", zone: 'resultat-exploitation' },
+                    { term: 'Résultat financier', zone: 'resultat-financier' },
+                    { term: 'Résultat exceptionnel', zone: 'resultat-exceptionnel' },
+                    { term: 'Résultat net', zone: 'resultat-net' }
+                ]
+            }
+        ];
+
+        // ============================================
+        // CHAPITRE 2 - ÉTAT DU JEU
+        // ============================================
+        let ch2CurrentPhase = 0;
+        let ch2Score = 0;
+        let ch2CorrectPlacements = 0;
+        let ch2RemainingTerms = [];
+        let ch2FilledZones = new Set();
+        let ch2DraggedElement = null;
+        let ch2TouchStartX = 0;
+        let ch2TouchStartY = 0;
+        let ch2InitialCardPosition = null;
+
+        // ============================================
+        // CHAPITRE 2 - FONCTIONS PRINCIPALES
+        // ============================================
+        function resetChapter2State() {
+            ch2CurrentPhase = 0;
+            ch2Score = 0;
+            ch2CorrectPlacements = 0;
+            ch2RemainingTerms = [];
+            ch2FilledZones = new Set();
+            
+            document.getElementById('ch2ScoreDisplay').textContent = '0';
+            document.getElementById('ch2ProgressBar').style.width = '0%';
+            
+            // Cacher le conteneur de cartes
+            document.getElementById('ch2CardsContainer').classList.remove('active');
+            
+            // Afficher l'écran d'intro pédagogique
+            document.querySelectorAll('.ch2-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch2IntroScreen').classList.add('active');
+        }
+
+        function startChapter2Game() {
+            ch2CurrentPhase = 0;
+            ch2Score = 0;
+            ch2CorrectPlacements = 0;
+            document.getElementById('ch2ScoreDisplay').textContent = '0';
+            
+            document.querySelectorAll('.ch2-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch2GameScreen').classList.add('active');
+            document.getElementById('ch2CardsContainer').classList.add('active');
+            
+            loadCh2Phase();
+        }
+
+        function loadCh2Phase() {
+            if (ch2CurrentPhase >= ch2GamePhases.length) {
+                showCh2Results();
+                return;
+            }
+
+            const phase = ch2GamePhases[ch2CurrentPhase];
+            ch2RemainingTerms = [...phase.terms];
+            ch2FilledZones = new Set();
+            
+            const structureContainer = document.getElementById('ch2DocumentStructure');
+            
+            if (phase.name === 'bilan') {
+                structureContainer.innerHTML = `
+                    <div class="document-structure">
+                        <div class="document-title">${phase.title}</div>
+                        <div class="bilan-grid">
+                            <div class="bilan-column actif">
+                                <div class="ch2-drop-zone" data-zone="actif-title">
+                                    <div class="ch2-drop-zone-hint">Grande catégorie : ce que je possède</div>
+                                </div>
+                                <div class="ch2-drop-zone" data-zone="actif-immobilise">
+                                    <div class="ch2-drop-zone-hint">Biens qui restent longtemps dans l'entreprise</div>
+                                </div>
+                                <div class="ch2-drop-zone" data-zone="actif-circulant">
+                                    <div class="ch2-drop-zone-hint">Éléments qui bougent rapidement (stocks, clients, banque)</div>
+                                </div>
+                            </div>
+                            <div class="bilan-column passif">
+                                <div class="ch2-drop-zone" data-zone="passif-title">
+                                    <div class="ch2-drop-zone-hint">Grande catégorie : ce que je dois</div>
+                                </div>
+                                <div class="ch2-drop-zone" data-zone="capitaux-propres">
+                                    <div class="ch2-drop-zone-hint">Apports des propriétaires + résultat net + affectation du résultat net</div>
+                                </div>
+                                <div class="ch2-drop-zone" data-zone="dettes">
+                                    <div class="ch2-drop-zone-hint">Dettes à rembourser (emprunts, fournisseurs)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                structureContainer.innerHTML = `
+                    <div class="document-structure">
+                        <div class="document-title">${phase.title}</div>
+                        <div class="resultat-grid">
+                            <div class="resultat-section produits">
+                                <div class="ch2-drop-zone" data-zone="produits-title">
+                                    <div class="ch2-drop-zone-hint">Grande catégorie : ce que je gagne</div>
+                                </div>
+                            </div>
+                            <div class="resultat-section charges">
+                                <div class="ch2-drop-zone" data-zone="charges-title">
+                                    <div class="ch2-drop-zone-hint">Grande catégorie : ce que je dépense</div>
+                                </div>
+                            </div>
+                            <div class="resultat-section resultat">
+                                <div class="resultat-section-title">CALCULS DES RÉSULTATS</div>
+                                <div class="ch2-drop-zone" data-zone="resultat-exploitation">
+                                    <div class="ch2-drop-zone-hint">Valeur générée par l'activité de l'entreprise</div>
+                                </div>
+                                <div class="ch2-drop-zone" data-zone="resultat-financier">
+                                    <div class="ch2-drop-zone-hint">Valorisation de l'impact des choix financiers de l'entreprise</div>
+                                </div>
+                                <div class="ch2-drop-zone" data-zone="resultat-exceptionnel">
+                                    <div class="ch2-drop-zone-hint">Valorisation de l'impact d'événements anormaux par rapport à l'activité de l'entreprise</div>
+                                </div>
+                                <div class="ch2-drop-zone" data-zone="resultat-net">
+                                    <div class="ch2-drop-zone-hint">Résultat final total</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            loadCh2Cards();
+            updateCh2Progress();
+            updateCh2Instruction();
+        }
+
+        function loadCh2Cards() {
+            const cardsContainer = document.getElementById('ch2CardsContainer');
+            cardsContainer.innerHTML = '';
+            
+            // Mélanger les termes avant de les afficher
+            const shuffledTerms = [...ch2RemainingTerms].sort(() => Math.random() - 0.5);
+            
+            shuffledTerms.forEach((termObj, index) => {
+                const card = document.createElement('div');
+                card.className = 'ch2-draggable-card';
+                card.textContent = termObj.term;
+                card.dataset.zone = termObj.zone;
+                card.dataset.index = ch2RemainingTerms.findIndex(t => t.term === termObj.term);
+                
+                card.addEventListener('touchstart', handleCh2TouchStart, { passive: false });
+                card.addEventListener('touchmove', handleCh2TouchMove, { passive: false });
+                card.addEventListener('touchend', handleCh2TouchEnd, { passive: false });
+                card.addEventListener('mousedown', handleCh2MouseDown);
+                
+                cardsContainer.appendChild(card);
+            });
+        }
+
+        // ============================================
+        // CHAPITRE 2 - DRAG & DROP TACTILE
+        // ============================================
+        function handleCh2TouchStart(e) {
+            ch2DraggedElement = e.target.closest('.ch2-draggable-card');
+            if (!ch2DraggedElement || ch2DraggedElement.classList.contains('used')) return;
+            
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            ch2TouchStartX = touch.clientX;
+            ch2TouchStartY = touch.clientY;
+            
+            const rect = ch2DraggedElement.getBoundingClientRect();
+            ch2InitialCardPosition = { left: rect.left, top: rect.top };
+            
+            ch2DraggedElement.classList.add('dragging');
+            
+            const clone = ch2DraggedElement.cloneNode(true);
+            clone.id = 'ch2DragClone';
+            clone.style.position = 'fixed';
+            clone.style.left = rect.left + 'px';
+            clone.style.top = rect.top + 'px';
+            clone.style.width = rect.width + 'px';
+            clone.style.pointerEvents = 'none';
+            clone.style.zIndex = '9999';
+            clone.style.transition = 'none';
+            document.body.appendChild(clone);
+        }
+
+        function handleCh2TouchMove(e) {
+            if (!ch2DraggedElement) return;
+
+            const touch = e.touches[0];
+            const clone = document.getElementById('ch2DragClone');
+            
+            if (clone) {
+                const deltaX = touch.clientX - ch2TouchStartX;
+                const deltaY = touch.clientY - ch2TouchStartY;
+                clone.style.left = (ch2InitialCardPosition.left + deltaX) + 'px';
+                clone.style.top = (ch2InitialCardPosition.top + deltaY) + 'px';
+            }
+            
+            // Auto-scroll de la page complète si on approche des bords
+            const threshold = 80;
+            const scrollSpeed = 4;
+            
+            if (touch.clientY < threshold) {
+                window.scrollBy(0, -scrollSpeed);
+            } else if (touch.clientY > window.innerHeight - threshold) {
+                window.scrollBy(0, scrollSpeed);
+            }
+            
+            document.querySelectorAll('.ch2-drop-zone').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            const dropZone = element?.closest('.ch2-drop-zone');
+            if (dropZone && !dropZone.classList.contains('filled')) {
+                dropZone.classList.add('drag-over');
+            }
+        }
+
+        function handleCh2TouchEnd(e) {
+            if (!ch2DraggedElement) return;
+            
+            e.preventDefault();
+
+            const touch = e.changedTouches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            const dropZone = element?.closest('.ch2-drop-zone');
+
+            const clone = document.getElementById('ch2DragClone');
+            if (clone) clone.remove();
+
+            if (dropZone && !dropZone.classList.contains('filled')) {
+                const expectedZone = ch2DraggedElement.dataset.zone;
+                const actualZone = dropZone.dataset.zone;
+                
+                validateCh2Placement(dropZone, expectedZone, actualZone, ch2DraggedElement.textContent);
+            }
+
+            ch2DraggedElement.classList.remove('dragging');
+            document.querySelectorAll('.ch2-drop-zone').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+            ch2DraggedElement = null;
+            ch2InitialCardPosition = null;
+        }
+
+        // ============================================
+        // CHAPITRE 2 - DRAG & DROP SOURIS
+        // ============================================
+        function handleCh2MouseDown(e) {
+            ch2DraggedElement = e.target.closest('.ch2-draggable-card');
+            if (!ch2DraggedElement || ch2DraggedElement.classList.contains('used')) return;
+            
+            e.preventDefault();
+            
+            const rect = ch2DraggedElement.getBoundingClientRect();
+            ch2InitialCardPosition = { left: rect.left, top: rect.top };
+            ch2TouchStartX = e.clientX;
+            ch2TouchStartY = e.clientY;
+            
+            ch2DraggedElement.classList.add('dragging');
+            
+            const clone = ch2DraggedElement.cloneNode(true);
+            clone.id = 'ch2DragClone';
+            clone.style.position = 'fixed';
+            clone.style.left = rect.left + 'px';
+            clone.style.top = rect.top + 'px';
+            clone.style.width = rect.width + 'px';
+            clone.style.pointerEvents = 'none';
+            clone.style.zIndex = '9999';
+            clone.style.transition = 'none';
+            document.body.appendChild(clone);
+            
+            document.addEventListener('mousemove', handleCh2MouseMove);
+            document.addEventListener('mouseup', handleCh2MouseUp);
+        }
+
+        function handleCh2MouseMove(e) {
+            if (!ch2DraggedElement) return;
+
+            const clone = document.getElementById('ch2DragClone');
+            
+            if (clone) {
+                const deltaX = e.clientX - ch2TouchStartX;
+                const deltaY = e.clientY - ch2TouchStartY;
+                clone.style.left = (ch2InitialCardPosition.left + deltaX) + 'px';
+                clone.style.top = (ch2InitialCardPosition.top + deltaY) + 'px';
+            }
+            
+            document.querySelectorAll('.ch2-drop-zone').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+
+            const element = document.elementFromPoint(e.clientX, e.clientY);
+            const dropZone = element?.closest('.ch2-drop-zone');
+            if (dropZone && !dropZone.classList.contains('filled')) {
+                dropZone.classList.add('drag-over');
+            }
+        }
+
+        function handleCh2MouseUp(e) {
+            if (!ch2DraggedElement) return;
+
+            const element = document.elementFromPoint(e.clientX, e.clientY);
+            const dropZone = element?.closest('.ch2-drop-zone');
+
+            const clone = document.getElementById('ch2DragClone');
+            if (clone) clone.remove();
+
+            if (dropZone && !dropZone.classList.contains('filled')) {
+                const expectedZone = ch2DraggedElement.dataset.zone;
+                const actualZone = dropZone.dataset.zone;
+                
+                validateCh2Placement(dropZone, expectedZone, actualZone, ch2DraggedElement.textContent);
+            }
+
+            ch2DraggedElement.classList.remove('dragging');
+            document.querySelectorAll('.ch2-drop-zone').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+            ch2DraggedElement = null;
+            ch2InitialCardPosition = null;
+            
+            document.removeEventListener('mousemove', handleCh2MouseMove);
+            document.removeEventListener('mouseup', handleCh2MouseUp);
+        }
+
+        // ============================================
+        // CHAPITRE 2 - VALIDATION
+        // ============================================
+        function validateCh2Placement(dropZone, expectedZone, actualZone, term) {
+            const isCorrect = expectedZone === actualZone;
+            
+            if (isCorrect) {
+                dropZone.classList.add('filled');
+                dropZone.innerHTML = `<div class="dropped-term">${term}</div>`;
+                ch2FilledZones.add(actualZone);
+                
+                ch2CorrectPlacements++;
+                ch2Score += 100;
+                showCh2Feedback(true, `✓ "${term}" est bien placé !`);
+            } else {
+                dropZone.classList.add('filled', 'error');
+                dropZone.innerHTML = `<div class="dropped-term error">${term}</div>`;
+                ch2FilledZones.add(actualZone);
+                
+                setTimeout(() => {
+                    dropZone.classList.remove('error');
+                    const droppedTerm = dropZone.querySelector('.dropped-term');
+                    if (droppedTerm) {
+                        droppedTerm.classList.remove('error');
+                    }
+                }, 500);
+                
+                showCh2Feedback(false, `✗ "${term}" n'était pas au bon endroit...`);
+            }
+            
+            const cardIndex = parseInt(ch2DraggedElement.dataset.index);
+            ch2RemainingTerms.splice(cardIndex, 1);
+            ch2DraggedElement.classList.add('used');
+            
+            document.getElementById('ch2ScoreDisplay').textContent = ch2Score;
+            
+            if (ch2RemainingTerms.length === 0) {
+                setTimeout(() => {
+                    ch2CurrentPhase++;
+                    if (ch2CurrentPhase < ch2GamePhases.length) {
+                        document.getElementById('ch2FeedbackContainer').innerHTML = `
+                            <div class="feedback correct">
+                                <strong>🎉 ${ch2GamePhases[ch2CurrentPhase-1].title} terminé !</strong>
+                                <div style="margin-top: 12px;">Passons au ${ch2GamePhases[ch2CurrentPhase].title}...</div>
+                            </div>
+                        `;
+                        setTimeout(() => loadCh2Phase(), 2000);
+                    } else {
+                        showCh2Results();
+                    }
+                }, 1500);
+            } else {
+                loadCh2Cards();
+                updateCh2Instruction();
+            }
+        }
+
+        function showCh2Feedback(isCorrect, message) {
+            const feedbackContainer = document.getElementById('ch2FeedbackContainer');
+            const feedbackClass = isCorrect ? 'correct' : 'incorrect';
+            
+            feedbackContainer.innerHTML = `
+                <div class="feedback ${feedbackClass}">
+                    ${message}
+                    ${isCorrect ? '<div style="margin-top: 8px;">+100 points</div>' : ''}
+                </div>
+            `;
+            
+            setTimeout(() => {
+                if (ch2RemainingTerms.length > 0) {
+                    feedbackContainer.innerHTML = '';
+                }
+            }, 1500);
+        }
+
+        function updateCh2Instruction() {
+            const remaining = ch2RemainingTerms.length;
+            const instructionText = document.getElementById('ch2InstructionText');
+            instructionText.textContent = `👆 ${remaining} notion${remaining > 1 ? 's' : ''} restante${remaining > 1 ? 's' : ''}`;
+        }
+
+        function updateCh2Progress() {
+            const totalTerms = ch2GamePhases.reduce((sum, phase) => sum + phase.terms.length, 0);
+            const progress = (ch2CorrectPlacements / totalTerms) * 100;
+            document.getElementById('ch2ProgressBar').style.width = progress + '%';
+        }
+
+        function showCh2Results() {
+            document.querySelectorAll('.ch2-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch2ResultScreen').classList.add('active');
+            document.getElementById('ch2CardsContainer').classList.remove('active');
+
+            const totalTerms = ch2GamePhases.reduce((sum, phase) => sum + phase.terms.length, 0);
+            document.getElementById('ch2FinalScore').textContent = ch2Score + ' points';
+            document.getElementById('ch2CorrectAnswers').textContent = ch2CorrectPlacements;
+
+            const badgeContainer = document.getElementById('ch2BadgeContainer');
+            let message = '';
+
+            if (ch2CorrectPlacements >= 9) {
+                badgeContainer.innerHTML = `
+                    <div class="badge-earned">
+                        <div class="badge-icon">🏆</div>
+                        <h3>Badge débloqué !</h3>
+                        <p>Architecte Comptable</p>
+                    </div>
+                `;
+                message = "Bravo ! Tu maîtrises la structure des documents comptables. Tu sais maintenant où placer chaque grande notion ! 🎯";
+            } else if (ch2CorrectPlacements >= 6) {
+                badgeContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <div style="font-size: 48px;">👍</div>
+                        <p style="margin-top: 8px;">Bon travail !</p>
+                    </div>
+                `;
+                message = "Pas mal ! Tu commences à comprendre la structure. Encore un peu de pratique et ce sera parfait ! 💪";
+            } else {
+                badgeContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <div style="font-size: 48px;">💪</div>
+                        <p style="margin-top: 8px;">Continue tes efforts !</p>
+                    </div>
+                `;
+                message = "Les structures comptables demandent un peu de pratique. Recommence pour mieux mémoriser les emplacements ! 📚";
+            }
+
+            document.getElementById('ch2FinalMessage').textContent = message;
+
+            // Marquer le chapitre comme terminé et sauvegarder le score
+            markChapterCompleted(2, ch2Score);
+
+            // Mettre à jour le bouton suivant
+            const nextBtn = document.getElementById('ch2NextBtn');
+            if (isChapterUnlocked(3)) {
+                nextBtn.style.background = 'linear-gradient(135deg, #0095D0, #25CCF6)';
+                nextBtn.textContent = 'Chapitre 3 : Écritures comptables →';
+                nextBtn.disabled = false;
+            }
+        }
+
+        function restartChapter2() {
+            startChapter2Game();
+        }
+
+        function restartCh2CurrentPhase() {
+            // Calculer les points à soustraire
+            const phase = ch2GamePhases[ch2CurrentPhase];
+            const termsInPhase = phase.terms.length;
+            const termsRemaining = ch2RemainingTerms.length;
+            const termsPlacedInPhase = termsInPhase - termsRemaining;
+            
+            // On doit retirer les points gagnés dans cette phase
+            // Comme on ne peut pas savoir exactement combien étaient corrects,
+            // on utilise une approche simple : retirer tous les placements de cette phase
+            // en supposant qu'ils correspondent aux derniers placements corrects
+            
+            // Calculer le nombre total de termes des phases précédentes
+            const termsInPreviousPhases = ch2GamePhases.slice(0, ch2CurrentPhase).reduce((sum, p) => sum + p.terms.length, 0);
+            
+            // Les placements corrects dans cette phase = total correct - correct dans phases précédentes
+            // Mais on ne peut pas dépasser le nombre de termes des phases précédentes
+            const maxCorrectInPreviousPhases = Math.min(ch2CorrectPlacements, termsInPreviousPhases);
+            const correctInThisPhase = ch2CorrectPlacements - maxCorrectInPreviousPhases;
+            
+            // Retirer les points de cette phase
+            ch2Score -= correctInThisPhase * 100;
+            if (ch2Score < 0) ch2Score = 0;
+            
+            ch2CorrectPlacements -= correctInThisPhase;
+            if (ch2CorrectPlacements < 0) ch2CorrectPlacements = 0;
+            
+            // Réinitialiser la phase
+            ch2RemainingTerms = [...phase.terms];
+            ch2FilledZones = new Set();
+            
+            // Mettre à jour l'affichage
+            document.getElementById('ch2ScoreDisplay').textContent = ch2Score;
+            
+            // Recharger la structure et les cartes
+            loadCh2Phase();
+            
+            // Vider le feedback
+            document.getElementById('ch2FeedbackContainer').innerHTML = '';
+        }
+
+        // ============================================
+        // CHAPITRE 3 - DONNÉES DU JEU
+        // ============================================
+        const ch3GameSections = [
+            {
+                name: 'actif-immobilise',
+                title: 'Actif immobilisé',
+                colorClass: 'actif-immobilise',
+                terms: [
+                    { term: 'Immobilisations incorporelles', zone: 'immo-incorp', hint: 'Biens immatériels de long terme' },
+                    { term: 'Immobilisations corporelles', zone: 'immo-corp', hint: 'Biens matériels de long terme' },
+                    { term: 'Immobilisations financières', zone: 'immo-fin', hint: 'Titres et prêts à long terme' }
+                ]
+            },
+            {
+                name: 'actif-circulant',
+                title: 'Actif circulant',
+                colorClass: 'actif-circulant',
+                terms: [
+                    { term: 'Stocks', zone: 'stocks', hint: 'Biens destinés à la vente ou à la production' },
+                    { term: 'Créances', zone: 'creances', hint: 'Sommes dues par les tiers' },
+                    { term: 'Disponibilités', zone: 'dispo', hint: 'Liquidités immédiatement disponibles' },
+                    { term: 'VMP', zone: 'vmp', hint: 'Titres acquis pour placement à court terme' }
+                ]
+            },
+            {
+                name: 'capitaux-propres',
+                title: 'Capitaux propres',
+                colorClass: 'capitaux-propres',
+                terms: [
+                    { term: 'Capital social', zone: 'capital', hint: 'Apports des associés ou actionnaires' },
+                    { term: 'Réserves', zone: 'reserves', hint: 'Bénéfices non distribués affectés' },
+                    { term: 'Report à nouveau', zone: 'report', hint: 'Bénéfices ou pertes en attente d\'affectation' },
+                    { term: 'Résultat de l\'exercice', zone: 'resultat-exercice', hint: 'Bénéfice ou perte de la période' }
+                ]
+            },
+            {
+                name: 'dettes',
+                title: 'Dettes',
+                colorClass: 'dettes',
+                terms: [
+                    { term: 'Emprunts', zone: 'emprunts', hint: 'Dettes financières à moyen ou long terme' },
+                    { term: 'Dettes fournisseurs', zone: 'dettes-fourn', hint: 'Sommes dues aux fournisseurs' },
+                    { term: 'Dettes fiscales et sociales', zone: 'dettes-fisc', hint: 'Dettes envers l\'État et organismes sociaux' }
+                ]
+            },
+            {
+                name: 'exploitation',
+                title: 'Résultat d\'exploitation',
+                colorClass: 'exploitation',
+                terms: [
+                    { term: 'Ventes de marchandises', zone: 'ventes', hint: 'Revenu de la vente de biens achetés pour revendre' },
+                    { term: 'Production vendue', zone: 'production', hint: 'Revenu de la vente de biens ou services produits' },
+                    { term: 'Subventions d\'exploitation', zone: 'subventions', hint: 'Aides publiques pour l\'activité courante' },
+                    { term: 'Achats de marchandises', zone: 'achats-march', hint: 'Coût des biens achetés pour revendre' },
+                    { term: 'Achats de matières premières', zone: 'achats-mp', hint: 'Coût des matières pour la production' },
+                    { term: 'Autres achats et charges externes', zone: 'autres-achats', hint: 'Services extérieurs et fournitures diverses' },
+                    { term: 'Impôts et taxes', zone: 'impots', hint: 'Charges fiscales d\'exploitation' },
+                    { term: 'Salaires et cotisations sociales', zone: 'salaires', hint: 'Rémunérations et charges de personnel' },
+                    { term: 'Dotations aux amortissements et aux provisions', zone: 'dotations', hint: 'Constatation de la dépréciation des immobilisations et des risques' }
+                ]
+            },
+            {
+                name: 'financier',
+                title: 'Résultat financier',
+                colorClass: 'financier',
+                terms: [
+                    { term: 'Produits financiers', zone: 'produits-fin', hint: 'Revenus issus des placements et créances' },
+                    { term: 'Charges financières', zone: 'charges-fin', hint: 'Coûts liés aux emprunts et à la trésorerie' }
+                ]
+            },
+            {
+                name: 'exceptionnel',
+                title: 'Résultat exceptionnel',
+                colorClass: 'exceptionnel',
+                terms: [
+                    { term: 'Produits exceptionnels', zone: 'produits-excep', hint: 'Gains hors activité normale et non récurrents' },
+                    { term: 'Charges exceptionnelles', zone: 'charges-excep', hint: 'Pertes hors activité normale et non récurrentes' }
+                ]
+            }
+        ];
+
+        // ============================================
+        // CHAPITRE 3 - ÉTAT DU JEU
+        // ============================================
+        let ch3CurrentSection = 0;
+        let ch3Score = 0;
+        let ch3CorrectPlacements = 0;
+        let ch3RemainingTerms = [];
+        let ch3TotalTerms = 0;
+        let ch3DraggedElement = null;
+        let ch3TouchStartX = 0;
+        let ch3TouchStartY = 0;
+        let ch3InitialCardPosition = null;
+
+        // ============================================
+        // CHAPITRE 3 - FONCTIONS PRINCIPALES
+        // ============================================
+        function resetChapter3State() {
+            ch3CurrentSection = 0;
+            ch3Score = 0;
+            ch3CorrectPlacements = 0;
+            ch3RemainingTerms = [];
+            ch3TotalTerms = ch3GameSections.reduce((sum, section) => sum + section.terms.length, 0);
+            
+            document.getElementById('ch3ScoreDisplay').textContent = '0';
+            document.getElementById('ch3ProgressBar').style.width = '0%';
+            document.getElementById('ch3TotalPlacements').textContent = ch3TotalTerms;
+            
+            // Cacher le conteneur de cartes
+            document.getElementById('ch3CardsContainer').classList.remove('active');
+            
+            // Afficher l'écran d'intro pédagogique
+            document.querySelectorAll('.ch3-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch3IntroScreen').classList.add('active');
+        }
+
+        function startChapter3Game() {
+            ch3CurrentSection = 0;
+            ch3Score = 0;
+            ch3CorrectPlacements = 0;
+            ch3TotalTerms = ch3GameSections.reduce((sum, section) => sum + section.terms.length, 0);
+            document.getElementById('ch3ScoreDisplay').textContent = '0';
+            document.getElementById('ch3TotalPlacements').textContent = ch3TotalTerms;
+            
+            document.querySelectorAll('.ch3-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch3GameScreen').classList.add('active');
+            document.getElementById('ch3CardsContainer').classList.add('active');
+            
+            loadCh3Section();
+        }
+
+        function loadCh3Section() {
+            if (ch3CurrentSection >= ch3GameSections.length) {
+                showCh3Results();
+                return;
+            }
+
+            const section = ch3GameSections[ch3CurrentSection];
+            ch3RemainingTerms = [...section.terms];
+            
+            const structureContainer = document.getElementById('ch3DocumentStructure');
+            
+            let dropZonesHtml = '';
+            
+            // Pour les sections avec produits et charges, appliquer des fonds colorés légers
+            if (section.name === 'exploitation' || section.name === 'financier' || section.name === 'exceptionnel') {
+                section.terms.forEach(term => {
+                    const isProduit = term.term.toLowerCase().includes('produit') || 
+                                     term.term.toLowerCase().includes('vente') || 
+                                     term.term.toLowerCase().includes('production') ||
+                                     term.term.toLowerCase().includes('subvention');
+                    const backgroundClass = isProduit ? 'produit-bg' : 'charge-bg';
+                    
+                    dropZonesHtml += `
+                        <div class="ch3-drop-zone ${backgroundClass}" data-zone="${term.zone}">
+                            <div class="ch3-drop-zone-hint">${term.hint}</div>
+                        </div>
+                    `;
+                });
+            } else {
+                // Sections normales (Bilan)
+                section.terms.forEach(term => {
+                    dropZonesHtml += `
+                        <div class="ch3-drop-zone" data-zone="${term.zone}">
+                            <div class="ch3-drop-zone-hint">${term.hint}</div>
+                        </div>
+                    `;
+                });
+            }
+            
+            structureContainer.innerHTML = `
+                <div class="document-structure">
+                    <div class="document-title">Section ${ch3CurrentSection + 1} / ${ch3GameSections.length}</div>
+                    <div class="ch3-section-container">
+                        <div class="ch3-section-title ${section.colorClass}">${section.title}</div>
+                        ${dropZonesHtml}
+                    </div>
+                </div>
+            `;
+            
+            loadCh3Cards();
+            updateCh3Progress();
+            updateCh3Instruction();
+        }
+
+        function loadCh3Cards() {
+            const cardsContainer = document.getElementById('ch3CardsContainer');
+            cardsContainer.innerHTML = '';
+            
+            const shuffledTerms = [...ch3RemainingTerms].sort(() => Math.random() - 0.5);
+            
+            shuffledTerms.forEach((termObj, index) => {
+                const card = document.createElement('div');
+                card.className = 'ch3-draggable-card';
+                card.textContent = termObj.term;
+                card.dataset.zone = termObj.zone;
+                card.dataset.index = ch3RemainingTerms.findIndex(t => t.term === termObj.term);
+                
+                card.addEventListener('touchstart', handleCh3TouchStart, { passive: false });
+                card.addEventListener('touchmove', handleCh3TouchMove, { passive: false });
+                card.addEventListener('touchend', handleCh3TouchEnd, { passive: false });
+                card.addEventListener('mousedown', handleCh3MouseDown);
+                
+                cardsContainer.appendChild(card);
+            });
+        }
+
+        // ============================================
+        // CHAPITRE 3 - DRAG & DROP TACTILE
+        // ============================================
+        function handleCh3TouchStart(e) {
+            ch3DraggedElement = e.target.closest('.ch3-draggable-card');
+            if (!ch3DraggedElement || ch3DraggedElement.classList.contains('used')) return;
+            
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            ch3TouchStartX = touch.clientX;
+            ch3TouchStartY = touch.clientY;
+            
+            const rect = ch3DraggedElement.getBoundingClientRect();
+            ch3InitialCardPosition = { left: rect.left, top: rect.top };
+            
+            ch3DraggedElement.classList.add('dragging');
+            
+            const clone = ch3DraggedElement.cloneNode(true);
+            clone.id = 'ch3DragClone';
+            clone.style.position = 'fixed';
+            clone.style.left = rect.left + 'px';
+            clone.style.top = rect.top + 'px';
+            clone.style.width = rect.width + 'px';
+            clone.style.pointerEvents = 'none';
+            clone.style.zIndex = '9999';
+            clone.style.transition = 'none';
+            document.body.appendChild(clone);
+        }
+
+        function handleCh3TouchMove(e) {
+            if (!ch3DraggedElement) return;
+
+            const touch = e.touches[0];
+            const clone = document.getElementById('ch3DragClone');
+            
+            if (clone) {
+                const deltaX = touch.clientX - ch3TouchStartX;
+                const deltaY = touch.clientY - ch3TouchStartY;
+                clone.style.left = (ch3InitialCardPosition.left + deltaX) + 'px';
+                clone.style.top = (ch3InitialCardPosition.top + deltaY) + 'px';
+            }
+            
+            // Auto-scroll
+            const threshold = 80;
+            const scrollSpeed = 4;
+            
+            if (touch.clientY < threshold) {
+                window.scrollBy(0, -scrollSpeed);
+            } else if (touch.clientY > window.innerHeight - threshold) {
+                window.scrollBy(0, scrollSpeed);
+            }
+            
+            document.querySelectorAll('.ch3-drop-zone').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            const dropZone = element?.closest('.ch3-drop-zone');
+            if (dropZone && !dropZone.classList.contains('filled')) {
+                dropZone.classList.add('drag-over');
+            }
+        }
+
+        function handleCh3TouchEnd(e) {
+            if (!ch3DraggedElement) return;
+            
+            e.preventDefault();
+
+            const touch = e.changedTouches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            const dropZone = element?.closest('.ch3-drop-zone');
+
+            const clone = document.getElementById('ch3DragClone');
+            if (clone) clone.remove();
+
+            if (dropZone && !dropZone.classList.contains('filled')) {
+                const expectedZone = ch3DraggedElement.dataset.zone;
+                const actualZone = dropZone.dataset.zone;
+                
+                validateCh3Placement(dropZone, expectedZone, actualZone, ch3DraggedElement.textContent);
+            }
+
+            ch3DraggedElement.classList.remove('dragging');
+            document.querySelectorAll('.ch3-drop-zone').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+            ch3DraggedElement = null;
+            ch3InitialCardPosition = null;
+        }
+
+        // ============================================
+        // CHAPITRE 3 - DRAG & DROP SOURIS
+        // ============================================
+        function handleCh3MouseDown(e) {
+            ch3DraggedElement = e.target.closest('.ch3-draggable-card');
+            if (!ch3DraggedElement || ch3DraggedElement.classList.contains('used')) return;
+            
+            e.preventDefault();
+            
+            const rect = ch3DraggedElement.getBoundingClientRect();
+            ch3InitialCardPosition = { left: rect.left, top: rect.top };
+            ch3TouchStartX = e.clientX;
+            ch3TouchStartY = e.clientY;
+            
+            ch3DraggedElement.classList.add('dragging');
+            
+            const clone = ch3DraggedElement.cloneNode(true);
+            clone.id = 'ch3DragClone';
+            clone.style.position = 'fixed';
+            clone.style.left = rect.left + 'px';
+            clone.style.top = rect.top + 'px';
+            clone.style.width = rect.width + 'px';
+            clone.style.pointerEvents = 'none';
+            clone.style.zIndex = '9999';
+            clone.style.transition = 'none';
+            document.body.appendChild(clone);
+            
+            document.addEventListener('mousemove', handleCh3MouseMove);
+            document.addEventListener('mouseup', handleCh3MouseUp);
+        }
+
+        function handleCh3MouseMove(e) {
+            if (!ch3DraggedElement) return;
+
+            const clone = document.getElementById('ch3DragClone');
+            
+            if (clone) {
+                const deltaX = e.clientX - ch3TouchStartX;
+                const deltaY = e.clientY - ch3TouchStartY;
+                clone.style.left = (ch3InitialCardPosition.left + deltaX) + 'px';
+                clone.style.top = (ch3InitialCardPosition.top + deltaY) + 'px';
+            }
+            
+            document.querySelectorAll('.ch3-drop-zone').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+
+            const element = document.elementFromPoint(e.clientX, e.clientY);
+            const dropZone = element?.closest('.ch3-drop-zone');
+            if (dropZone && !dropZone.classList.contains('filled')) {
+                dropZone.classList.add('drag-over');
+            }
+        }
+
+        function handleCh3MouseUp(e) {
+            if (!ch3DraggedElement) return;
+
+            const element = document.elementFromPoint(e.clientX, e.clientY);
+            const dropZone = element?.closest('.ch3-drop-zone');
+
+            const clone = document.getElementById('ch3DragClone');
+            if (clone) clone.remove();
+
+            if (dropZone && !dropZone.classList.contains('filled')) {
+                const expectedZone = ch3DraggedElement.dataset.zone;
+                const actualZone = dropZone.dataset.zone;
+                
+                validateCh3Placement(dropZone, expectedZone, actualZone, ch3DraggedElement.textContent);
+            }
+
+            ch3DraggedElement.classList.remove('dragging');
+            document.querySelectorAll('.ch3-drop-zone').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+            ch3DraggedElement = null;
+            ch3InitialCardPosition = null;
+            
+            document.removeEventListener('mousemove', handleCh3MouseMove);
+            document.removeEventListener('mouseup', handleCh3MouseUp);
+        }
+
+        // ============================================
+        // CHAPITRE 3 - VALIDATION
+        // ============================================
+        function validateCh3Placement(dropZone, expectedZone, actualZone, term) {
+            const isCorrect = expectedZone === actualZone;
+            
+            if (isCorrect) {
+                dropZone.classList.add('filled');
+                dropZone.innerHTML = `<div class="dropped-term">${term}</div>`;
+                
+                ch3CorrectPlacements++;
+                ch3Score += 100;
+                showCh3Feedback(true, `✓ "${term}" est bien placé !`);
+            } else {
+                dropZone.classList.add('filled', 'error');
+                dropZone.innerHTML = `<div class="dropped-term error">${term}</div>`;
+                
+                setTimeout(() => {
+                    dropZone.classList.remove('error');
+                    const droppedTerm = dropZone.querySelector('.dropped-term');
+                    if (droppedTerm) {
+                        droppedTerm.classList.remove('error');
+                    }
+                }, 500);
+                
+                showCh3Feedback(false, `✗ "${term}" n'était pas au bon endroit...`);
+            }
+            
+            const cardIndex = parseInt(ch3DraggedElement.dataset.index);
+            ch3RemainingTerms.splice(cardIndex, 1);
+            ch3DraggedElement.classList.add('used');
+            
+            document.getElementById('ch3ScoreDisplay').textContent = ch3Score;
+            
+            if (ch3RemainingTerms.length === 0) {
+                setTimeout(() => {
+                    ch3CurrentSection++;
+                    if (ch3CurrentSection < ch3GameSections.length) {
+                        document.getElementById('ch3FeedbackContainer').innerHTML = `
+                            <div class="feedback correct">
+                                <strong>🎉 Section terminée !</strong>
+                                <div style="margin-top: 12px;">Passons à la suivante...</div>
+                            </div>
+                        `;
+                        setTimeout(() => loadCh3Section(), 2000);
+                    } else {
+                        showCh3Results();
+                    }
+                }, 1500);
+            } else {
+                loadCh3Cards();
+                updateCh3Instruction();
+            }
+        }
+
+        function showCh3Feedback(isCorrect, message) {
+            const feedbackContainer = document.getElementById('ch3FeedbackContainer');
+            const feedbackClass = isCorrect ? 'correct' : 'incorrect';
+            
+            feedbackContainer.innerHTML = `
+                <div class="feedback ${feedbackClass}">
+                    ${message}
+                    ${isCorrect ? '<div style="margin-top: 8px;">+100 points</div>' : ''}
+                </div>
+            `;
+            
+            setTimeout(() => {
+                if (ch3RemainingTerms.length > 0) {
+                    feedbackContainer.innerHTML = '';
+                }
+            }, 1500);
+        }
+
+        function updateCh3Instruction() {
+            const remaining = ch3RemainingTerms.length;
+            const instructionText = document.getElementById('ch3InstructionText');
+            instructionText.textContent = `👆 ${remaining} poste${remaining > 1 ? 's' : ''} restant${remaining > 1 ? 's' : ''}`;
+        }
+
+        function updateCh3Progress() {
+            const placedTerms = ch3GameSections.slice(0, ch3CurrentSection).reduce((sum, s) => sum + s.terms.length, 0) + 
+                               (ch3GameSections[ch3CurrentSection]?.terms.length || 0) - ch3RemainingTerms.length;
+            const progress = (placedTerms / ch3TotalTerms) * 100;
+            document.getElementById('ch3ProgressBar').style.width = progress + '%';
+        }
+
+        function showCh3Results() {
+            document.querySelectorAll('.ch3-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch3ResultScreen').classList.add('active');
+            document.getElementById('ch3CardsContainer').classList.remove('active');
+
+            document.getElementById('ch3FinalScore').textContent = ch3Score + ' points';
+            document.getElementById('ch3CorrectAnswers').textContent = ch3CorrectPlacements;
+
+            const badgeContainer = document.getElementById('ch3BadgeContainer');
+            let message = '';
+
+            if (ch3CorrectPlacements >= 20) {
+                badgeContainer.innerHTML = `
+                    <div class="badge-earned">
+                        <div class="badge-icon">🏆</div>
+                        <h3>Badge débloqué !</h3>
+                        <p>Expert Comptable</p>
+                    </div>
+                `;
+                message = "Incroyable ! Tu maîtrises maintenant tous les détails de la comptabilité. Tu es prêt pour gérer de vrais documents comptables ! 🎯";
+            } else if (ch3CorrectPlacements >= 14) {
+                badgeContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <div style="font-size: 48px;">👍</div>
+                        <p style="margin-top: 8px;">Très bien !</p>
+                    </div>
+                `;
+                message = "Bravo ! Tu connais bien les postes comptables. Avec un peu plus de pratique, tu seras un expert ! 💪";
+            } else {
+                badgeContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <div style="font-size: 48px;">💪</div>
+                        <p style="margin-top: 8px;">Continue !</p>
+                    </div>
+                `;
+                message = "Les détails comptables demandent de la pratique. Recommence pour mieux mémoriser les postes ! 📚";
+            }
+
+            document.getElementById('ch3FinalMessage').textContent = message;
+
+            // Marquer le chapitre comme terminé et sauvegarder le score
+            markChapterCompleted(3, ch3Score);
+
+            // Mettre à jour le bouton suivant
+            const nextBtn = document.getElementById('ch3NextBtn');
+            if (isChapterUnlocked(4)) {
+                nextBtn.style.background = 'linear-gradient(135deg, #0095D0, #25CCF6)';
+                nextBtn.textContent = 'Chapitre 4 : Analyse financière →';
+                nextBtn.disabled = false;
+            }
+        }
+
+        function restartChapter3() {
+            startChapter3Game();
+        }
+
+        function restartCh3CurrentSection() {
+            // Calculer les points à soustraire
+            const section = ch3GameSections[ch3CurrentSection];
+            const termsInSection = section.terms.length;
+            const termsRemaining = ch3RemainingTerms.length;
+            const termsPlacedInSection = termsInSection - termsRemaining;
+            
+            // Calculer le nombre total de termes des sections précédentes
+            const termsInPreviousSections = ch3GameSections.slice(0, ch3CurrentSection).reduce((sum, s) => sum + s.terms.length, 0);
+            
+            // Les placements corrects dans cette section = total correct - correct dans sections précédentes
+            const maxCorrectInPreviousSections = Math.min(ch3CorrectPlacements, termsInPreviousSections);
+            const correctInThisSection = ch3CorrectPlacements - maxCorrectInPreviousSections;
+            
+            // Retirer les points de cette section
+            ch3Score -= correctInThisSection * 100;
+            if (ch3Score < 0) ch3Score = 0;
+            
+            ch3CorrectPlacements -= correctInThisSection;
+            if (ch3CorrectPlacements < 0) ch3CorrectPlacements = 0;
+            
+            // Réinitialiser la section
+            ch3RemainingTerms = [...section.terms];
+            
+            // Mettre à jour l'affichage
+            document.getElementById('ch3ScoreDisplay').textContent = ch3Score;
+            
+            // Recharger la structure et les cartes
+            loadCh3Section();
+            
+            // Vider le feedback
+            document.getElementById('ch3FeedbackContainer').innerHTML = '';
+        }
+
+        // ============================================
+        // CHAPITRE 4 - DONNÉES DU JEU
+        // ============================================
+        const ch4Questions = [
+            {
+                type: "Définition",
+                question: "Qu'est-ce qu'un amortissement ?",
+                choices: [
+                    "La constatation comptable de la perte de valeur irréversible d'une immobilisation due à l'usage ou au temps",
+                    "Une perte de valeur exceptionnelle et réversible d'un actif circulant",
+                    "Un mécanisme comptable permettant une réduction de la dette de l'entreprise",
+                    "Un gain exceptionnel sur la vente d'une immobilisation incorporelle"
+                ],
+                correct: 0,
+                explanation: "L'amortissement traduit la <strong>dépréciation irréversible</strong> d'une immobilisation résultant de l'usage, du temps ou de l'obsolescence. Il répartit le coût d'acquisition sur la durée d'utilisation prévue."
+            },
+            {
+                type: "Cas pratique",
+                question: "Le 1er janvier N, une entreprise acquiert un véhicule utilitaire pour 25 000€ HT. Durée d'utilisation prévue : 5 ans. Mode d'amortissement : linéaire. Calculez la dotation aux amortissements pour l'exercice N.",
+                context: "Amortissement linéaire = Valeur d'origine ÷ Durée d'utilisation",
+                choices: [
+                    "4 000€",
+                    "5 000€",
+                    "6 250€",
+                    "25 000€"
+                ],
+                correct: 1,
+                explanation: "Dotation annuelle = 25 000€ ÷ 5 ans = <strong>5 000€</strong>. Cette dotation sera comptabilisée chaque année pendant 5 ans jusqu'à ce que le véhicule soit totalement amorti."
+            },
+            {
+                type: "Impact comptable",
+                question: "Les amortissements cumulés sont inscrits au niveau des immobilisations à l'actif du bilan. Pourquoi et quel est leur impact ?",
+                choices: [
+                    "Ils augmentent la valeur des immobilisations pour constater leur valeur actualisée chaque année",
+                    "Ils n'ont aucun impact sur le bilan car ils apparaissent uniquement au compte de résultat",
+                    "Ils augmentent le passif du bilan car l'amortissemennt est une dette envers un fournisseur",
+                    "Ils diminuent la valeur des immobilisations car ils constatent la perte de valeur due au temps ou à l'usure depuis l'acquisition"
+                ],
+                correct: 3,
+                explanation: "Les amortissements cumulés viennent en <strong>diminution de la valeur brute</strong> des immobilisations à l'actif du bilan. Ils traduisent l'usure et le vieillissement du bien depuis son acquisition. On obtient ainsi la <strong>valeur nette comptable (VNC)</strong> qui représente la valeur résiduelle de l'immobilisation."
+            },
+            {
+                type: "Impact comptable",
+                question: "La dotation aux amortissements annuel de l'exercice apparaît au compte de résultat. Pourquoi et quel est son impact ?",
+                choices: [
+                    "Elle augmente les produits car elle traduit une hausse de valeur du patrimoine de l’entreprise sur l’exercice",
+                    "Elle diminue les charges car elle permet de constater une baisse des coûts liés à l’utilisation et à l’entretien des biens",
+                    "Elle augmente les charges car elle traduit la consommation progressive de l'immobilisation sur l'exercice",
+                    "Elle n’a aucun impact sur le résultat car elle correspond uniquement à une écriture de bilan sans effet sur le compte de résultat"
+                ],
+                correct: 2,
+                explanation: "La dotation aux amortissements est une <strong>charge d'exploitation</strong> au compte de résultat. Elle traduit la « consommation » d'une partie de l'immobilisation pendant l'exercice. C'est une charge calculée (pas de sortie d'argent) qui diminue le résultat et reflète l'usure normale du bien."
+            },
+            {
+                type: "Cas pratique",
+                question: "Une entreprise dégage un résultat avant impôt de 120 000€. Elle décide de constituer une provision pour litige de 20 000€. Taux d'IS : 25%. Quel sera le résultat net après impôt ?",
+                context: "Résultat net = (Résultat avant impôt - Provisions) - Impôt sur les sociétés (ici, 25%)",
+                choices: [
+                    "90 000€",
+                    "75 000€",
+                    "100 000€",
+                    "95 000€"
+                ],
+                correct: 1,
+                explanation: "Résultat après provision = 120 000€ - 20 000€ = 100 000€. IS = 100 000€ × 25% = 25 000€. Résultat net = 100 000€ - 25 000€ = <strong>75 000€</strong>."
+            },
+            {
+                type: "Définition",
+                question: "Quelle est la différence fondamentale entre amortissement et dépréciation ?",
+                choices: [
+                    "L'amortissement constate l'usure normale et programmée d'un bien ; la dépréciation constate une perte de valeur non volontaire et souvent inattendue d'un actif",
+                    "L'amortissement concerne uniquement les stocks ; la dépréciation concerne uniquement les immobilisations",
+                    "L’amortissement augmente la valeur d’un bien au fil du temps ; la dépréciation la diminue en fonction de l’évolution de sa valeur",
+                    "Il n'y a aucune différence, ce sont deux termes synonymes en comptabilité"
+                ],
+                correct: 0,
+                explanation: "L'<strong>amortissement</strong> est prévu et programmé dès l'acquisition : il étale le coût d'un bien sur sa durée d'utilisation (usure normale). La <strong>dépréciation</strong> constate une perte de valeur exceptionnelle, non prévue et souvent involontaire (sinistre, obsolescence soudaine...). Elle peut être reprise si la valeur se rétablit."
+            },
+            {
+                type: "Cas pratique",
+                question: "Un incendie détruit partiellement un stock de marchandises dont la valeur d'achat était de 80 000€. La valeur résiduelle après sinistre est estimée à 55 000€. Quelle écriture comptable ?",
+                choices: [
+                    "Dotation aux amortissements : 25 000€",
+                    "Provision pour risques : 25 000€",
+                    "Dotation pour dépréciation des stocks : 25 000€",
+                    "Aucune écriture nécessaire"
+                ],
+                correct: 2,
+                explanation: "La perte de valeur involontaire (80 000€ - 55 000€ = 25 000€) doit être constatée par une <strong>dotation pour dépréciation des stocks</strong>. Si le stock retrouve de la valeur, cette dépréciation pourra être reprise."
+            },
+            {
+                type: "Impact comptable",
+                question: "Au bilan et au compte de résultat, quel est l'impact d'une dépréciation de stock ?",
+                choices: [
+                    "Au bilan : augmente le passif (dette envers les fournisseurs) ; Au compte de résultat : diminue les produits",
+                    "Au bilan : augmente la valeur des stocks ; Au compte de résultat : diminue les charges",
+                    "Au bilan : aucun impact car les stocks ne changent pas ; Au compte de résultat : augmente les produits exceptionnels",
+                    "Au bilan : diminue la valeur des stocks (actif) ; Au compte de résultat : augmente les charges (dotation pour dépréciation)"
+                ],
+                correct: 3,
+                explanation: "Au <strong>bilan</strong>, la dépréciation vient diminuer la valeur des stocks à l'actif pour refléter leur vraie valeur. Au <strong>compte de résultat</strong>, la dotation pour dépréciation est enregistrée en charge, ce qui diminue le résultat de l'exercice."
+            },
+            {
+                type: "Définition",
+                question: "Qu'est-ce qu'une provision ?",
+                choices: [
+                    "Une charge certaine et définitive dont le montant exact est connu à l'avance",
+                    "Un produit encaissé d'avance que l'entreprise doit rembourser",
+                    "Une charge probable souvent liée à un risque ou un litige dont le montant ou l'échéance ne sont pas encore certains",
+                    "Une réserve d'argent mise de côté sur un compte bancaire spécial"
+                ],
+                correct: 2,
+                explanation: "Une <strong>provision</strong> permet d'anticiper une charge probable (litige en cours, garantie client, restructuration...) dont on ne connaît pas encore le montant exact ou la date. C'est le <strong>principe de prudence</strong> : on enregistre les charges dès qu'elles sont probables, même si elles ne sont pas certaines."
+            },
+            {
+                type: "Cas pratique",
+                question: "Une entreprise est assignée en justice par un ancien salarié qui réclame 80 000€. Les avocats estiment à 70% la probabilité de perdre. Quelle écriture au 31/12/N ?",
+                choices: [
+                    "Aucune écriture : le risque n'est pas certain à 100%",
+                    "Dotation aux provisions pour risques : 80 000€",
+                    "Dépréciation des créances : 80 000€",
+                    "Charge à payer : 80 000€"
+                ],
+                correct: 1,
+                explanation: "Le risque est <strong>probable</strong> (70% > 50%), une provision doit être constituée. On provisionne le montant total réclamé (80 000€) car c'est le montant du risque encouru."
+            },
+            {
+                type: "Cas pratique",
+                question: "Une entreprise réalise un bénéfice avant impôt de 200 000€. Elle constitue une provision pour garantie de 30 000€. Taux d'IS : 25%. Quel est l'impact sur le résultat net et l'impôt ?",
+                context: "La provision est une charge déductible fiscalement",
+                choices: [
+                    "Résultat net = 150 000€ ; Économie d'impôt = 0€",
+                    "Résultat net = 170 000€ ; Économie d'impôt = 0€",
+                    "Résultat net = 200 000€ ; Économie d'impôt = 7 500€",
+                    "Résultat net = 127 500€ ; Économie d'impôt = 7 500€"
+                ],
+                correct: 3,
+                explanation: "Résultat imposable = 200 000€ - 30 000€ = 170 000€. IS = 170 000€ × 25% = 42 500€. Résultat net = 170 000€ - 42 500€ = <strong>127 500€</strong>. Économie d'IS = 30 000€ × 25% = <strong>7 500€</strong>."
+            },
+            {
+                type: "Synthèse",
+                question: "Une entreprise constate : dotation aux amortissements (10 000€), dotation pour dépréciation des stocks (5 000€), dotation aux provisions pour litiges (8 000€). Quel est l'impact total sur le résultat ?",
+                choices: [
+                    "Diminution de 23 000€",
+                    "Diminution de 15 000€",
+                    "Augmentation de 23 000€",
+                    "Aucun impact"
+                ],
+                correct: 0,
+                explanation: "Les trois dotations sont des <strong>charges</strong> : 10 000€ + 5 000€ + 8 000€ = <strong>23 000€ de diminution du résultat</strong>."
+            }
+        ];
+
+        // ============================================
+        // CHAPITRE 4 - ÉTAT DU JEU
+        // ============================================
+        let ch4CurrentQuestion = 0;
+        let ch4Score = 0;
+        let ch4CorrectCount = 0;
+        let ch4SelectedChoice = null;
+        let ch4Answered = false;
+
+        // ============================================
+        // CHAPITRE 4 - FONCTIONS PRINCIPALES
+        // ============================================
+        function resetChapter4State() {
+            ch4CurrentQuestion = 0;
+            ch4Score = 0;
+            ch4CorrectCount = 0;
+            ch4SelectedChoice = null;
+            ch4Answered = false;
+            
+            document.getElementById('ch4ScoreDisplay').textContent = '0';
+            document.getElementById('ch4ProgressBar').style.width = '0%';
+            
+            document.querySelectorAll('.ch4-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch4IntroScreen').classList.add('active');
+        }
+
+        function startChapter4Game() {
+            ch4CurrentQuestion = 0;
+            ch4Score = 0;
+            ch4CorrectCount = 0;
+            document.getElementById('ch4ScoreDisplay').textContent = '0';
+            
+            document.querySelectorAll('.ch4-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch4GameScreen').classList.add('active');
+            
+            loadCh4Question();
+        }
+
+        function loadCh4Question() {
+            if (ch4CurrentQuestion >= ch4Questions.length) {
+                showCh4Results();
+                return;
+            }
+
+            ch4SelectedChoice = null;
+            ch4Answered = false;
+            const q = ch4Questions[ch4CurrentQuestion];
+            
+            const contextHtml = q.context ? `<div class="ch4-context-box">📌 ${q.context}</div>` : '';
+            
+            const choicesHtml = q.choices.map((choice, index) => {
+                const letter = String.fromCharCode(65 + index);
+                return `
+                    <button class="ch4-choice-btn" onclick="selectCh4Choice(${index})">
+                        <span class="ch4-choice-letter">${letter}</span>
+                        <span>${choice}</span>
+                    </button>
+                `;
+            }).join('');
+
+            document.getElementById('ch4QuestionContainer').innerHTML = `
+                <div class="ch4-question-card">
+                    <div class="ch4-question-type">${q.type}</div>
+                    <div class="ch4-question-text">${q.question}</div>
+                    ${contextHtml}
+                </div>
+                
+                <div class="ch4-choices-container">
+                    ${choicesHtml}
+                </div>
+                
+                <button class="btn btn-primary ch4-validate-btn" id="ch4ValidateBtn" onclick="validateCh4Answer()" disabled>
+                    Valider ma réponse
+                </button>
+                
+                <div id="ch4FeedbackContainer"></div>
+            `;
+
+            updateCh4Progress();
+        }
+
+        function selectCh4Choice(index) {
+            if (ch4Answered) return;
+            
+            ch4SelectedChoice = index;
+            
+            document.querySelectorAll('.ch4-choice-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            document.querySelectorAll('.ch4-choice-btn')[index].classList.add('selected');
+            document.getElementById('ch4ValidateBtn').disabled = false;
+        }
+
+        function validateCh4Answer() {
+            if (ch4Answered || ch4SelectedChoice === null) return;
+            
+            ch4Answered = true;
+            const q = ch4Questions[ch4CurrentQuestion];
+            const isCorrect = ch4SelectedChoice === q.correct;
+            
+            const buttons = document.querySelectorAll('.ch4-choice-btn');
+            buttons[q.correct].classList.add('correct');
+            
+            if (!isCorrect) {
+                buttons[ch4SelectedChoice].classList.add('incorrect');
+            } else {
+                ch4CorrectCount++;
+                ch4Score += 100;
+                document.getElementById('ch4ScoreDisplay').textContent = ch4Score;
+            }
+            
+            buttons.forEach(btn => btn.style.pointerEvents = 'none');
+            document.getElementById('ch4ValidateBtn').style.display = 'none';
+            
+            const feedbackContainer = document.getElementById('ch4FeedbackContainer');
+            const feedbackClass = isCorrect ? 'correct' : 'incorrect';
+            const feedbackTitle = isCorrect ? '✅ Correct !' : '❌ Incorrect';
+            
+            feedbackContainer.innerHTML = `
+                <div class="feedback ${feedbackClass}">
+                    <div class="ch4-feedback-title">${feedbackTitle}</div>
+                    ${isCorrect ? '<div>+100 points</div>' : ''}
+                    <div class="ch4-feedback-explanation">${q.explanation}</div>
+                </div>
+                <button class="btn btn-primary ch4-next-question-btn" onclick="nextCh4Question()">
+                    ${ch4CurrentQuestion < ch4Questions.length - 1 ? 'Question suivante →' : 'Voir les résultats 🏆'}
+                </button>
+            `;
+        }
+
+        function nextCh4Question() {
+            ch4CurrentQuestion++;
+            loadCh4Question();
+        }
+
+        function updateCh4Progress() {
+            const progress = ((ch4CurrentQuestion + 1) / ch4Questions.length) * 100;
+            document.getElementById('ch4ProgressBar').style.width = progress + '%';
+        }
+
+        function showCh4Results() {
+            document.querySelectorAll('.ch4-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch4ResultScreen').classList.add('active');
+
+            document.getElementById('ch4FinalScore').textContent = ch4Score + ' points';
+            document.getElementById('ch4CorrectAnswers').textContent = ch4CorrectCount;
+
+            const badgeContainer = document.getElementById('ch4BadgeContainer');
+            let message = '';
+
+            if (ch4CorrectCount >= 9) {
+                badgeContainer.innerHTML = `
+                    <div class="badge-earned">
+                        <div class="badge-icon">🏆</div>
+                        <h3>Badge débloqué !</h3>
+                        <p>Maître Comptable</p>
+                    </div>
+                `;
+                message = "Félicitations ! Tu as terminé l'intégralité du parcours et tu maîtrises maintenant tous les concepts fondamentaux de la comptabilité. Tu es prêt pour la pratique ! 🎯";
+            } else if (ch4CorrectCount >= 6) {
+                badgeContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <div style="font-size: 48px;">👍</div>
+                        <p style="margin-top: 8px;">Très bien !</p>
+                    </div>
+                `;
+                message = "Excellent travail ! Tu as bien compris les ajustements comptables. Avec un peu plus de pratique, tu seras au top ! 💪";
+            } else {
+                badgeContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <div style="font-size: 48px;">💪</div>
+                        <p style="margin-top: 8px;">Continue !</p>
+                    </div>
+                `;
+                message = "Les ajustements comptables sont complexes. N'hésite pas à recommencer pour mieux comprendre ces concepts essentiels ! 📚";
+            }
+
+            document.getElementById('ch4FinalMessage').textContent = message;
+
+            // Marquer le chapitre comme terminé et sauvegarder le score
+            markChapterCompleted(4, ch4Score);
+        }
+
+        function restartChapter4() {
+            startChapter4Game();
+        }
+
+        // ============================================
+        // PAGE SCORES FINAUX
+        // ============================================
+        function showFinalScores() {
+            updateHeader('main');
+            showScreen('finalScoresScreen');
+            renderFinalScores();
+        }
+
+        function renderFinalScores() {
+            const bestScores = getBestScores();
+            const lastScores = getLastScores();
+            
+            document.getElementById('finalTotalScore').textContent = bestScores.total;
+            
+            const detailContainer = document.getElementById('finalScoresDetail');
+            detailContainer.innerHTML = '';
+            
+            const chapters = [
+                { id: 1, name: 'Ch.1 - Fondamentaux', badge: 'Détective Comptable', threshold: 600 },
+                { id: 2, name: 'Ch.2 - Structure', badge: 'Architecte Comptable', threshold: 900 },
+                { id: 3, name: 'Ch.3 - Détails', badge: 'Expert Comptable', threshold: 2000 },
+                { id: 4, name: 'Ch.4 - Ajustements', badge: 'Maître Comptable', threshold: 900 }
+            ];
+            
+            chapters.forEach(ch => {
+                const bestScore = bestScores[`chapter${ch.id}`] || 0;
+                const lastScore = lastScores[`chapter${ch.id}`] || 0;
+                const completed = isChapterCompleted(ch.id);
+                
+                const item = document.createElement('div');
+                item.className = 'final-score-item' + (bestScore >= ch.threshold ? ' best' : '');
+                item.innerHTML = `
+                    <div class="final-score-chapter">
+                        ${completed ? '✅' : '🔒'} ${ch.name}
+                    </div>
+                    <div class="final-score-value">${bestScore} pts</div>
+                `;
+                detailContainer.appendChild(item);
+            });
+            
+            // Badges
+            const badgesContainer = document.getElementById('finalBadges');
+            badgesContainer.innerHTML = '';
+            
+            const badges = [
+                { name: 'Détective Comptable', icon: '🔍', unlocked: (bestScores.chapter1 || 0) >= 600 },
+                { name: 'Architecte Comptable', icon: '🏗️', unlocked: (bestScores.chapter2 || 0) >= 900 },
+                { name: 'Expert Comptable', icon: '📊', unlocked: (bestScores.chapter3 || 0) >= 2000 },
+                { name: 'Maître Comptable', icon: '🏆', unlocked: (bestScores.chapter4 || 0) >= 900 }
+            ];
+            
+            badges.forEach(badge => {
+                const badgeEl = document.createElement('div');
+                badgeEl.className = 'final-badge' + (badge.unlocked ? '' : ' locked');
+                badgeEl.innerHTML = `
+                    <div class="final-badge-icon">${badge.unlocked ? badge.icon : '🔒'}</div>
+                    <div class="final-badge-name">${badge.name}</div>
+                `;
+                badgesContainer.appendChild(badgeEl);
+            });
+        }
+
+        // ============================================
+        // INITIALISATION
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            updateHomeUI();
+        });
+    </script>
+</body>
+</html>
