@@ -1,0 +1,4064 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Restructurations CSE - HIIATO</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0095D0 0%, #25CCF6 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        .game-container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0095D0, #25CCF6);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .header-logo {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2px;
+        }
+
+        .header-logo svg {
+            height: 70px;
+            width: auto;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.95;
+            margin-top: 4px;
+        }
+
+        .content {
+            padding: 24px;
+        }
+
+        /* ============================================
+           ÉCRANS - Système de navigation
+           ============================================ */
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .ch1-subscreen {
+            display: none;
+        }
+
+        .ch1-subscreen.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        /* ============================================
+           PAGE D'ACCUEIL
+           ============================================ */
+        .progress-section {
+            background: linear-gradient(135deg, #E8F8FD, #F0FBFF);
+            border-left: 4px solid #25CCF6;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .progress-section h3 {
+            color: #0095D0;
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 12px;
+        }
+
+        .progress-stat {
+            text-align: center;
+        }
+
+        .progress-stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0095D0;
+            line-height: 1;
+        }
+
+        .progress-stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .chapters-list {
+            margin-bottom: 24px;
+        }
+
+        .chapter-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .chapter-item:hover:not(.locked) {
+            border-color: #25CCF6;
+            box-shadow: 0 4px 12px rgba(37, 204, 246, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .chapter-item.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f5f5f5;
+        }
+
+        .chapter-item.completed {
+            border-color: #4CAF50;
+            background: linear-gradient(135deg, #f0fff0, #f8fff8);
+        }
+
+        .chapter-info {
+            flex: 1;
+        }
+
+        .chapter-number {
+            font-size: 12px;
+            color: #0095D0;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .chapter-item.completed .chapter-number {
+            color: #4CAF50;
+        }
+
+        .chapter-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .chapter-item.locked .chapter-title {
+            color: #999;
+        }
+
+        .chapter-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 24px;
+        }
+
+        .chapter-item.locked .chapter-status::after {
+            content: '🔒';
+        }
+
+        .chapter-item.completed .chapter-status::after {
+            content: '✅';
+        }
+
+        .chapter-item:not(.locked):not(.completed) .chapter-status::after {
+            content: '▶️';
+        }
+
+        /* ============================================
+           BOUTONS
+           ============================================ */
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0095D0, #25CCF6);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 204, 246, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 2px solid #0095D0;
+            color: #0095D0;
+        }
+
+        .btn-secondary:hover {
+            background: #f0f9fc;
+            transform: translateY(-2px);
+        }
+
+        /* ============================================
+           CHAPITRE 1 - INTRODUCTION
+           ============================================ */
+        .intro-box {
+            background: linear-gradient(135deg, #E8F8FD, #F0FBFF);
+            border-left: 4px solid #25CCF6;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .intro-box h3 {
+            color: #0095D0;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+
+        .intro-box p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .intro-box ul {
+            margin-left: 20px;
+            color: #555;
+            line-height: 1.8;
+        }
+
+        /* ============================================
+           CHAPITRE 1 - JEU
+           ============================================ */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .score-display {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0095D0;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #0095D0, #25CCF6);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .question-number {
+            font-size: 12px;
+            color: #0095D0;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .question-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .scenario-box {
+            background: #FFF9E6;
+            border-left: 4px solid #FFC107;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .scenario-box strong {
+            color: #F57C00;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .scenario-box ul {
+            margin-left: 20px;
+            margin-top: 8px;
+        }
+
+        .scenario-box ul li {
+            margin-bottom: 6px;
+        }
+
+        /* Schémas visuels */
+        .visual-schema {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .schema-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #0095D0;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .schema-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .entity-box {
+            background: white;
+            border: 3px solid #0095D0;
+            border-radius: 12px;
+            padding: 16px 24px;
+            min-width: 100px;
+            box-shadow: 0 4px 12px rgba(0, 149, 208, 0.2);
+        }
+
+        .entity-box.disappears {
+            border-color: #ff6b6b;
+            background: #ffe0e0;
+            position: relative;
+        }
+
+        .entity-box.disappears::after {
+            content: '❌';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 24px;
+        }
+
+        .entity-box.new {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+            position: relative;
+        }
+
+        .entity-box.new::after {
+            content: '✨';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 24px;
+        }
+
+        .entity-name {
+            font-weight: 700;
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .entity-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .arrow {
+            font-size: 32px;
+            color: #0095D0;
+            font-weight: 700;
+        }
+
+        .plus-sign {
+            font-size: 32px;
+            color: #666;
+            font-weight: 700;
+        }
+
+        /* Choix de réponse */
+        .choices-container {
+            margin-top: 20px;
+        }
+
+        .choice-btn {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 12px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .choice-btn:hover {
+            border-color: #25CCF6;
+            background: #f8fcff;
+            transform: translateX(4px);
+        }
+
+        .choice-btn.selected {
+            border-color: #0095D0;
+            background: #E8F8FD;
+            border-width: 3px;
+        }
+
+        .choice-btn.correct {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+            border-width: 3px;
+        }
+
+        .choice-btn.incorrect {
+            border-color: #ff6b6b;
+            background: #ffe0e0;
+            border-width: 3px;
+        }
+
+        .choice-letter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #0095D0;
+            color: white;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .choice-btn.correct .choice-letter {
+            background: #4CAF50;
+        }
+
+        .choice-btn.incorrect .choice-letter {
+            background: #ff6b6b;
+        }
+
+        /* Feedback */
+        .feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            animation: slideIn 0.4s ease;
+        }
+
+        .feedback.correct {
+            background: #e8f5e9;
+            border: 2px solid #4CAF50;
+        }
+
+        .feedback.incorrect {
+            background: #ffe0e0;
+            border: 2px solid #ff6b6b;
+        }
+
+        .feedback-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .feedback.correct .feedback-title {
+            color: #4CAF50;
+        }
+
+        .feedback.incorrect .feedback-title {
+            color: #ff6b6b;
+        }
+
+        .feedback-explanation {
+            color: #555;
+            line-height: 1.6;
+            margin-top: 12px;
+        }
+
+        .feedback-points {
+            font-size: 24px;
+            font-weight: 700;
+            color: #4CAF50;
+            margin: 8px 0;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ============================================
+           ÉCRAN DE RÉSULTATS
+           ============================================ */
+        .result-box {
+            text-align: center;
+            padding: 24px;
+        }
+
+        .final-score {
+            font-size: 48px;
+            font-weight: 700;
+            color: #0095D0;
+            margin: 20px 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #0095D0;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .badge-earned {
+            background: linear-gradient(135deg, #FFF9E6, #FFF3CC);
+            border: 3px solid #FFC107;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        .badge-icon {
+            font-size: 64px;
+            margin-bottom: 12px;
+        }
+
+        .badge-earned h3 {
+            color: #F57C00;
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .badge-earned p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .final-message {
+            background: #E8F8FD;
+            border-left: 4px solid #25CCF6;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 24px 0;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        /* ============================================
+           PAGE SCORES
+           ============================================ */
+        .total-score-display {
+            background: linear-gradient(135deg, #0095D0, #25CCF6);
+            color: white;
+            padding: 32px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .total-score-display h2 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+
+        .total-score-display .score-value {
+            font-size: 56px;
+            font-weight: 700;
+        }
+
+        .scores-detail {
+            margin-bottom: 24px;
+        }
+
+        .score-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .score-item.best {
+            border-color: #4CAF50;
+            background: linear-gradient(135deg, #f0fff0, #f8fff8);
+        }
+
+        .score-chapter {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .score-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0095D0;
+        }
+
+        .badges-section {
+            margin-top: 32px;
+        }
+
+        .badges-section h3 {
+            color: #0095D0;
+            margin-bottom: 16px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .badge {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .badge.locked {
+            opacity: 0.4;
+        }
+
+        .badge-icon-large {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+
+        .badge-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* ============================================
+           CHAPITRE 3 - JEU D'ASSOCIATION
+           ============================================ */
+        .definitions-grid,
+        .procedures-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .definitions-grid,
+            .procedures-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+
+        /* Zones de dépôt (définitions) */
+        .definition-drop-zone {
+            background: white;
+            border: 3px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 16px;
+            min-height: 160px;
+            position: relative;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .definition-drop-zone.drag-over {
+            border-color: #0095D0;
+            background: #E8F8FD;
+            transform: scale(1.02);
+        }
+
+        .definition-drop-zone.has-procedure {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+        }
+
+        .definition-text {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #555;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .dropped-procedure {
+            margin-top: 12px;
+            min-height: 50px;
+            width: 100%;
+        }
+
+        /* Procédures draggables */
+        .draggable-procedure,
+        .procedure-draggable {
+            background: linear-gradient(135deg, #0095D0, #25CCF6);
+            border: none;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: grab;
+            transition: all 0.3s ease;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            box-shadow: 0 2px 8px rgba(0, 149, 208, 0.2);
+            position: relative;
+        }
+
+        .draggable-procedure:hover,
+        .procedure-draggable:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 149, 208, 0.3);
+        }
+
+        .draggable-procedure:active,
+        .procedure-draggable:active {
+            cursor: grabbing;
+        }
+
+        .draggable-procedure.dragging,
+        .procedure-draggable.dragging {
+            opacity: 0.2;
+            cursor: grabbing;
+        }
+
+        .draggable-procedure.in-zone,
+        .procedure-draggable.in-zone {
+            cursor: default;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+            padding: 12px 16px;
+            min-height: 50px;
+            margin-top: 12px;
+            width: 100%;
+        }
+
+        .draggable-procedure.in-zone .procedure-name,
+        .procedure-draggable.in-zone .procedure-name {
+            font-size: 16px;
+        }
+
+        .draggable-procedure.in-zone:hover,
+        .procedure-draggable.in-zone:hover {
+            transform: none;
+        }
+
+        .drop-placeholder {
+            margin-top: 12px;
+            padding: 12px;
+            border: 2px dashed #0095D0;
+            border-radius: 8px;
+            text-align: center;
+            color: #0095D0;
+            font-size: 14px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.5;
+            width: 100%;
+        }
+
+        .definition-drop-zone.has-procedure .drop-placeholder {
+            display: none;
+        }
+            border-radius: 8px;
+            text-align: center;
+            color: #0095D0;
+            font-size: 14px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.5;
+        }
+
+        .definition-drop-zone.has-procedure .drop-placeholder {
+            display: none;
+        }
+
+        /* Procédure dans une zone (version compacte) */
+        .definition-drop-zone .draggable-procedure,
+        .definition-drop-zone .procedure-draggable {
+            padding: 12px 16px;
+            min-height: 50px;
+            margin-top: 12px;
+        }
+
+        .definition-drop-zone .procedure-name {
+            font-size: 16px;
+        }
+
+        .procedure-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .association-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 20px 0;
+        }
+
+        .procedures-column h3,
+        .definitions-column h3 {
+            text-align: center;
+            color: #0095D0;
+            font-size: 16px;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .procedure-card,
+        .definition-card {
+            background: white;
+            border: 3px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .procedure-card:hover,
+        .definition-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 149, 208, 0.2);
+        }
+
+        .procedure-card.selected {
+            border-color: #0095D0;
+            background: #E8F8FD;
+            border-width: 4px;
+        }
+
+        .definition-card.selected {
+            border-color: #0095D0;
+            background: #E8F8FD;
+            border-width: 4px;
+        }
+
+        .procedure-card.matched,
+        .definition-card.matched {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+            pointer-events: none;
+        }
+
+        .procedure-card.matched::after,
+        .definition-card.matched::after {
+            content: '✓';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            color: #4CAF50;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .procedure-card {
+            position: relative;
+        }
+
+        .definition-card {
+            position: relative;
+        }
+
+        /* ============================================
+           CHAPITRE 3 - FRISE CHRONOLOGIQUE
+           ============================================ */
+        .timeline-scroll-container {
+            width: 100%;
+            overflow-x: visible;
+            overflow-y: visible;
+            padding: 30px 10px;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .timeline-arrow-container {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 0;
+            position: relative;
+            gap: 0;
+        }
+
+        .timeline-arrow-step {
+            position: relative;
+            background: white;
+            border: 3px dashed #0095D0;
+            flex: 1;
+            min-width: 0;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 10px;
+            transition: all 0.3s ease;
+            clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 50%, calc(100% - 15px) 100%, 0 100%, 15px 50%);
+        }
+
+        .timeline-arrow-step:first-child {
+            clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 50%, calc(100% - 15px) 100%, 0 100%);
+            padding-left: 20px;
+        }
+
+        .timeline-arrow-step:last-child {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 15px 50%);
+            padding-right: 20px;
+        }
+
+        .timeline-arrow-step.drag-over {
+            border-color: #25CCF6;
+            background: #E8F8FD;
+            transform: scale(1.03);
+        }
+
+        .timeline-arrow-step.has-step {
+            border-style: solid;
+            border-color: #4CAF50;
+            background: #e8f5e9;
+        }
+
+        .timeline-placeholder {
+            color: #999;
+            font-size: 12px;
+            text-align: center;
+            line-height: 1.4;
+            padding: 0 5px;
+        }
+
+        .timeline-arrow-step.has-step .timeline-placeholder {
+            display: none;
+        }
+
+        .steps-bank-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            background: white;
+            border: 2px dashed #0095D0;
+            border-radius: 12px;
+            padding: 16px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 600px) {
+            .steps-bank-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .timeline-arrow-step {
+                min-height: 120px;
+                padding: 15px 8px;
+            }
+            
+            .timeline-placeholder {
+                font-size: 11px;
+            }
+        }
+
+        .timeline-step {
+            background: linear-gradient(135deg, #0095D0, #25CCF6);
+            border-radius: 8px;
+            padding: 16px;
+            cursor: grab;
+            color: white;
+            font-size: 13px;
+            line-height: 1.4;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 149, 208, 0.2);
+            user-select: none;
+            -webkit-user-select: none;
+            text-align: center;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .timeline-step:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 149, 208, 0.3);
+        }
+
+        .timeline-step:active {
+            cursor: grabbing;
+        }
+
+        .timeline-step.dragging {
+            opacity: 0.2;
+            cursor: grabbing;
+        }
+
+        .timeline-step.in-timeline {
+            cursor: default;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+            background: linear-gradient(135deg, #4CAF50, #66BB6A);
+            padding: 10px 8px;
+            font-size: 12px;
+            min-height: auto;
+            width: 100%;
+            height: 100%;
+        }
+
+        .timeline-step.in-timeline:hover {
+            transform: none;
+        }
+
+        .timeline-arrow-step .timeline-step {
+            margin: 0;
+        }
+
+        .procedure-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .procedure-tab {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .procedure-tab:hover {
+            border-color: #0095D0;
+            color: #0095D0;
+        }
+
+        .procedure-tab.active {
+            border-color: #0095D0;
+            background: #E8F8FD;
+            color: #0095D0;
+        }
+
+        .procedure-tab.completed {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+            color: #4CAF50;
+        }
+
+        .procedure-tab.completed::after {
+            content: ' ✓';
+        }
+
+        .timeline-container {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 24px;
+            min-height: 400px;
+        }
+
+        .timeline-drop-zone {
+            min-height: 300px;
+            position: relative;
+        }
+
+        .timeline-step-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #0095D0;
+            color: white;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .timeline-step-text {
+            flex: 1;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .steps-bank {
+            background: #fff;
+            border: 2px dashed #0095D0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .steps-bank h4 {
+            color: #0095D0;
+            font-size: 14px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .steps-bank-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* ============================================
+           CHAPITRE 4 - CAS PRATIQUES
+           ============================================ */
+        .case-study-box {
+            background: white;
+            border-left: 4px solid #0095D0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .case-study-box h3 {
+            margin: 0 0 16px 0;
+        }
+
+        .case-study-box p {
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .case-study-box ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .case-study-box ul li {
+            padding: 6px 0;
+            color: #555;
+        }
+
+        .question-prompt {
+            background: #E8F8FD;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 16px;
+            color: #0095D0;
+        }
+
+        .choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .choice-card {
+            background: white;
+            border: 3px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .choice-card:hover {
+            border-color: #0095D0;
+            background: #E8F8FD;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 149, 208, 0.2);
+        }
+
+        .choice-text {
+            flex: 1;
+            font-size: 15px;
+            line-height: 1.5;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-logo">
+                <svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
+                    <text x="100" y="50" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="white" text-anchor="middle">HIIATO</text>
+                </svg>
+            </div>
+            <h1 id="headerTitle">Restructurations & CSE</h1>
+            <p id="headerSubtitle">Formation interactive</p>
+        </div>
+
+        <!-- CONTENU -->
+        <div class="content">
+            <!-- ============================================
+                 ÉCRAN D'ACCUEIL
+                 ============================================ -->
+            <div id="homeScreen" class="screen active">
+                <div class="progress-section">
+                    <h3>Ta progression</h3>
+                    <div class="progress-stats">
+                        <div class="progress-stat">
+                            <div class="progress-stat-value" id="homeCompletedChapters">0</div>
+                            <div class="progress-stat-label">Chapitres terminés</div>
+                        </div>
+                        <div class="progress-stat">
+                            <div class="progress-stat-value" id="homeTotalScore">0</div>
+                            <div class="progress-stat-label">Score total</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chapters-list">
+                    <div class="chapter-item" id="chapter1Item" onclick="selectChapter(1)">
+                        <div class="chapter-info">
+                            <div class="chapter-number">Chapitre 1</div>
+                            <div class="chapter-title">Les Restructurations</div>
+                        </div>
+                        <div class="chapter-status"></div>
+                    </div>
+
+                    <div class="chapter-item locked" id="chapter2Item" onclick="selectChapter(2)">
+                        <div class="chapter-info">
+                            <div class="chapter-number">Chapitre 2</div>
+                            <div class="chapter-title">Impact sur les salariés</div>
+                        </div>
+                        <div class="chapter-status"></div>
+                    </div>
+
+                    <div class="chapter-item locked" id="chapter3Item" onclick="selectChapter(3)">
+                        <div class="chapter-info">
+                            <div class="chapter-number">Chapitre 3</div>
+                            <div class="chapter-title">Procédures collectives</div>
+                        </div>
+                        <div class="chapter-status"></div>
+                    </div>
+
+                    <div class="chapter-item locked" id="chapter4Item" onclick="selectChapter(4)">
+                        <div class="chapter-info">
+                            <div class="chapter-number">Chapitre 4</div>
+                            <div class="chapter-title">Cessation des paiements</div>
+                        </div>
+                        <div class="chapter-status"></div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="showFinalScores()">
+                    📊 Voir mes scores et badges
+                </button>
+            </div>
+
+            <!-- ============================================
+                 CHAPITRE 1 - INTRODUCTION
+                 ============================================ -->
+            <div id="ch1IntroScreen" class="screen ch1-subscreen">
+                <div class="intro-box">
+                    <h3>🏢 Chapitre 1 : Les Restructurations</h3>
+                    <p>Les restructurations d'entreprise sont des opérations stratégiques qui modifient en profondeur l'organisation juridique et économique d'une société.</p>
+                    <p><strong>Dans ce chapitre, tu vas découvrir :</strong></p>
+                    <ul>
+                        <li>Les différents types de restructurations juridiques</li>
+                        <li>Leur impact sur l'existence des entités</li>
+                        <li>Leurs conséquences pour le CSE et les salariés</li>
+                    </ul>
+                    <p style="margin-top: 16px;">Prêt à devenir expert en restructurations ? 🎯</p>
+                </div>
+
+                <button class="btn btn-primary" onclick="startChapter1Game()">
+                    Commencer le quiz →
+                </button>
+                <button class="btn btn-secondary" onclick="showScreen('homeScreen')">
+                    ← Retour à l'accueil
+                </button>
+            </div>
+
+            <!-- ============================================
+                 CHAPITRE 1 - JEU
+                 ============================================ -->
+            <div id="ch1GameScreen" class="screen ch1-subscreen">
+                <div class="game-header">
+                    <div>
+                        <strong>Question <span id="ch1QuestionNum">1</span>/12</strong>
+                    </div>
+                    <div class="score-display">
+                        <span id="ch1ScoreDisplay">0</span> pts
+                    </div>
+                </div>
+
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="ch1ProgressBar"></div>
+                </div>
+
+                <div id="ch1QuestionContainer"></div>
+            </div>
+
+            <!-- ============================================
+                 CHAPITRE 1 - RÉSULTATS
+                 ============================================ -->
+            <div id="ch1ResultScreen" class="screen ch1-subscreen">
+                <div class="result-box">
+                    <h2>🎉 Chapitre 1 terminé !</h2>
+                    
+                    <div class="final-score" id="ch1FinalScore">0 points</div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="ch1CorrectAnswers">0</div>
+                            <div class="stat-label">Bonnes réponses</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">12</div>
+                            <div class="stat-label">Questions totales</div>
+                        </div>
+                    </div>
+
+                    <div id="ch1BadgeContainer"></div>
+
+                    <div class="final-message" id="ch1FinalMessage"></div>
+
+                    <button class="btn btn-primary" onclick="showScreen('homeScreen')">
+                        Retour à l'accueil
+                    </button>
+                    <button class="btn btn-secondary" onclick="restartChapter1()">
+                        🔄 Recommencer le chapitre
+                    </button>
+                </div>
+            </div>
+
+            <!-- ============================================
+                 CHAPITRE 2 - INTRODUCTION
+                 ============================================ -->
+            <div id="ch2IntroScreen" class="screen ch2-subscreen">
+                <div class="intro-box">
+                    <h3>⚖️ Chapitre 2 : Impact social des restructurations</h3>
+                    <p>Les restructurations ne se limitent pas aux aspects juridiques : elles ont un impact direct sur les salariés et le fonctionnement des instances représentatives du personnel.</p>
+                    <p><strong>Dans ce chapitre, tu vas étudier un cas pratique complet :</strong></p>
+                    <ul>
+                        <li>Le maintien du CSE après une restructuration</li>
+                        <li>Le sort des usages d'entreprise</li>
+                        <li>Les modifications du contrat de travail</li>
+                        <li>L'application des accords collectifs</li>
+                    </ul>
+                    <p style="margin-top: 16px;"><strong>💡 Concepts clés que tu découvriras :</strong></p>
+                    <ul>
+                        <li><strong>Établissement distinct</strong> : critères et conséquences</li>
+                        <li><strong>Transfert légal</strong> (article L1224-1)</li>
+                        <li><strong>Accord anticipé</strong> : harmoniser avant la fusion</li>
+                        <li><strong>Accord d'adaptation</strong> : gérer les différences</li>
+                        <li><strong>Période de survie</strong> : 15 mois pour négocier</li>
+                    </ul>
+                    <p style="margin-top: 16px;">Prêt à défendre les droits des salariés ? 🛡️</p>
+                </div>
+
+                <button class="btn btn-primary" onclick="startChapter2Game()">
+                    Découvrir le cas pratique →
+                </button>
+                <button class="btn btn-secondary" onclick="showScreen('homeScreen')">
+                    ← Retour à l'accueil
+                </button>
+            </div>
+
+            <!-- ============================================
+                 CHAPITRE 2 - CAS PRATIQUE
+                 ============================================ -->
+            <div id="ch2CaseScreen" class="screen ch2-subscreen">
+                <div class="intro-box">
+                    <h3>📋 Le cas pratique</h3>
+                    <p><strong>Contexte :</strong></p>
+                    <p>Votre société, la <strong>société A</strong>, est absorbée par une <strong>société B</strong> par le transfert de l'intégralité de son patrimoine. Les deux sociétés sont soumises à la même convention collective nationale. Aucun licenciement n'est prévu.</p>
+                    
+                    <p style="margin-top: 12px;"><strong>Situation après la restructuration :</strong></p>
+                    <ul>
+                        <li>✅ Votre activité est maintenue mais transférée à la société B</li>
+                        <li>✅ Chaque entreprise garde ses locaux et son fonctionnement</li>
+                        <li>✅ Le chef de l'entreprise A devient responsable et garde ses pouvoirs (notamment en gestion du personnel) mais devient salarié de l'entreprise B</li>
+                        <li>✅ L'entreprise A se voit attribuer un nouveau numéro SIRET</li>
+                    </ul>
+
+                    <p style="margin-top: 12px;"><strong>⚠️ Problème d'un salarié :</strong></p>
+                    <p>Depuis cette opération, un salarié ne bénéficie plus de la même rémunération :</p>
+                    <ul>
+                        <li>❌ Il ne perçoit plus sa <strong>prime d'assiduité mensuelle</strong> (usage d'entreprise)</li>
+                        <li>❌ La direction l'informe de l'<strong>augmentation de la durée hebdomadaire du travail</strong> (passage de 33h à 35h par semaine)</li>
+                        <li>❌ Sa fiche de paie n'indique plus la <strong>prime de panier repas</strong> prévue par un accord d'entreprise de la société B</li>
+                    </ul>
+
+                    <p style="margin-top: 12px;"><strong>🎯 Votre mission :</strong></p>
+                    <p>En tant que membre du CSE, vous devez étudier ces réclamations et défendre les droits du salarié.</p>
+                    
+                    <p style="margin-top: 12px; font-style: italic; color: #666;">Note : En l'absence de précision, nous considérons qu'il n'y a pas d'accord anticipé.</p>
+                </div>
+
+                <button class="btn btn-primary" onclick="startChapter2Questions()">
+                    Commencer l'étude du cas →
+                </button>
+                <button class="btn btn-secondary" onclick="showScreen('ch2IntroScreen')">
+                    ← Retour
+                </button>
+            </div>
+
+            <!-- ============================================
+                 CHAPITRE 2 - JEU
+                 ============================================ -->
+            <div id="ch2GameScreen" class="screen ch2-subscreen">
+                <div class="game-header">
+                    <div>
+                        <strong>Question <span id="ch2QuestionNum">1</span>/6</strong>
+                    </div>
+                    <div class="score-display">
+                        <span id="ch2ScoreDisplay">0</span> pts
+                    </div>
+                </div>
+
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="ch2ProgressBar"></div>
+                </div>
+
+                <div id="ch2QuestionContainer"></div>
+            </div>
+
+            <!-- ============================================
+                 CHAPITRE 2 - RÉSULTATS
+                 ============================================ -->
+            <div id="ch2ResultScreen" class="screen ch2-subscreen">
+                <div class="result-box">
+                    <h2>🎉 Chapitre 2 terminé !</h2>
+                    
+                    <div class="final-score" id="ch2FinalScore">0 points</div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="ch2CorrectAnswers">0</div>
+                            <div class="stat-label">Bonnes réponses</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">6</div>
+                            <div class="stat-label">Questions totales</div>
+                        </div>
+                    </div>
+
+                    <div id="ch2BadgeContainer"></div>
+
+                    <div class="final-message" id="ch2FinalMessage"></div>
+
+                    <button class="btn btn-primary" onclick="showScreen('homeScreen')">
+                        Retour à l'accueil
+                    </button>
+                    <button class="btn btn-secondary" onclick="restartChapter2()">
+                        🔄 Recommencer le chapitre
+                    </button>
+                </div>
+            </div>
+
+            <!-- ============================================
+                 CHAPITRE 3 - INTRODUCTION
+                 ============================================ -->
+            <div id="ch3IntroScreen" class="screen ch3-subscreen">
+                <div class="intro-box">
+                    <h3>⚖️ Chapitre 3 : Les Procédures Collectives</h3>
+                    <p>Lorsqu'une entreprise rencontre des difficultés financières, plusieurs procédures collectives peuvent être mises en œuvre pour tenter de la sauver ou organiser sa liquidation.</p>
+                    <p><strong>Dans ce chapitre, tu vas découvrir :</strong></p>
+                    <ul>
+                        <li>Les 4 principales procédures collectives</li>
+                        <li>Leurs objectifs et caractéristiques</li>
+                        <li>Le déroulement chronologique de chaque procédure</li>
+                        <li>Les acteurs clés (juge, mandataire, administrateur...)</li>
+                    </ul>
+                    <p style="margin-top: 16px;"><strong>🎮 Le chapitre se déroule en 2 parties :</strong></p>
+                    <ul>
+                        <li><strong>Partie 1</strong> : Jeu d'association - Associe chaque procédure à sa définition</li>
+                        <li><strong>Partie 2</strong> : Frise chronologique - Replace les étapes dans l'ordre</li>
+                    </ul>
+                    <p style="margin-top: 16px;">Prêt à maîtriser les procédures collectives ? 📚</p>
+                </div>
+
+                <button class="btn btn-primary" onclick="startChapter3Part1()">
+                    Commencer la Partie 1 : Association →
+                </button>
+                <button class="btn btn-secondary" onclick="showScreen('homeScreen')">
+                    ← Retour à l'accueil
+                </button>
+            </div>
+
+            <!-- ============================================
+                 CHAPITRE 3 - PARTIE 1 : JEU D'ASSOCIATION
+                 ============================================ -->
+            <div id="ch3Part1Screen" class="screen ch3-subscreen">
+                <div class="game-header">
+                    <div>
+                        <strong>Partie 1 : Association</strong>
+                    </div>
+                    <div class="score-display">
+                        <span id="ch3Part1ScoreDisplay">0</span> pts
+                    </div>
+                </div>
+
+                <div class="intro-box" style="margin-bottom: 20px;">
+                    <strong>🎯 Consigne :</strong> Glisse chaque procédure sur sa définition correspondante.
+                </div>
+
+                <div id="ch3AssociationGame">
+                    <h3 style="text-align: center; color: #0095D0; font-size: 16px; margin-bottom: 16px;">📋 Définitions (zones de dépôt)</h3>
+                    <div class="definitions-grid">
+                        <div class="definition-drop-zone" data-definition="conciliation">
+                            <div class="definition-text">Favoriser la conclusion d'un accord amiable entre l'entreprise et ses principaux créanciers par le biais d'un conciliateur</div>
+                            <div class="dropped-procedure" data-zone="conciliation"></div>
+                        </div>
+                        <div class="definition-drop-zone" data-definition="sauvegarde">
+                            <div class="definition-text">Faciliter la réorganisation de l'entreprise afin de permettre la poursuite de l'activité avant l'installation de problèmes structurels</div>
+                            <div class="dropped-procedure" data-zone="sauvegarde"></div>
+                        </div>
+                        <div class="definition-drop-zone" data-definition="redressement">
+                            <div class="definition-text">Faciliter la réorganisation de l'entreprise afin de permettre la poursuite de l'activité lorsque les problèmes sont survenus</div>
+                            <div class="dropped-procedure" data-zone="redressement"></div>
+                        </div>
+                        <div class="definition-drop-zone" data-definition="liquidation">
+                            <div class="definition-text">Stopper l'endettement du débiteur et rembourser les créanciers si cela est encore possible</div>
+                            <div class="dropped-procedure" data-zone="liquidation"></div>
+                        </div>
+                    </div>
+
+                    <h3 style="text-align: center; color: #0095D0; font-size: 16px; margin: 24px 0 16px 0;">🏢 Procédures Collectives (glisse-les)</h3>
+                    <div class="procedures-grid" id="proceduresBank">
+                        <div class="draggable-procedure" draggable="true" data-procedure="conciliation">
+                            <div class="procedure-name">Conciliation</div>
+                        </div>
+                        <div class="draggable-procedure" draggable="true" data-procedure="sauvegarde">
+                            <div class="procedure-name">Sauvegarde</div>
+                        </div>
+                        <div class="draggable-procedure" draggable="true" data-procedure="redressement">
+                            <div class="procedure-name">Redressement</div>
+                        </div>
+                        <div class="draggable-procedure" draggable="true" data-procedure="liquidation">
+                            <div class="procedure-name">Liquidation</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="ch3Part1ValidateBtn" onclick="validateCh3Part1()" disabled style="margin-top: 20px;">
+                    Valider mes associations
+                </button>
+
+                <div id="ch3Part1FeedbackContainer"></div>
+            </div>
+
+            <!-- ============================================
+                 CHAPITRE 3 - PARTIE 2 : FRISE CHRONOLOGIQUE
+                 ============================================ -->
+            <div id="ch3Part2Screen" class="screen ch3-subscreen">
+                <div class="game-header">
+                    <div>
+                        <strong>Partie 2 : Frise chronologique</strong>
+                    </div>
+                    <div class="score-display">
+                        <span id="ch3Part2ScoreDisplay">0</span> pts
+                    </div>
+                </div>
+
+                <div class="intro-box" style="margin-bottom: 20px;">
+                    <strong>🎯 Consigne :</strong> Glisse les étapes dans la frise chronologique de gauche à droite.
+                </div>
+
+                <div id="ch3TimelineGame">
+                    <h3 id="ch3CurrentProcedureName" style="text-align: center; color: #0095D0; font-size: 18px; margin-bottom: 16px;"></h3>
+                    
+                    <!-- Frise chronologique horizontale en forme de flèche -->
+                    <div class="timeline-scroll-container">
+                        <div class="timeline-arrow-container" id="timelineArrowContainer">
+                            <!-- Les zones de la frise seront générées dynamiquement -->
+                        </div>
+                    </div>
+
+                    <!-- Banque d'étapes à placer -->
+                    <h4 style="text-align: center; color: #0095D0; margin: 24px 0 12px 0;">📦 Étapes à placer dans la frise (glisse-les)</h4>
+                    <div class="steps-bank-grid" id="stepsBank">
+                        <!-- Les étapes seront générées dynamiquement -->
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="ch3Part2ValidateBtn" onclick="validateCh3Part2()" style="margin-top: 20px;" disabled>
+                    Valider cet ordre
+                </button>
+
+                <div id="ch3Part2FeedbackContainer"></div>
+            </div>
+
+            <!-- ============================================
+                 CHAPITRE 4 - INTRODUCTION
+                 ============================================ -->
+            <div id="ch4IntroScreen" class="screen ch4-subscreen">
+                <div class="intro-box">
+                    <h3>⚖️ Chapitre 4 : La Cessation des Paiements</h3>
+                    
+                    <h4 style="color: #0095D0; margin-top: 20px;">📌 Notion centrale des procédures collectives</h4>
+                    <p><strong>La cessation des paiements</strong> est la pierre angulaire du droit des procédures collectives. C'est elle qui détermine la gravité de la situation de l'entreprise et, par conséquent, la procédure applicable.</p>
+                    
+                    <h4 style="color: #0095D0; margin-top: 20px;">📖 Définition</h4>
+                    <p><strong>La cessation des paiements</strong> est l'impossibilité pour une entreprise de faire face au passif exigible avec son actif disponible.</p>
+                    <ul>
+                        <li><strong>Passif exigible</strong> : les dettes arrivées à échéance et dont le paiement peut être réclamé</li>
+                        <li><strong>Actif disponible</strong> : les liquidités et moyens de paiement immédiatement mobilisables</li>
+                    </ul>
+                    
+                    <h4 style="color: #0095D0; margin-top: 20px;">⚖️ Conditions d'ouverture des procédures collectives</h4>
+                    <p>Chaque procédure collective a ses propres conditions d'ouverture :</p>
+                    
+                    <div style="background: #E8F8FD; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <p style="margin: 0;"><strong style="color: #0095D0;">🤝 Conciliation</strong><br>
+                        → <strong>Absence de cessation des paiements</strong> OU<br>
+                        → <strong>Cessation des paiements depuis moins de 45 jours</strong> ET difficultés juridiques, économiques ou financières, avérées ou prévisibles</p>
+                    </div>
+                    
+                    <div style="background: #E8F5E9; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <p style="margin: 0;"><strong style="color: #4CAF50;">🛡️ Sauvegarde</strong><br>
+                        → <strong>Absence totale de cessation des paiements</strong> ET difficultés que le débiteur n'est pas en mesure de surmonter seul</p>
+                    </div>
+                    
+                    <div style="background: #FFF3E0; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <p style="margin: 0;"><strong style="color: #FF9800;">⚠️ Redressement judiciaire</strong><br>
+                        → <strong>Existence d'une cessation des paiements</strong> ET redressement de l'entreprise encore envisageable</p>
+                    </div>
+                    
+                    <div style="background: #FFEBEE; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <p style="margin: 0;"><strong style="color: #F44336;">🔴 Liquidation judiciaire</strong><br>
+                        → <strong>Existence d'une cessation des paiements</strong> ET redressement manifestement impossible</p>
+                    </div>
+                    
+                    <h4 style="color: #0095D0; margin-top: 20px;">🎯 Dans ce chapitre</h4>
+                    <p>Tu vas analyser <strong>5 situations concrètes</strong> d'entreprises en difficulté et déterminer la nature et la gravité de leur situation financière.</p>
+                    
+                    <p style="margin-top: 16px;">Prêt à devenir expert en analyse de cessation des paiements ? 💼</p>
+                </div>
+
+                <button class="btn btn-primary" onclick="startChapter4()">
+                    Commencer le chapitre →
+                </button>
+                <button class="btn btn-secondary" onclick="showScreen('homeScreen')">
+                    ← Retour à l'accueil
+                </button>
+            </div>
+
+            <!-- ============================================
+                 CHAPITRE 4 - QCM
+                 ============================================ -->
+            <div id="ch4GameScreen" class="screen ch4-subscreen">
+                <div class="game-header">
+                    <div>
+                        <strong>Chapitre 4 : Cessation des paiements</strong>
+                        <span id="ch4QuestionCounter" style="margin-left: 10px; color: #666;"></span>
+                    </div>
+                    <div class="score-display">
+                        <span id="ch4ScoreDisplay">0</span> pts
+                    </div>
+                </div>
+
+                <div id="ch4QuestionContainer"></div>
+
+                <div id="ch4FeedbackContainer"></div>
+            </div>
+
+            <!-- ============================================
+                 CHAPITRE 4 - RÉSULTATS
+                 ============================================ -->
+            <div id="ch4ResultScreen" class="screen ch4-subscreen">
+                <div class="result-box">
+                    <h2>🎉 Chapitre 4 terminé !</h2>
+                    
+                    <div class="final-score" id="ch4FinalScore">0 points</div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="ch4CorrectCount">0/5</div>
+                            <div class="stat-label">Réponses correctes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="ch4Percentage">0%</div>
+                            <div class="stat-label">Taux de réussite</div>
+                        </div>
+                    </div>
+
+                    <div id="ch4BadgeContainer"></div>
+
+                    <div class="final-message" id="ch4FinalMessage"></div>
+
+                    <button class="btn btn-primary" onclick="showScreen('homeScreen')">
+                        Retour à l'accueil
+                    </button>
+                    <button class="btn btn-secondary" onclick="restartChapter4()">
+                        🔄 Recommencer le chapitre
+                    </button>
+                </div>
+            </div>
+
+            <!-- ============================================
+                 CHAPITRE 3 - RÉSULTATS
+                 ============================================ -->
+            <div id="ch3ResultScreen" class="screen ch3-subscreen">
+                <div class="result-box">
+                    <h2>🎉 Chapitre 3 terminé !</h2>
+                    
+                    <div class="final-score" id="ch3FinalScore">0 points</div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="ch3Part1Score">0</div>
+                            <div class="stat-label">Partie 1 - Association</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="ch3Part2Score">0</div>
+                            <div class="stat-label">Partie 2 - Chronologie</div>
+                        </div>
+                    </div>
+
+                    <div id="ch3BadgeContainer"></div>
+
+                    <div class="final-message" id="ch3FinalMessage"></div>
+
+                    <button class="btn btn-primary" onclick="showScreen('homeScreen')">
+                        Retour à l'accueil
+                    </button>
+                    <button class="btn btn-secondary" onclick="restartChapter3()">
+                        🔄 Recommencer le chapitre
+                    </button>
+                </div>
+            </div>
+
+            <!-- ============================================
+                 PAGE SCORES FINAUX
+                 ============================================ -->
+            <div id="finalScoresScreen" class="screen">
+                <div class="total-score-display">
+                    <h2>Score Total</h2>
+                    <div class="score-value" id="finalTotalScore">0</div>
+                </div>
+
+                <div class="scores-detail" id="finalScoresDetail"></div>
+
+                <div class="badges-section">
+                    <h3>🏆 Tes Badges</h3>
+                    <div class="badges-grid" id="finalBadges"></div>
+                </div>
+
+                <button class="btn btn-primary" onclick="showScreen('homeScreen')" style="margin-top: 24px;">
+                    ← Retour à l'accueil
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // SYSTÈME DE SAUVEGARDE
+        // ============================================
+        function saveProgress() {
+            const progress = {
+                chapter1: localStorage.getItem('ch1_completed') === 'true',
+                chapter2: localStorage.getItem('ch2_completed') === 'true',
+                chapter3: localStorage.getItem('ch3_completed') === 'true',
+                scores: {
+                    chapter1: parseInt(localStorage.getItem('ch1_score')) || 0,
+                    chapter2: parseInt(localStorage.getItem('ch2_score')) || 0,
+                    chapter3: parseInt(localStorage.getItem('ch3_score')) || 0
+                }
+            };
+            return progress;
+        }
+
+        function markChapterCompleted(chapter, score) {
+            localStorage.setItem(`ch${chapter}_completed`, 'true');
+            const currentScore = parseInt(localStorage.getItem(`ch${chapter}_score`)) || 0;
+            if (score > currentScore) {
+                localStorage.setItem(`ch${chapter}_score`, score);
+            }
+            updateHomeUI();
+        }
+
+        function isChapterCompleted(chapter) {
+            return localStorage.getItem(`ch${chapter}_completed`) === 'true';
+        }
+
+        function getBestScores() {
+            return {
+                chapter1: parseInt(localStorage.getItem('ch1_score')) || 0,
+                chapter2: parseInt(localStorage.getItem('ch2_score')) || 0,
+                chapter3: parseInt(localStorage.getItem('ch3_score')) || 0,
+                total: (parseInt(localStorage.getItem('ch1_score')) || 0) +
+                       (parseInt(localStorage.getItem('ch2_score')) || 0) +
+                       (parseInt(localStorage.getItem('ch3_score')) || 0)
+            };
+        }
+
+        function updateHomeUI() {
+            const completed = [1, 2, 3].filter(ch => isChapterCompleted(ch)).length;
+            document.getElementById('homeCompletedChapters').textContent = completed;
+            
+            const scores = getBestScores();
+            document.getElementById('homeTotalScore').textContent = scores.total;
+
+            // Mise à jour des statuts des chapitres
+            const chapter1Item = document.getElementById('chapter1Item');
+            const chapter2Item = document.getElementById('chapter2Item');
+            const chapter3Item = document.getElementById('chapter3Item');
+            const chapter4Item = document.getElementById('chapter4Item');
+
+            if (isChapterCompleted(1)) {
+                chapter1Item.classList.add('completed');
+                chapter2Item.classList.remove('locked');
+            }
+
+            if (isChapterCompleted(2)) {
+                chapter2Item.classList.add('completed');
+                chapter3Item.classList.remove('locked');
+            }
+
+            if (isChapterCompleted(3)) {
+                chapter3Item.classList.add('completed');
+                chapter4Item.classList.remove('locked');
+            }
+
+            if (isChapterCompleted(4)) {
+                chapter4Item.classList.add('completed');
+            }
+        }
+
+        // ============================================
+        // NAVIGATION
+        // ============================================
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+            
+            if (screenId === 'homeScreen') {
+                updateHomeUI();
+            }
+        }
+
+        function selectChapter(chapterNum) {
+            if (chapterNum === 1) {
+                showScreen('ch1IntroScreen');
+            } else if (chapterNum === 2) {
+                if (isChapterCompleted(1)) {
+                    showScreen('ch2IntroScreen');
+                } else {
+                    alert('Termine d\'abord le chapitre 1 ! 🔒');
+                }
+            } else if (chapterNum === 3) {
+                if (isChapterCompleted(2)) {
+                    showScreen('ch3IntroScreen');
+                } else {
+                    alert('Termine d\'abord le chapitre 2 ! 🔒');
+                }
+            } else if (chapterNum === 4) {
+                if (isChapterCompleted(3)) {
+                    showScreen('ch4IntroScreen');
+                } else {
+                    alert('Termine d\'abord le chapitre 3 ! 🔒');
+                }
+            }
+        }
+
+        // ============================================
+        // CHAPITRE 4 - CESSATION DES PAIEMENTS
+        // ============================================
+        let ch4CurrentQuestion = 0;
+        let ch4Score = 0;
+        let ch4Answers = [];
+
+        const ch4Questions = [
+            {
+                id: 1,
+                situation: "La crise sanitaire impacte votre entreprise qui a récemment investi dans des machines coûteuses payées comptant. L'entreprise peine à payer les salaires, son découvert augmente, et elle ne paie plus la TVA ni les cotisations URSSAF. Elle envisage de vendre les machines, mais cela prendra du temps.",
+                details: [
+                    "💰 Trésorerie fortement impactée",
+                    "❌ Non-paiement des dettes fiscales et sociales",
+                    "📈 Découvert bancaire en augmentation constante",
+                    "🏭 Machines vendables mais recherche d'acquéreur longue"
+                ],
+                choices: [
+                    "Il y a cessation des paiements, une procédure collective peut être ouverte",
+                    "Il n'y a pas de cessation des paiements",
+                    "Il y a cessation des paiements mais des solutions existent avant l'ouverture d'une procédure",
+                    "Il n'y a pas encore de cessation des paiements mais la situation est préoccupante"
+                ],
+                correct: 0,
+                explanation: `<strong>✅ Il y a cessation des paiements, une procédure collective peut être ouverte.</strong><br><br>
+                <strong>Analyse :</strong><br>
+                • <strong>Passif exigible important</strong> : TVA, URSSAF, salaires impayés<br>
+                • <strong>Actif disponible insuffisant</strong> : trésorerie fortement impactée, découvert en augmentation<br>
+                • Les machines sont un actif <strong>non disponible</strong> (vente longue)<br><br>
+                <strong>⚖️ Procédure applicable :</strong><br>
+                L'entreprise est en cessation des paiements avérée. Selon la date de la cessation :<br>
+                • Si < 45 jours : <strong>Redressement judiciaire</strong> possible si redressement envisageable<br>
+                • Si > 45 jours : <strong>Liquidation judiciaire</strong> probable<br><br>
+                <strong>💡 Solutions possibles :</strong><br>
+                Avant d'en arriver à une procédure judiciaire : négocier des délais avec les créanciers, chercher un financement externe, demander un échelonnement des dettes fiscales/sociales, négocier une remise de dette avec clause de retour à meilleure fortune.`
+            },
+            {
+                id: 2,
+                situation: "Le directeur financier explique que l'entreprise est insolvable : l'actif total ne couvre pas le passif total. L'usine (principal actif) est en cours de construction et financée par de nombreux prêts. Cependant, l'activité permet de payer les fournisseurs, les salaires, l'État et les échéances de prêt à court terme.",
+                details: [
+                    "⚠️ Insolvabilité constatée (passif > actif)",
+                    "🏗️ Usine en construction (actif en cours)",
+                    "✅ Paiement régulier des dettes à court terme",
+                    "💳 Échéances de prêt honorées"
+                ],
+                choices: [
+                    "Il y a cessation des paiements, une procédure collective peut être ouverte",
+                    "Il n'y a pas de cessation des paiements",
+                    "Il y a cessation des paiements mais des solutions existent avant l'ouverture d'une procédure",
+                    "Il n'y a pas encore de cessation des paiements mais la situation est préoccupante"
+                ],
+                correct: 3,
+                explanation: `<strong>✅ Il n'y a pas encore de cessation des paiements mais la situation est préoccupante.</strong><br><br>
+                <strong>Distinction fondamentale :</strong><br>
+                • <strong>Insolvabilité ≠ Cessation des paiements</strong><br>
+                • <strong>Insolvabilité</strong> = notion comptable (actif total < passif total)<br>
+                • <strong>Cessation des paiements</strong> = notion de trésorerie (actif disponible < passif exigible)<br><br>
+                <strong>Analyse :</strong><br>
+                ✅ L'entreprise <strong>paie ses dettes exigibles</strong> : fournisseurs, salaires, État, échéances<br>
+                ❌ Mais elle est <strong>insolvable</strong> sur le plan comptable<br>
+                ⚠️ Situation <strong>à surveiller</strong> : l'insolvabilité peut conduire à une cessation des paiements si la trésorerie se dégrade<br><br>
+                <strong>💡 Important à retenir :</strong><br>
+                Une entreprise peut être insolvable (passif > actif) mais continuer à fonctionner si elle dispose de liquidités pour payer ses dettes exigibles. Inversement, une entreprise solvable (actif > passif) peut être en cessation des paiements si son actif n'est pas immédiatement disponible (ex: immeubles à vendre).`
+            },
+            {
+                id: 3,
+                situation: "Votre entreprise obtient un marché de 3 millions d'euros. Le client ne paie pas ses premières échéances. Deux mois plus tard, vous apprenez que le dirigeant du client a détourné les fonds et disparu. Le client est en liquidation judiciaire. Votre entreprise n'a plus la trésorerie pour faire face aux dettes échues, même en arrêtant les frais du chantier.",
+                details: [
+                    "💰 Impayé de 3 millions d'euros",
+                    "🚨 Client en liquidation judiciaire",
+                    "❌ Trésorerie insuffisante malgré l'arrêt des frais",
+                    "⚖️ Faible chance de récupération sans garantie"
+                ],
+                choices: [
+                    "Il y a cessation des paiements, une procédure collective peut être ouverte",
+                    "Il n'y a pas de cessation des paiements",
+                    "Il y a cessation des paiements mais des solutions existent avant l'ouverture d'une procédure",
+                    "Il n'y a pas encore de cessation des paiements mais la situation est préoccupante"
+                ],
+                correct: 0,
+                explanation: `<strong>✅ Il y a cessation des paiements, une procédure collective peut être ouverte.</strong><br><br>
+                <strong>Analyse :</strong><br>
+                • <strong>Impayé massif</strong> de 3 millions d'euros = perte d'actif disponible<br>
+                • <strong>Trésorerie insuffisante</strong> pour faire face aux dettes échues<br>
+                • <strong>Très faible chance de récupération</strong> (liquidation + détournement de fonds)<br>
+                • Les impayés clients sont à l'origine de <strong>25% des procédures collectives</strong> en France<br><br>
+                <strong>⚖️ Procédure applicable :</strong><br>
+                Cessation des paiements avérée → <strong>Redressement</strong> ou <strong>Liquidation</strong> selon la date et les perspectives de redressement<br><br>
+                <strong>💡 Contexte :</strong><br>
+                Sans garantie, votre entreprise aura peu de chances de récupérer sa créance dans la procédure de liquidation du client, d'où l'état de cessation des paiements immédiat. L'entreprise ne dispose plus de la trésorerie nécessaire pour honorer ses propres engagements.`
+            },
+            {
+                id: 4,
+                situation: "Depuis quelques semaines, les clients éprouvent des difficultés à régler leurs factures à cause de la crise sanitaire. L'entreprise continue de payer ses fournisseurs. Le comptable évoque un mauvais besoin en fonds de roulement (décalage entre paiement clients et fournisseurs trop grand). La direction a négocié des délais de paiement plus rapides avec les clients et plus longs avec les fournisseurs.",
+                details: [
+                    "📊 Mauvais besoin en fonds de roulement",
+                    "⏰ Décalage temporaire de trésorerie",
+                    "✅ Entreprise continue de payer ses fournisseurs",
+                    "🤝 Direction proactive (négociation en cours)"
+                ],
+                choices: [
+                    "Il y a cessation des paiements, une procédure collective peut être ouverte",
+                    "Il n'y a pas de cessation des paiements",
+                    "Il y a cessation des paiements mais des solutions existent avant l'ouverture d'une procédure",
+                    "Il n'y a pas encore de cessation des paiements mais la situation est préoccupante"
+                ],
+                correct: 1,
+                explanation: `<strong>✅ Il n'y a pas de cessation des paiements.</strong><br><br>
+                <strong>Distinction importante :</strong><br>
+                • <strong>Gêne momentanée ≠ Cessation des paiements</strong><br>
+                • La <strong>gêne momentanée</strong> = interruption passagère, panne temporaire de trésorerie (pas de constatation judiciaire)<br>
+                • La <strong>cessation des paiements</strong> = état persistant d'arrêt des paiements nécessitant une décision judiciaire<br><br>
+                <strong>📊 Le Besoin en Fonds de Roulement (BFR) :</strong><br>
+                • Besoin en fonds nécessaires au fonctionnement avant l'encaissement des clients<br>
+                • Provient du décalage entre paiement des fournisseurs et encaissement des clients<br>
+                • <strong>Mauvais BFR ≠ Cessation des paiements</strong> → plutôt une mauvaise gestion opérationnelle<br><br>
+                <strong>Points rassurants ici :</strong><br>
+                ✅ L'entreprise <strong>paie encore ses fournisseurs</strong><br>
+                ✅ Direction <strong>proactive</strong> (négociation de délais)<br>
+                ✅ Situation <strong>temporaire</strong> liée à la crise<br><br>
+                <strong>💡 Solutions envisageables :</strong> Financement externe, découvert bancaire, prêt associés, augmentation de capital.`
+            },
+            {
+                id: 5,
+                situation: "Élu du CSE depuis 3 ans, vous constatez que l'entreprise est déficitaire depuis 3 exercices consécutifs (résultat net négatif). Le directeur financier explique que le résultat est impacté par une importante politique de R&D et l'acquisition d'immobilisations coûteuses (coût et amortissement importants chaque année).",
+                details: [
+                    "📉 Résultat net négatif depuis 3 exercices",
+                    "🔬 Politique de recherche & développement importante",
+                    "🏭 Acquisition d'immobilisations coûteuses",
+                    "📊 Amortissements importants"
+                ],
+                choices: [
+                    "Il y a cessation des paiements, une procédure collective peut être ouverte",
+                    "Il n'y a pas de cessation des paiements",
+                    "Il y a cessation des paiements mais des solutions existent avant l'ouverture d'une procédure",
+                    "Il n'y a pas encore de cessation des paiements mais la situation est préoccupante"
+                ],
+                correct: 1,
+                explanation: `<strong>✅ Il n'y a pas de cessation des paiements.</strong><br><br>
+                <strong>Distinction fondamentale :</strong><br>
+                • <strong>Résultat net négatif ≠ Cessation des paiements</strong><br>
+                • <strong>Déficit</strong> = perte comptable au terme de l'exercice<br>
+                • <strong>Cessation des paiements</strong> = impossibilité de payer les dettes exigibles avec l'actif disponible<br><br>
+                <strong>📊 Analyse de la situation :</strong><br>
+                • Il est <strong>normal</strong> d'être en perte lors d'investissements lourds en R&D et immobilisations<br>
+                • À surveiller : le <strong>résultat d'exploitation</strong> (rentabilité de l'activité opérationnelle)<br>
+                • Si le résultat d'exploitation est correct, la perte vient des investissements, pas de l'activité elle-même<br><br>
+                <strong>💡 L'amortissement :</strong><br>
+                • Mécanisme comptable qui fait <strong>baisser artificiellement</strong> le résultat<br>
+                • <strong>N'est pas une sortie de trésorerie</strong> réelle chaque année (charge calculée)<br>
+                • L'investissement a été payé une seule fois, l'amortissement étale comptablement ce coût<br><br>
+                <strong>Conclusion :</strong> Si l'entreprise paie ses dettes exigibles, il n'y a pas de cessation des paiements, même en déficit comptable.`
+            }
+        ];
+
+        function startChapter4() {
+            ch4CurrentQuestion = 0;
+            ch4Score = 0;
+            ch4Answers = [];
+
+            document.getElementById('ch4ScoreDisplay').textContent = '0';
+
+            document.querySelectorAll('.ch4-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch4GameScreen').classList.add('active');
+
+            showCh4Question();
+        }
+
+        function showCh4Question() {
+            const question = ch4Questions[ch4CurrentQuestion];
+            
+            document.getElementById('ch4QuestionCounter').textContent = `Question ${ch4CurrentQuestion + 1}/${ch4Questions.length}`;
+
+            const questionHtml = `
+                <div class="question-card" style="animation: fadeIn 0.4s ease;">
+                    <div class="case-study-box">
+                        <h3 style="color: #0095D0; margin-bottom: 16px;">📋 Cas pratique ${question.id}</h3>
+                        <p style="line-height: 1.6; margin-bottom: 16px;">${question.situation}</p>
+                        
+                        <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-top: 12px;">
+                            <strong style="color: #0095D0;">🔍 Éléments clés :</strong>
+                            <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+                                ${question.details.map(d => `<li>${d}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="question-prompt">
+                        <strong>❓ Votre analyse :</strong> Y a-t-il cessation des paiements ?
+                    </div>
+
+                    <div class="choices-container">
+                        ${question.choices.map((choice, index) => `
+                            <div class="choice-card" onclick="selectCh4Answer(${index})">
+                                <div class="choice-text">${choice}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('ch4QuestionContainer').innerHTML = questionHtml;
+            document.getElementById('ch4FeedbackContainer').innerHTML = '';
+        }
+
+        function selectCh4Answer(choiceIndex) {
+            const question = ch4Questions[ch4CurrentQuestion];
+            const isCorrect = (choiceIndex === question.correct);
+
+            // Enregistrer la réponse
+            ch4Answers.push({
+                questionId: question.id,
+                selected: choiceIndex,
+                correct: question.correct,
+                isCorrect: isCorrect
+            });
+
+            // Calculer le score
+            if (isCorrect) {
+                ch4Score += 200;
+                document.getElementById('ch4ScoreDisplay').textContent = ch4Score;
+            }
+
+            // Afficher le feedback
+            const feedbackClass = isCorrect ? 'correct' : 'incorrect';
+            const feedbackTitle = isCorrect ? '✅ Correct !' : '❌ Incorrect';
+            const points = isCorrect ? '+200 points' : '+0 point';
+
+            const feedbackHtml = `
+                <div class="feedback ${feedbackClass}" style="margin-top: 20px; animation: fadeIn 0.3s ease;">
+                    <div class="feedback-title">${feedbackTitle}</div>
+                    <div class="feedback-points">${points}</div>
+                    <div class="feedback-explanation">${question.explanation}</div>
+                </div>
+            `;
+
+            document.getElementById('ch4FeedbackContainer').innerHTML = feedbackHtml;
+
+            // Désactiver les choix
+            document.querySelectorAll('.choice-card').forEach((card, index) => {
+                card.style.pointerEvents = 'none';
+                if (index === question.correct) {
+                    card.style.borderColor = '#4CAF50';
+                    card.style.background = '#e8f5e9';
+                } else if (index === choiceIndex && !isCorrect) {
+                    card.style.borderColor = '#F44336';
+                    card.style.background = '#FFEBEE';
+                }
+            });
+
+            // Bouton suivant
+            const nextButton = ch4CurrentQuestion < ch4Questions.length - 1
+                ? `<button class="btn btn-primary" onclick="nextCh4Question()" style="margin-top: 16px;">Question suivante →</button>`
+                : `<button class="btn btn-primary" onclick="showCh4Results()" style="margin-top: 16px;">Voir les résultats 🏆</button>`;
+
+            document.getElementById('ch4FeedbackContainer').innerHTML += nextButton;
+        }
+
+        function nextCh4Question() {
+            ch4CurrentQuestion++;
+            showCh4Question();
+        }
+
+        function showCh4Results() {
+            document.querySelectorAll('.ch4-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch4ResultScreen').classList.add('active');
+
+            const correctCount = ch4Answers.filter(a => a.isCorrect).length;
+            const percentage = Math.round((correctCount / ch4Questions.length) * 100);
+
+            document.getElementById('ch4FinalScore').textContent = ch4Score + ' points';
+            document.getElementById('ch4CorrectCount').textContent = `${correctCount}/${ch4Questions.length}`;
+            document.getElementById('ch4Percentage').textContent = percentage + '%';
+
+            const badgeContainer = document.getElementById('ch4BadgeContainer');
+            let message = '';
+
+            if (correctCount === 5) {
+                badgeContainer.innerHTML = `
+                    <div class="badge-earned">
+                        <div class="badge-icon">⚖️</div>
+                        <h3>Badge débloqué !</h3>
+                        <p>Expert Cessation des Paiements</p>
+                    </div>
+                `;
+                message = "Parfait ! Tu maîtrises parfaitement la notion de cessation des paiements et sais l'identifier dans toutes les situations. Félicitations ! 🎯";
+            } else if (correctCount >= 3) {
+                badgeContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <div style="font-size: 48px;">👍</div>
+                        <p style="margin-top: 8px;">Très bien !</p>
+                    </div>
+                `;
+                message = "Bon travail ! Tu as bien compris les principes de la cessation des paiements. Continue comme ça ! 💪";
+            } else {
+                badgeContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <div style="font-size: 48px;">💪</div>
+                        <p style="margin-top: 8px;">Continue !</p>
+                    </div>
+                `;
+                message = "La cessation des paiements est une notion complexe. N'hésite pas à recommencer pour mieux comprendre les différentes situations ! 📚";
+            }
+
+            document.getElementById('ch4FinalMessage').textContent = message;
+
+            markChapterCompleted(4, ch4Score);
+        }
+
+        function restartChapter4() {
+            startChapter4();
+        }
+
+        // ============================================
+        // CHAPITRE 3 - DONNÉES ET LOGIQUE
+        // ============================================
+        let ch3Part1Score = 0;
+        let ch3Part2Score = 0;
+        let ch3SelectedProcedure = null;
+        let ch3SelectedDefinition = null;
+        let ch3Matches = [];
+        let ch3CurrentProcedureTimeline = 'conciliation';
+        let ch3TimelineAnswers = {
+            conciliation: [],
+            sauvegarde: [],
+            redressement: [],
+            liquidation: []
+        };
+
+        const ch3TimelineSteps = {
+            conciliation: [
+                "L'employeur demande l'ouverture de la procédure au Président du tribunal compétent",
+                "Le Président du tribunal désigne un conciliateur pour une période de 4 ou 5 mois maximum",
+                "Le conciliateur ouvre les négociations avec les principaux créanciers et présente des propositions",
+                "Constatation ou homologation d'un accord ou échec et possible ouverture d'une autre procédure"
+            ],
+            sauvegarde: [
+                "L'employeur demande l'ouverture de la procédure au Président du tribunal compétent",
+                "Le Président ouvre la procédure et nomme les acteurs (Un juge commissaire, Un mandataire judicaire, Un éventuel administrateur judiciaire)",
+                "Ouverture d'une période d'observation pour étudier les possibilités de sauvegarde pendant laquelle le dirigeant peut conserver ses fonctions",
+                "Arrêt d'un plan de sauvegarde sur demande du dirigeant OU Impossibilité de sauvegarde débouche sur une éventuelle procédure de redressement ou liquidation"
+            ],
+            redressement: [
+                "Demande d'ouverture de la procédure au Président du tribunal compétent par l'employeur ou un tiers (créanciers ou procureur)",
+                "Le Président ouvre la procédure et nomme les acteurs (Un juge commissaire, Un mandataire judicaire, Un commissaire priseur, Un éventuel administrateur judiciaire)",
+                "Ouverture d'une période d'observation pour étudier les possibilités de redressement pendant laquelle le dirigeant peut conserver ses fonctions",
+                "Arrêt d'un plan de redressement sur demande du dirigeant OU Impossibilité de redressement débouche sur une éventuelle procédure de liquidation"
+            ],
+            liquidation: [
+                "Demande d'ouverture de la procédure au Président du tribunal compétent par l'employeur ou un tiers (créanciers ou procureur)",
+                "Le Président du tribunal nomme les acteurs (Un juge commissaire, Un mandataire judicaire, Un commissaire priseur, Un liquidateur)",
+                "Mise en place de la liquidation par le liquidateur sous contrôle du juge commissaire",
+                "Clôture de la procédure : Paiement des créanciers, Liquidation impossible si insuffisance d'actif, Sommes suffisantes pour payer les créanciers, Difficultés résiduelles rendant inutile la procédure"
+            ]
+        };
+
+        function startChapter3Part1() {
+            ch3Part1Score = 0;
+            ch3Part2Score = 0;
+            ch3Matches = {};
+
+            document.getElementById('ch3Part1ScoreDisplay').textContent = '0';
+            
+            // Réinitialiser les zones
+            document.querySelectorAll('.definition-drop-zone').forEach(zone => {
+                zone.classList.remove('has-procedure', 'drag-over');
+                // Supprimer les procédures dans les zones
+                const existingProcedure = zone.querySelector('.procedure-draggable');
+                if (existingProcedure) {
+                    existingProcedure.remove();
+                }
+            });
+
+            // Remettre les procédures dans la banque ALÉATOIREMENT
+            const proceduresBank = document.getElementById('proceduresBank');
+            const procedures = shuffleArray(['conciliation', 'sauvegarde', 'redressement', 'liquidation']);
+            proceduresBank.innerHTML = procedures.map(proc => `
+                <div class="procedure-draggable" draggable="true" data-procedure="${proc}">
+                    <div class="procedure-name">${proc.charAt(0).toUpperCase() + proc.slice(1)}</div>
+                </div>
+            `).join('');
+
+            document.querySelectorAll('.ch3-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch3Part1Screen').classList.add('active');
+
+            // Setup drag and drop
+            setupCh3Part1DragDrop();
+        }
+
+        function setupCh3Part1DragDrop() {
+            const procedures = document.querySelectorAll('.procedure-draggable');
+            const dropZones = document.querySelectorAll('.definition-drop-zone');
+
+            procedures.forEach(procedure => {
+                // Mouse events
+                procedure.addEventListener('dragstart', handleProcedureDragStart);
+                procedure.addEventListener('dragend', handleProcedureDragEnd);
+
+                // Touch events
+                procedure.addEventListener('touchstart', handleProcedureTouchStart, { passive: false });
+                procedure.addEventListener('touchmove', handleProcedureTouchMove, { passive: false });
+                procedure.addEventListener('touchend', handleProcedureTouchEnd, { passive: false });
+            });
+
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', handleZoneDragOver);
+                zone.addEventListener('dragleave', handleZoneDragLeave);
+                zone.addEventListener('drop', handleZoneDrop);
+            });
+        }
+
+        let draggedProcedureElement = null;
+        let touchStartX, touchStartY;
+        let touchClone = null;
+
+        // Mouse drag handlers
+        function handleProcedureDragStart(e) {
+            draggedProcedureElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        }
+
+        function handleProcedureDragEnd(e) {
+            this.classList.remove('dragging');
+        }
+
+        function handleZoneDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            this.classList.add('drag-over');
+        }
+
+        function handleZoneDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleZoneDrop(e) {
+            e.stopPropagation();
+            e.preventDefault();
+
+            this.classList.remove('drag-over');
+
+            if (draggedProcedureElement) {
+                // Si une procédure existe déjà dans cette zone, la remettre dans la banque
+                const existingProcedure = this.querySelector('.procedure-draggable');
+                if (existingProcedure && existingProcedure !== draggedProcedureElement) {
+                    document.getElementById('proceduresBank').appendChild(existingProcedure);
+                    existingProcedure.classList.remove('in-zone');
+                    setupCh3Part1DragDrop();
+                }
+
+                // Ajouter la nouvelle procédure
+                this.appendChild(draggedProcedureElement);
+                draggedProcedureElement.classList.add('in-zone');
+                this.classList.add('has-procedure');
+
+                // Enregistrer l'association
+                ch3Matches[this.dataset.definition] = draggedProcedureElement.dataset.procedure;
+
+                // Réactiver les listeners pour la procédure déplacée
+                setupCh3Part1DragDrop();
+
+                // Vérifier si toutes les zones sont remplies
+                checkCh3Part1Complete();
+
+                draggedProcedureElement = null;
+            }
+        }
+
+        // Touch drag handlers
+        function handleProcedureTouchStart(e) {
+            draggedProcedureElement = this;
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+
+            // Créer un clone visual pour le drag - PLUS VISIBLE
+            touchClone = this.cloneNode(true);
+            touchClone.style.position = 'fixed';
+            touchClone.style.top = (touch.clientY - this.offsetHeight / 2) + 'px';
+            touchClone.style.left = (touch.clientX - this.offsetWidth / 2) + 'px';
+            touchClone.style.opacity = '0.95';
+            touchClone.style.pointerEvents = 'none';
+            touchClone.style.zIndex = '10000';
+            touchClone.style.width = this.offsetWidth + 'px';
+            touchClone.style.transform = 'scale(1.1)';
+            touchClone.style.boxShadow = '0 12px 40px rgba(0, 149, 208, 0.6)';
+            touchClone.classList.add('touch-clone');
+            document.body.appendChild(touchClone);
+
+            this.style.opacity = '0.2';
+        }
+
+        function handleProcedureTouchMove(e) {
+            if (!touchClone) return;
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
+            touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
+
+            // Highlight drop zone under touch
+            const dropZones = document.querySelectorAll('.definition-drop-zone');
+            dropZones.forEach(zone => zone.classList.remove('drag-over'));
+
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            const dropZone = elementBelow?.closest('.definition-drop-zone');
+            if (dropZone) {
+                dropZone.classList.add('drag-over');
+            }
+        }
+
+        function handleProcedureTouchEnd(e) {
+            if (!touchClone) return;
+
+            const touch = e.changedTouches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            const dropZone = elementBelow?.closest('.definition-drop-zone');
+
+            // Nettoyer le clone
+            document.body.removeChild(touchClone);
+            touchClone = null;
+            this.style.opacity = '1';
+
+            // Drop dans la zone
+            if (dropZone) {
+                // Si une procédure existe déjà dans cette zone, la remettre dans la banque
+                const existingProcedure = dropZone.querySelector('.procedure-draggable');
+                if (existingProcedure && existingProcedure !== draggedProcedureElement) {
+                    document.getElementById('proceduresBank').appendChild(existingProcedure);
+                    existingProcedure.classList.remove('in-zone');
+                }
+
+                // Ajouter la nouvelle procédure
+                dropZone.appendChild(draggedProcedureElement);
+                draggedProcedureElement.classList.add('in-zone');
+                dropZone.classList.add('has-procedure');
+                dropZone.classList.remove('drag-over');
+
+                // Enregistrer l'association
+                ch3Matches[dropZone.dataset.definition] = draggedProcedureElement.dataset.procedure;
+
+                // Réactiver les listeners
+                setupCh3Part1DragDrop();
+
+                // Vérifier si toutes les zones sont remplies
+                checkCh3Part1Complete();
+            }
+
+            draggedProcedureElement = null;
+
+            // Nettoyer les classes drag-over
+            document.querySelectorAll('.definition-drop-zone').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+        }
+
+        function checkCh3Part1Complete() {
+            const filledZones = document.querySelectorAll('.definition-drop-zone.has-procedure').length;
+            document.getElementById('ch3Part1ValidateBtn').disabled = (filledZones !== 4);
+        }
+
+        function validateCh3Part1() {
+            // Vérifier les associations
+            const correctMatches = {
+                'conciliation': 'conciliation',
+                'sauvegarde': 'sauvegarde',
+                'redressement': 'redressement',
+                'liquidation': 'liquidation'
+            };
+
+            let correctCount = 0;
+            Object.keys(ch3Matches).forEach(definition => {
+                const procedure = ch3Matches[definition];
+                if (correctMatches[definition] === procedure) {
+                    correctCount++;
+                }
+            });
+
+            ch3Part1Score = correctCount * 150; // 150 points par bonne association (600 max)
+            document.getElementById('ch3Part1ScoreDisplay').textContent = ch3Part1Score;
+
+            const feedbackContainer = document.getElementById('ch3Part1FeedbackContainer');
+            
+            if (correctCount === 4) {
+                feedbackContainer.innerHTML = `
+                    <div class="feedback correct" style="margin-top: 20px;">
+                        <div class="feedback-title">✅ Parfait !</div>
+                        <div class="feedback-points">+600 points</div>
+                        <div class="feedback-explanation">Toutes les associations sont correctes ! Tu maîtrises bien les 4 procédures collectives.</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="startChapter3Part2()" style="margin-top: 16px;">
+                        Passer à la Partie 2 : Frise chronologique →
+                    </button>
+                `;
+            } else {
+                feedbackContainer.innerHTML = `
+                    <div class="feedback incorrect" style="margin-top: 20px;">
+                        <div class="feedback-title">❌ ${correctCount}/4 correct${correctCount > 1 ? 's' : ''}</div>
+                        <div class="feedback-points">+${ch3Part1Score} points</div>
+                        <div class="feedback-explanation">Certaines associations ne sont pas correctes. Revois les définitions et réessaie !</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="startChapter3Part1()" style="margin-top: 16px;">
+                        🔄 Recommencer la Partie 1
+                    </button>
+                    <button class="btn btn-secondary" onclick="startChapter3Part2()" style="margin-top: 16px;">
+                        Passer à la Partie 2 quand même →
+                    </button>
+                `;
+            }
+
+            document.getElementById('ch3Part1ValidateBtn').disabled = true;
+        }
+
+        function startChapter3Part2() {
+            ch3CurrentProcedureTimeline = 'conciliation';
+            ch3TimelineAnswers = {
+                conciliation: [],
+                sauvegarde: [],
+                redressement: [],
+                liquidation: []
+            };
+
+            document.getElementById('ch3Part2ScoreDisplay').textContent = '0';
+
+            document.querySelectorAll('.ch3-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch3Part2Screen').classList.add('active');
+
+            // Charger la première procédure
+            loadCh3TimelineProcedure('conciliation');
+        }
+
+        function loadCh3TimelineProcedure(procedure) {
+            const steps = ch3TimelineSteps[procedure];
+            const procedureName = procedure.charAt(0).toUpperCase() + procedure.slice(1);
+            
+            document.getElementById('ch3CurrentProcedureName').textContent = `📋 ${procedureName}`;
+
+            // Créer les zones de la frise horizontale en forme de flèche
+            const arrowHtml = steps.map((step, index) => `
+                <div class="timeline-arrow-step" data-position="${index + 1}" data-step-index="${index}">
+                    <div class="timeline-placeholder">📍 Étape ${index + 1}<br><span style="font-size: 11px; opacity: 0.7;">Glisse une étape ici</span></div>
+                </div>
+            `).join('');
+
+            document.getElementById('timelineArrowContainer').innerHTML = arrowHtml;
+
+            // Créer les étapes à placer (MÉLANGÉES ALÉATOIREMENT)
+            const shuffledSteps = shuffleArray([...steps]);
+            const stepsHtml = shuffledSteps.map((step, index) => `
+                <div class="timeline-step" draggable="true" data-step-text="${step}">
+                    ${step}
+                </div>
+            `).join('');
+
+            document.getElementById('stepsBank').innerHTML = stepsHtml;
+
+            // Désactiver le bouton de validation
+            document.getElementById('ch3Part2ValidateBtn').disabled = true;
+
+            // Setup drag and drop pour la frise
+            setupCh3TimelineDragDrop();
+        }
+
+        let draggedTimelineStep = null;
+        let timelineTouchClone = null;
+        let autoScrollInterval = null;
+
+        function setupCh3TimelineDragDrop() {
+            const steps = document.querySelectorAll('.timeline-step');
+            const dropZones = document.querySelectorAll('.timeline-arrow-step');
+
+            steps.forEach(step => {
+                // S'assurer que draggable est activé
+                step.setAttribute('draggable', 'true');
+                step.style.cursor = 'grab';
+                
+                // Mouse events
+                step.ondragstart = handleTimelineStepDragStart;
+                step.ondragend = handleTimelineStepDragEnd;
+
+                // Touch events
+                step.ontouchstart = handleTimelineStepTouchStart;
+                step.ontouchmove = handleTimelineStepTouchMove;
+                step.ontouchend = handleTimelineStepTouchEnd;
+            });
+
+            dropZones.forEach(zone => {
+                zone.ondragover = handleTimelineZoneDragOver;
+                zone.ondragenter = handleTimelineZoneDragEnter;
+                zone.ondragleave = handleTimelineZoneDragLeave;
+                zone.ondrop = handleTimelineZoneDrop;
+            });
+        }
+
+        // Mouse drag handlers avec auto-scroll
+        function handleTimelineStepDragStart(e) {
+            draggedTimelineStep = this;
+            this.classList.add('dragging');
+            this.style.cursor = 'grabbing';
+            
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', 'drag');
+        }
+
+        function handleTimelineStepDragEnd(e) {
+            this.classList.remove('dragging');
+            this.style.cursor = 'grab';
+            
+            // Nettoyer toutes les zones drag-over
+            document.querySelectorAll('.timeline-arrow-step').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+        }
+
+        function handleTimelineZoneDragEnter(e) {
+            e.preventDefault();
+            if (draggedTimelineStep) {
+                this.classList.add('drag-over');
+            }
+        }
+
+        function handleTimelineZoneDragOver(e) {
+            if (e.preventDefault) e.preventDefault();
+            if (e.stopPropagation) e.stopPropagation();
+            
+            e.dataTransfer.dropEffect = 'move';
+            
+            if (draggedTimelineStep) {
+                this.classList.add('drag-over');
+            }
+            
+            return false;
+        }
+
+        function handleTimelineZoneDragLeave(e) {
+            const rect = this.getBoundingClientRect();
+            if (e.clientX < rect.left || e.clientX >= rect.right || 
+                e.clientY < rect.top || e.clientY >= rect.bottom) {
+                this.classList.remove('drag-over');
+            }
+        }
+
+        function handleTimelineZoneDrop(e) {
+            if (e.preventDefault) e.preventDefault();
+            if (e.stopPropagation) e.stopPropagation();
+
+            this.classList.remove('drag-over');
+
+            if (draggedTimelineStep) {
+                // Si une étape existe déjà dans cette zone, la remettre dans la banque
+                const existingStep = this.querySelector('.timeline-step');
+                if (existingStep && existingStep !== draggedTimelineStep) {
+                    const bank = document.getElementById('stepsBank');
+                    bank.appendChild(existingStep);
+                    existingStep.classList.remove('in-timeline');
+                    existingStep.setAttribute('draggable', 'true');
+                }
+
+                // Ajouter la nouvelle étape
+                this.appendChild(draggedTimelineStep);
+                draggedTimelineStep.classList.remove('dragging');
+                draggedTimelineStep.classList.add('in-timeline');
+                this.classList.add('has-step');
+
+                // Réactiver les listeners
+                setupCh3TimelineDragDrop();
+
+                // Vérifier si toutes les zones sont remplies
+                checkCh3TimelineComplete();
+
+                draggedTimelineStep = null;
+            }
+            
+            return false;
+        }
+
+        // Touch drag handlers simplifiés
+        function handleTimelineStepTouchStart(e) {
+            e.preventDefault();
+            draggedTimelineStep = this;
+            const touch = e.touches[0];
+
+            // Créer un clone visual simplifié
+            timelineTouchClone = this.cloneNode(true);
+            timelineTouchClone.style.cssText = `
+                position: fixed;
+                top: ${touch.clientY - this.offsetHeight / 2}px;
+                left: ${touch.clientX - this.offsetWidth / 2}px;
+                opacity: 0.9;
+                pointer-events: none;
+                z-index: 10000;
+                width: ${this.offsetWidth}px;
+                transform: scale(1.05);
+                box-shadow: 0 8px 32px rgba(0, 149, 208, 0.5);
+            `;
+            document.body.appendChild(timelineTouchClone);
+
+            this.style.opacity = '0.3';
+        }
+
+        function handleTimelineStepTouchMove(e) {
+            if (!timelineTouchClone) return;
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            timelineTouchClone.style.top = (touch.clientY - timelineTouchClone.offsetHeight / 2) + 'px';
+            timelineTouchClone.style.left = (touch.clientX - timelineTouchClone.offsetWidth / 2) + 'px';
+
+            // Trouver la zone la plus proche
+            const dropZones = document.querySelectorAll('.timeline-arrow-step');
+            dropZones.forEach(zone => zone.classList.remove('drag-over'));
+
+            let closestZone = null;
+            let minDistance = Infinity;
+
+            dropZones.forEach(zone => {
+                const rect = zone.getBoundingClientRect();
+                const zoneCenterX = rect.left + rect.width / 2;
+                const zoneCenterY = rect.top + rect.height / 2;
+                
+                const distance = Math.sqrt(
+                    Math.pow(touch.clientX - zoneCenterX, 2) + 
+                    Math.pow(touch.clientY - zoneCenterY, 2)
+                );
+                
+                if (distance < 200 && distance < minDistance) {
+                    minDistance = distance;
+                    closestZone = zone;
+                }
+            });
+
+            if (closestZone) {
+                closestZone.classList.add('drag-over');
+            }
+        }
+
+        function handleTimelineStepTouchEnd(e) {
+            if (!timelineTouchClone) return;
+            e.preventDefault();
+
+            const touch = e.changedTouches[0];
+            
+            // Trouver la zone la plus proche
+            const dropZones = document.querySelectorAll('.timeline-arrow-step');
+            let closestZone = null;
+            let minDistance = Infinity;
+
+            dropZones.forEach(zone => {
+                const rect = zone.getBoundingClientRect();
+                const zoneCenterX = rect.left + rect.width / 2;
+                const zoneCenterY = rect.top + rect.height / 2;
+                
+                const distance = Math.sqrt(
+                    Math.pow(touch.clientX - zoneCenterX, 2) + 
+                    Math.pow(touch.clientY - zoneCenterY, 2)
+                );
+                
+                if (distance < 250 && distance < minDistance) {
+                    minDistance = distance;
+                    closestZone = zone;
+                }
+            });
+
+            // Nettoyer le clone
+            document.body.removeChild(timelineTouchClone);
+            timelineTouchClone = null;
+            this.style.opacity = '1';
+
+            // Drop dans la zone
+            if (closestZone) {
+                // Si une étape existe déjà, la remettre dans la banque
+                const existingStep = closestZone.querySelector('.timeline-step');
+                if (existingStep && existingStep !== draggedTimelineStep) {
+                    const bank = document.getElementById('stepsBank');
+                    bank.appendChild(existingStep);
+                    existingStep.classList.remove('in-timeline');
+                }
+
+                // Ajouter la nouvelle étape
+                closestZone.appendChild(draggedTimelineStep);
+                draggedTimelineStep.classList.add('in-timeline');
+                closestZone.classList.add('has-step');
+                closestZone.classList.remove('drag-over');
+
+                // Réactiver les listeners
+                setupCh3TimelineDragDrop();
+
+                // Vérifier si toutes les zones sont remplies
+                checkCh3TimelineComplete();
+            }
+
+            draggedTimelineStep = null;
+
+            // Nettoyer les classes
+            document.querySelectorAll('.timeline-arrow-step').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+        }
+
+        function checkCh3TimelineComplete() {
+            const filledZones = document.querySelectorAll('.timeline-arrow-step.has-step').length;
+            const totalZones = ch3TimelineSteps[ch3CurrentProcedureTimeline].length;
+            document.getElementById('ch3Part2ValidateBtn').disabled = (filledZones !== totalZones);
+        }
+
+        function validateCh3Part2() {
+            const dropZones = document.querySelectorAll('.timeline-arrow-step');
+            const correctSteps = ch3TimelineSteps[ch3CurrentProcedureTimeline];
+            
+            // Récupérer l'ordre actuel
+            const currentOrder = Array.from(dropZones).map(zone => {
+                const step = zone.querySelector('.timeline-step');
+                return step ? step.dataset.stepText : null;
+            });
+
+            // Vérifier si l'ordre est correct
+            const isCorrect = JSON.stringify(currentOrder) === JSON.stringify(correctSteps);
+
+            // Sauvegarder la réponse
+            ch3TimelineAnswers[ch3CurrentProcedureTimeline] = currentOrder;
+
+            const feedbackContainer = document.getElementById('ch3Part2FeedbackContainer');
+
+            if (isCorrect) {
+                ch3Part2Score += 150; // 150 points par procédure (600 max)
+                document.getElementById('ch3Part2ScoreDisplay').textContent = ch3Part2Score;
+
+                feedbackContainer.innerHTML = `
+                    <div class="feedback correct" style="margin-top: 20px;">
+                        <div class="feedback-title">✅ Excellent !</div>
+                        <div class="feedback-points">+150 points</div>
+                        <div class="feedback-explanation">L'ordre chronologique est correct pour la ${ch3CurrentProcedureTimeline} !</div>
+                    </div>
+                `;
+
+                // Vérifier quelle est la procédure suivante
+                const procedures = ['conciliation', 'sauvegarde', 'redressement', 'liquidation'];
+                const currentIndex = procedures.indexOf(ch3CurrentProcedureTimeline);
+                
+                if (currentIndex < procedures.length - 1) {
+                    // Passer à la procédure suivante
+                    feedbackContainer.innerHTML += `
+                        <button class="btn btn-primary" onclick="nextCh3TimelineProcedure()" style="margin-top: 16px;">
+                            Procédure suivante : ${procedures[currentIndex + 1].charAt(0).toUpperCase() + procedures[currentIndex + 1].slice(1)} →
+                        </button>
+                    `;
+                } else {
+                    // Toutes les procédures sont terminées
+                    feedbackContainer.innerHTML += `
+                        <button class="btn btn-primary" onclick="showCh3Results()" style="margin-top: 16px;">
+                            Voir les résultats finaux 🏆
+                        </button>
+                    `;
+                }
+            } else {
+                feedbackContainer.innerHTML = `
+                    <div class="feedback incorrect" style="margin-top: 20px;">
+                        <div class="feedback-title">❌ Incorrect</div>
+                        <div class="feedback-explanation">L'ordre n'est pas correct. Réessaie ou passe à la procédure suivante.</div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="loadCh3TimelineProcedure('${ch3CurrentProcedureTimeline}')" style="margin-top: 16px;">
+                        🔄 Recommencer cette procédure
+                    </button>
+                `;
+
+                // Proposer de passer à la suivante si pas la dernière
+                const procedures = ['conciliation', 'sauvegarde', 'redressement', 'liquidation'];
+                const currentIndex = procedures.indexOf(ch3CurrentProcedureTimeline);
+                
+                if (currentIndex < procedures.length - 1) {
+                    feedbackContainer.innerHTML += `
+                        <button class="btn btn-secondary" onclick="nextCh3TimelineProcedure()" style="margin-top: 16px;">
+                            Passer à la suivante quand même →
+                        </button>
+                    `;
+                } else {
+                    feedbackContainer.innerHTML += `
+                        <button class="btn btn-secondary" onclick="showCh3Results()" style="margin-top: 16px;">
+                            Voir les résultats quand même →
+                        </button>
+                    `;
+                }
+            }
+
+            document.getElementById('ch3Part2ValidateBtn').disabled = true;
+        }
+
+        function nextCh3TimelineProcedure() {
+            const procedures = ['conciliation', 'sauvegarde', 'redressement', 'liquidation'];
+            const currentIndex = procedures.indexOf(ch3CurrentProcedureTimeline);
+            const nextProcedure = procedures[currentIndex + 1];
+            
+            if (nextProcedure) {
+                ch3CurrentProcedureTimeline = nextProcedure;
+                loadCh3TimelineProcedure(nextProcedure);
+                document.getElementById('ch3Part2FeedbackContainer').innerHTML = '';
+            }
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function showCh3Results() {
+            document.querySelectorAll('.ch3-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch3ResultScreen').classList.add('active');
+
+            const totalScore = ch3Part1Score + ch3Part2Score;
+
+            document.getElementById('ch3FinalScore').textContent = totalScore + ' points';
+            document.getElementById('ch3Part1Score').textContent = ch3Part1Score + ' pts';
+            document.getElementById('ch3Part2Score').textContent = ch3Part2Score + ' pts';
+
+            const badgeContainer = document.getElementById('ch3BadgeContainer');
+            let message = '';
+
+            if (totalScore >= 1100) {
+                badgeContainer.innerHTML = `
+                    <div class="badge-earned">
+                        <div class="badge-icon">⚖️</div>
+                        <h3>Badge débloqué !</h3>
+                        <p>Maître des Procédures</p>
+                    </div>
+                `;
+                message = "Parfait ! Tu maîtrises parfaitement les procédures collectives, leurs définitions et leur déroulement chronologique. Félicitations ! 🎯";
+            } else if (totalScore >= 800) {
+                badgeContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <div style="font-size: 48px;">👍</div>
+                        <p style="margin-top: 8px;">Très bien !</p>
+                    </div>
+                `;
+                message = "Très bon travail ! Tu as bien compris les procédures collectives. Continue comme ça ! 💪";
+            } else {
+                badgeContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <div style="font-size: 48px;">💪</div>
+                        <p style="margin-top: 8px;">Continue !</p>
+                    </div>
+                `;
+                message = "Les procédures collectives sont complexes. N'hésite pas à recommencer pour mieux comprendre leur fonctionnement ! 📚";
+            }
+
+            document.getElementById('ch3FinalMessage').textContent = message;
+
+            markChapterCompleted(3, totalScore);
+        }
+
+        function restartChapter3() {
+            startChapter3Part1();
+        }
+
+        // ============================================
+        // CHAPITRE 2 - DONNÉES DES QUESTIONS
+        // ============================================
+        const ch2Questions = [
+            // Question 1 : Qualification de la restructuration
+            {
+                question: 'Première étape : Qualifiez le type de restructuration dont il s\'agit.',
+                context: '💡 <strong>Rappel du cas :</strong> La société A est absorbée par la société B par le transfert de l\'intégralité de son patrimoine.',
+                guide: '<div class="intro-box" style="margin-top: 16px;"><strong>📚 Pour vous guider :</strong><br>Repensez aux 6 types de restructurations que vous avez étudiés au Chapitre 1.</div>',
+                choices: [
+                    'Fusion absorption',
+                    'Modification des statuts (changement juridique)',
+                    'Fusion création',
+                    'Scission',
+                    'Apport partiel d\'actif',
+                    'Prise de participation'
+                ],
+                correct: 0,
+                explanation: '✅ <strong>C\'est une fusion absorption</strong> : la société A (absorbée) transfère l\'intégralité de son patrimoine à la société B (absorbante).<br><br>Maintenant que nous avons qualifié la restructuration, une question importante se pose : <strong>Quelle(s) société(s) disparaît/disparaissent dans cette opération ?</strong>',
+                nextQuestionIntro: true
+            },
+
+            // Question 2 : Disparition des entités
+            {
+                question: 'Dans cette fusion absorption, quelle(s) société(s) disparaît/disparaissent ?',
+                context: '🏢 <strong>Rappel :</strong> Fusion absorption = Société A absorbée par Société B',
+                guide: '<div class="intro-box" style="margin-top: 16px;"><strong>📚 Principe de la fusion absorption :</strong><br>Dans une fusion absorption, une société (absorbante) intègre une autre société (absorbée) en récupérant l\'intégralité de son patrimoine.<br><br><strong>Question clé :</strong> Qu\'advient-il de la personnalité juridique de chaque société ?</div>',
+                choices: [
+                    'Les deux sociétés A et B disparaissent',
+                    'Uniquement la société B (absorbante) disparaît',
+                    'Aucune société ne disparaît, elles coexistent',
+                    'Uniquement la société A (absorbée) disparaît au profit de B (absorbante)'
+                ],
+                correct: 3,
+                explanation: '✅ <strong>Uniquement la société A (absorbée) disparaît au profit de la société B (absorbante).</strong><br><br><strong>Mécanisme juridique :</strong><br>• La société A cesse d\'exister en tant que personne morale<br>• La société B continue d\'exister et intègre tout le patrimoine de A (actifs, passifs, contrats, salariés)<br>• B s\'agrandit mais conserve son identité juridique<br><br><strong>⚠️ Conséquence importante :</strong> Même si A disparaît juridiquement, cela ne signifie pas forcément que son CSE disparaît ! C\'est ce que nous allons étudier maintenant.'
+            },
+
+            // Question 3 : Maintien du CSE
+            {
+                question: 'Le CSE de la société A est-il maintenu après la fusion absorption ? Et si oui, sous quelle forme ?',
+                context: '🏢 <strong>Éléments factuels :</strong><ul><li>✅ Nouveau numéro SIRET attribué à A</li><li>✅ A garde ses locaux et son fonctionnement</li><li>✅ Le chef d\'entreprise A conserve son autonomie de gestion du personnel</li></ul>',
+                guide: `<div class="intro-box" style="margin-top: 16px;">
+                    <strong>📚 Notion clé : L'établissement distinct</strong><br><br>
+                    <strong>Principe :</strong> Pour que le CSE soit maintenu, il faut que son entreprise garde une autonomie juridique ou de fait.<br><br>
+                    En cas de fusion-absorption, les mandats des élus du CSE de l'entreprise absorbée <strong>prennent fin</strong> parce que l'entreprise disparaît et ne conserve aucune autonomie.<br><br>
+                    <strong>Exception :</strong> Si l'entité absorbée devient ou demeure un <strong>établissement distinct autonome</strong> au sein de l'entreprise absorbante, les mandats des élus du CSE d'établissement sont maintenus jusqu'à leur terme.<br><br>
+                    <strong>2 conditions cumulatives (Article L2314-35) :</strong><br>
+                    1️⃣ L'entreprise A peut être qualifiée d'<strong>établissement au sens large</strong> de l'entreprise B<br>
+                    2️⃣ Le responsable possède une <strong>autonomie de gestion</strong>, notamment en matière de personnel<br><br>
+                    <strong>Conséquences :</strong><br>
+                    ✅ Si établissement distinct → <strong>Mandats maintenus jusqu'à leur terme</strong><br>
+                    ❌ Si pas d'établissement distinct → <strong>Mandats expirent</strong> à la date de reprise
+                </div>`,
+                choices: [
+                    'Non, le CSE disparaît car la société A n\'existe plus juridiquement',
+                    'Oui, le CSE de A devient un CSE d\'établissement de B et les mandats sont maintenus',
+                    'Oui, mais seulement si un accord est signé entre les parties',
+                    'Non, il faut organiser de nouvelles élections immédiatement'
+                ],
+                correct: 1,
+                explanation: `✅ <strong>Le CSE de A devient un CSE d'établissement de B</strong> et les mandats sont maintenus.<br><br>
+                <strong>Pourquoi ?</strong><br>
+                Les 2 conditions de l'établissement distinct sont remplies :<br>
+                1️⃣ <strong>Établissement au sens large :</strong> Nouveau SIRET → reconnaissance administrative (INSEE)<br>
+                2️⃣ <strong>Autonomie de gestion :</strong> Le chef de A conserve ses pouvoirs en matière de personnel<br>
+                3️⃣ <strong>Maintien de l'identité :</strong> Locaux et fonctionnement séparés<br><br>
+                <strong>📋 Conséquence pratique :</strong> Vous êtes <strong>compétents</strong> pour étudier et porter les réclamations des salariés au niveau de l'établissement !<br><br>
+                <em>Note : La durée des mandats peut être ajustée par accord pour s'aligner sur le calendrier électoral de B (Article L2314-35).</em>`
+            },
+
+            // Question 4 : Prime d'assiduité (usage)
+            {
+                question: 'Le salarié ne perçoit plus sa prime d\'assiduité mensuelle qui était un usage d\'entreprise dans la société A. A-t-il le droit de continuer à la percevoir ?',
+                context: '💰 <strong>Situation :</strong> Prime d\'assiduité mensuelle = usage d\'entreprise de la société A (pratique constante, générale et fixe)',
+                guide: `<div class="intro-box" style="margin-top: 16px;">
+                    <strong>📚 Notion clé : Le sort des usages d'entreprise</strong><br><br>
+                    <strong>Principe :</strong> Les usages sont <strong>automatiquement transmis</strong> au nouvel employeur lors d'une restructuration.<br><br>
+                    <strong>⚠️ Exceptions (2 cas) :</strong><br>
+                    1️⃣ <strong>Dénonciation régulière</strong> par le nouvel employeur<br>
+                    2️⃣ <strong>Accord anticipé ou accord d'adaptation</strong> ayant le même objet<br><br>
+                    <strong>📋 Procédure de dénonciation (3 étapes obligatoires) :</strong><br>
+                    ✅ Information du CSE<br>
+                    ✅ Information des salariés concernés<br>
+                    ✅ Respect d'un délai de prévenance suffisant<br><br>
+                    <strong>💡 Accord anticipé et accord d'adaptation :</strong><br>
+                    • <strong>Accord anticipé</strong> : conclu <strong>avant</strong> la restructuration pour harmoniser les statuts et éviter les disparités<br>
+                    • <strong>Accord d'adaptation</strong> : négocié <strong>au moment de ou après</strong> la mise en cause pour gérer les différences<br><br>
+                    <strong>Rappel des éléments factuels :</strong><br>
+                    • Pas d'accord anticipé mentionné dans le cas<br>
+                    • Aucune mention de dénonciation de l'usage
+                </div>`,
+                choices: [
+                    'Oui, les usages sont transmis au nouvel employeur car il n\'y a pas de dénonciation ou d\'accord anticipé',
+                    'Non, les usages disparaissent automatiquement lors d\'une fusion',
+                    'Non, sauf si un accord collectif le prévoit',
+                    'Cela dépend de la convention collective'
+                ],
+                correct: 0,
+                explanation: `✅ <strong>Oui, le salarié doit continuer à percevoir sa prime d'assiduité.</strong><br><br>
+                <strong>Analyse juridique :</strong><br>
+                🔹 La prime d'assiduité est un <strong>usage d'entreprise</strong> (pratique constante, générale et fixe)<br>
+                🔹 Les usages sont <strong>automatiquement transmis</strong> lors de la fusion<br>
+                🔹 Pas d'<strong>accord anticipé ou d'adaptation</strong> mentionné dans le cas<br>
+                🔹 Aucune <strong>dénonciation régulière</strong> mentionnée<br><br>
+                <strong>📋 Que doit faire la société B ?</strong><br>
+                Si elle ne souhaite plus appliquer cet usage, elle doit le <strong>dénoncer</strong> en respectant la procédure :<br>
+                1️⃣ Informer le CSE<br>
+                2️⃣ Informer les salariés concernés<br>
+                3️⃣ Respecter un délai de prévenance suffisant<br><br>
+                <strong>Sans dénonciation en bonne et due forme, la société B doit maintenir la prime.</strong>`
+            },
+
+            // Question 5 : Augmentation du temps de travail
+            {
+                question: 'La direction informe le salarié que sa durée hebdomadaire de travail passe de 33h à 35h. Cette modification peut-elle lui être imposée ?',
+                context: '⏱️ <strong>Situation :</strong> Durée contractuelle = 33h/semaine → Passage à 35h/semaine annoncé par la direction',
+                guide: `<div class="intro-box" style="margin-top: 16px;">
+                    <strong>📚 Notion clé : Le transfert légal des contrats (Article L1224-1)</strong><br><br>
+                    <strong>Principe du transfert légal :</strong> Lorsqu'il y a modification dans la situation juridique de l'employeur (fusion, cession...), <strong>tous les contrats de travail en cours subsistent</strong> entre le nouvel employeur et le personnel.<br><br>
+                    <strong>Conditions du transfert légal (2 critères cumulatifs) :</strong><br>
+                    1️⃣ Transfert d'une <strong>entité économique autonome</strong><br>
+                    2️⃣ <strong>Maintien de l'identité</strong> de l'entité transférée<br><br>
+                    <strong>Rappel des éléments factuels :</strong><br>
+                    • L'intégralité de l'activité de A est maintenue et transférée<br>
+                    • A conserve ses locaux et son fonctionnement<br><br>
+                    <strong>Conséquence du transfert légal :</strong> Le transfert est <strong>automatique</strong> et emporte <strong>tous les avantages contractuels</strong> sans formalité.<br><br>
+                    <strong>⚠️ Modification du contrat :</strong> Si le nouvel employeur souhaite modifier un élément du contrat (durée de travail, rémunération, lieu...), il doit suivre la <strong>procédure de modification du contrat de travail</strong> et obtenir l'<strong>accord du salarié</strong>.<br><br>
+                    <strong>💡 Note :</strong> Les accords anticipés ou accords d'adaptation ne permettent pas de modifier unilatéralement les contrats individuels.
+                </div>`,
+                choices: [
+                    'Oui, car la fusion permet d\'harmoniser les conditions de travail',
+                    'Oui, si c\'est prévu dans la convention collective',
+                    'Non, il s\'agit d\'une modification du contrat qui nécessite l\'accord du salarié',
+                    'Non, sauf si un délai de prévenance de 3 mois est respecté'
+                ],
+                correct: 2,
+                explanation: `✅ <strong>Non, cette modification ne peut pas être imposée au salarié.</strong><br><br>
+                <strong>Analyse juridique :</strong><br>
+                📋 Il s'agit d'un <strong>transfert légal</strong> (L1224-1) : les 2 conditions sont remplies (entité économique autonome + maintien de l'identité).<br><br>
+                <strong>Conséquence du transfert légal :</strong><br>
+                Le contrat est transféré <strong>automatiquement</strong> avec <strong>tous ses avantages</strong>, y compris la durée de 33h/semaine.<br><br>
+                <strong>⚠️ La durée du travail est un élément essentiel du contrat</strong><br>
+                Le passage de 33h à 35h constitue une <strong>modification substantielle</strong> qui nécessite :<br>
+                1️⃣ Une <strong>proposition écrite</strong> au salarié<br>
+                2️⃣ Un <strong>délai de réflexion</strong><br>
+                3️⃣ L'<strong>accord explicite</strong> du salarié<br><br>
+                <strong>📋 Que peut faire le salarié ?</strong><br>
+                • <strong>Refuser</strong> la modification → Maintien de 33h/semaine<br>
+                • <strong>Accepter</strong> → Passage à 35h avec avenant au contrat<br><br>
+                <em>Si B impose cette modification sans accord, le salarié peut saisir le Conseil de Prud'hommes.</em>`
+            },
+
+            // Question 6 : Prime panier repas (accord collectif)
+            {
+                question: 'La fiche de paie du salarié n\'indique plus la prime de panier repas prévue par un accord d\'entreprise de la société B. A-t-il le droit de la percevoir ?',
+                context: '🍽️ <strong>Situation :</strong> Prime de panier repas = prévue par un accord d\'entreprise de la société B (l\'entreprise absorbante)',
+                guide: `<div class="intro-box" style="margin-top: 16px;">
+                    <strong>📚 Notion clé : La mise en cause des accords collectifs</strong><br><br>
+                    <strong>Principe (modification de situation juridique) :</strong><br>
+                    En cas de fusion, absorption, cession... les accords et conventions sont <strong>automatiquement mis en cause</strong>.<br><br>
+                    <strong>Exception importante :</strong><br>
+                    Les <strong>conventions de branche</strong> ne sont PAS mises en cause si le transfert se fait dans une entreprise de la <strong>même branche</strong>.<br><br>
+                    <strong>⏱️ Période de survie des avantages (15 mois) :</strong><br>
+                    En l'absence d'<strong>accord anticipé ou d'accord d'adaptation</strong>, les dispositions <strong>plus favorables</strong> des anciens statuts collectifs continuent de s'appliquer pendant <strong>15 mois</strong>.<br><br>
+                    <strong>💡 Pourquoi 15 mois ?</strong><br>
+                    Ce délai permet aux partenaires sociaux de négocier :<br>
+                    • Un <strong>accord anticipé</strong> : conclu <strong>avant</strong> la restructuration pour harmoniser les statuts<br>
+                    • Un <strong>accord d'adaptation</strong> : négocié <strong>au moment de ou après</strong> la mise en cause pour gérer les différences<br>
+                    • Un <strong>nouvel accord</strong> : définir de nouvelles règles communes
+                </div>`,
+                choices: [
+                    'Non, seuls les avantages de A sont maintenus',
+                    'Oui, les dispositions plus favorables survivent pendant 15 mois minimum',
+                    'Non, car il travaillait dans A et pas dans B',
+                    'Oui, mais seulement si un accord d\'adaptation est signé'
+                ],
+                correct: 1,
+                explanation: `✅ <strong>Oui, le salarié doit percevoir la prime de panier repas.</strong><br><br>
+                <strong>Analyse juridique :</strong><br>
+                📋 <strong>Mise en cause des accords :</strong><br>
+                • La fusion entraîne la mise en cause automatique des accords d'entreprise<br>
+                • La convention collective nationale est <strong>maintenue</strong> (même branche)<br><br>
+                <strong>⏱️ Période de survie (15 mois) :</strong><br>
+                En l'absence d'accord anticipé ou d'adaptation, les dispositions <strong>plus favorables</strong> survivent pendant <strong>15 mois minimum</strong>.<br><br>
+                <strong>Dans notre cas :</strong><br>
+                • Le salarié vient de A (absorbée) et rejoint B (absorbante)<br>
+                • L'accord d'entreprise B prévoit une prime de panier repas<br>
+                • Cette prime est <strong>plus favorable</strong> que l'absence de prime<br>
+                • Pas d'accord anticipé ou d'adaptation mentionné → Application de la règle des 15 mois<br><br>
+                <strong>📋 Que doit faire la société B ?</strong><br>
+                Pendant ces 15 mois, B doit :<br>
+                1️⃣ Appliquer les dispositions favorables des deux accords<br>
+                2️⃣ Négocier un <strong>accord d'adaptation</strong> pour harmoniser les statuts<br>
+                3️⃣ Définir un nouveau cadre collectif commun<br><br>
+                <strong>Le salarié bénéficie donc de la prime de panier repas de l'accord B pendant au moins 15 mois.</strong>`
+            }
+        ];
+
+        // ============================================
+        // CHAPITRE 1 - DONNÉES DES QUESTIONS
+        // ============================================
+        const ch1Questions = [
+            // Question 1 : Modification des statuts
+            {
+                type: 'identification',
+                question: 'Une entreprise souhaite changer sa forme juridique en passant de SARL à SAS. De quel type de restructuration s\'agit-il ?',
+                scenario: 'La société ALPHA SARL décide de transformer sa structure juridique pour devenir ALPHA SAS.',
+                visual: 'modification',
+                choices: [
+                    'Modification des statuts (changement juridique)',
+                    'Fusion absorption',
+                    'Fusion création',
+                    'Scission',
+                    'Apport partiel d\'actif',
+                    'Prise de participation'
+                ],
+                correct: 0,
+                explanation: 'Il s\'agit d\'une <strong>modification des statuts par changement juridique</strong>. L\'entreprise reste la même entité mais change simplement sa forme juridique (SARL → SAS). C\'est la restructuration la plus simple : même nom, même activité, mais nouvelles règles de fonctionnement.',
+                visualExplanation: {
+                    before: 'ALPHA',
+                    beforeLabel: 'SARL',
+                    after: 'ALPHA',
+                    afterLabel: 'SAS',
+                    arrow: '→',
+                    note: 'Même entreprise, nouvelle forme'
+                }
+            },
+            {
+                type: 'disparition',
+                question: 'Dans une modification des statuts (changement juridique), l\'entité d\'origine disparaît-elle ?',
+                choices: [
+                    'Non, l\'entité continue d\'exister sous une nouvelle forme juridique',
+                    'Oui, une nouvelle entité est créée',
+                    'Cela dépend du type de modification',
+                    'Oui, mais seulement si c\'est une transformation en SA'
+                ],
+                correct: 2,
+                explanation: '<strong>Cela dépend du type de modification.</strong><br><br><strong>Règle générale :</strong> Une entité ne "disparaît" que si elle est formellement fermée (radiation, dissolution/liquidation). Modifier des statuts ne suffit pas.<br><br><strong>Si on reste dans la même famille juridique :</strong> Il y a continuité, l\'entité reste la même. Exemple : société commerciale → société commerciale (SARL → SAS).<br><br><strong>Si on change de famille juridique :</strong> Ce n\'est pas une transformation : on crée une nouvelle entité, puis on transfère l\'activité/actifs si besoin. L\'ancienne ne disparaît que si on la ferme. Exemples : micro-entreprise (EI) → société (SAS) ; société commerciale → association (loi 1901).'
+            },
+
+            // Question 2 : Fusion absorption
+            {
+                type: 'identification',
+                question: 'Deux sociétés décident de se regrouper : la société BETA absorbe la société GAMMA. Quelle restructuration décrit cette situation ?',
+                scenario: 'La société BETA rachète et intègre intégralement la société GAMMA. Tous les actifs de GAMMA sont transférés à BETA.',
+                visual: 'fusion-absorption',
+                choices: [
+                    'Modification des statuts (changement juridique)',
+                    'Fusion absorption',
+                    'Fusion création',
+                    'Scission',
+                    'Apport partiel d\'actif',
+                    'Prise de participation'
+                ],
+                correct: 1,
+                explanation: 'C\'est une <strong>fusion absorption</strong> : BETA (société absorbante) intègre entièrement GAMMA (société absorbée). Les actifs, passifs et salariés de GAMMA sont transférés à BETA qui continue d\'exister.',
+                visualExplanation: {
+                    entityA: 'BETA',
+                    entityB: 'GAMMA',
+                    result: 'BETA',
+                    resultLabel: '(agrandie)',
+                    note: 'BETA absorbe GAMMA'
+                }
+            },
+            {
+                type: 'disparition',
+                question: 'Dans une fusion absorption, quelles entités disparaissent ?',
+                choices: [
+                    'Uniquement la société absorbée',
+                    'Uniquement la société absorbante',
+                    'Les deux sociétés disparaissent',
+                    'Aucune société ne disparaît'
+                ],
+                correct: 0,
+                explanation: '✅ Seule la <strong>société absorbée disparaît</strong>. La société absorbante continue d\'exister et récupère tous les éléments de la société absorbée (patrimoine, contrats, salariés).'
+            },
+
+            // Question 3 : Fusion création
+            {
+                type: 'identification',
+                question: 'Deux entreprises, DELTA et EPSILON, décident de fusionner pour créer une nouvelle société ZETA. De quelle restructuration s\'agit-il ?',
+                scenario: 'DELTA et EPSILON mettent en commun leurs actifs pour créer ZETA, une entité entièrement nouvelle.',
+                visual: 'fusion-creation',
+                choices: [
+                    'Modification des statuts (changement juridique)',
+                    'Fusion absorption',
+                    'Fusion création',
+                    'Scission',
+                    'Apport partiel d\'actif',
+                    'Prise de participation'
+                ],
+                correct: 2,
+                explanation: 'C\'est une <strong>fusion création</strong> : deux (ou plusieurs) sociétés existantes fusionnent pour créer une société entièrement nouvelle. Les sociétés d\'origine sont remplacées par la nouvelle entité.',
+                visualExplanation: {
+                    entityA: 'DELTA',
+                    entityB: 'EPSILON',
+                    result: 'ZETA',
+                    resultLabel: 'nouvelle société',
+                    note: 'Création d\'une nouvelle entité'
+                }
+            },
+            {
+                type: 'disparition',
+                question: 'Dans une fusion création, combien d\'entités disparaissent ?',
+                choices: [
+                    'Aucune entité ne disparaît',
+                    'Une seule entité disparaît',
+                    'Toutes les entités qui fusionnent disparaissent',
+                    'Cela dépend du nombre d\'entités impliquées'
+                ],
+                correct: 2,
+                explanation: '✅ <strong>Toutes les sociétés qui fusionnent disparaissent</strong> pour donner naissance à une société entièrement nouvelle. Si 3 sociétés fusionnent, les 3 disparaissent pour créer une 4ème société.'
+            },
+
+            // Question 4 : Scission
+            {
+                type: 'identification',
+                question: 'La société KAPPA se divise en deux sociétés distinctes : KAPPA 1 et KAPPA 2. Quelle est cette opération ?',
+                scenario: 'L\'entreprise KAPPA décide de séparer ses activités en deux branches indépendantes pour devenir KAPPA 1 et KAPPA 2.',
+                visual: 'scission',
+                choices: [
+                    'Modification des statuts (changement juridique)',
+                    'Fusion absorption',
+                    'Fusion création',
+                    'Scission',
+                    'Apport partiel d\'actif',
+                    'Prise de participation'
+                ],
+                correct: 3,
+                explanation: 'C\'est une <strong>scission</strong> : une société existante se divise pour créer plusieurs sociétés nouvelles. C\'est l\'inverse de la fusion : au lieu de regrouper, on sépare.',
+                visualExplanation: {
+                    before: 'KAPPA',
+                    beforeLabel: 'société unique',
+                    results: ['KAPPA 1', 'KAPPA 2'],
+                    note: 'KAPPA est divisée en 2'
+                }
+            },
+            {
+                type: 'disparition',
+                question: 'Lors d\'une scission, la société qui se divise continue-t-elle d\'exister ?',
+                choices: [
+                    'Oui, elle continue d\'exister aux côtés des nouvelles entités',
+                    'Non, elle disparaît et est remplacée par les nouvelles entités',
+                    'Oui, mais sous une forme juridique différente',
+                    'Cela dépend du nombre de divisions'
+                ],
+                correct: 1,
+                explanation: '✅ La société d\'origine <strong>disparaît complètement</strong>. Elle est remplacée par plusieurs sociétés nouvelles qui se répartissent son patrimoine, ses activités et ses salariés.'
+            },
+
+            // Question 5 : Apport partiel d'actif
+            {
+                type: 'identification',
+                question: 'La société LAMBDA transfère une partie de son activité (sa branche logistique) à la société MU. LAMBDA continue d\'exister avec ses autres activités. Quelle restructuration est-ce ?',
+                scenario: 'LAMBDA conserve ses activités commerciales mais transfère toute sa branche logistique (bâtiments, camions, personnel logistique) à MU.',
+                visual: 'apport-partiel',
+                choices: [
+                    'Modification des statuts (changement juridique)',
+                    'Fusion absorption',
+                    'Fusion création',
+                    'Scission',
+                    'Apport partiel d\'actif',
+                    'Prise de participation'
+                ],
+                correct: 4,
+                explanation: 'C\'est un <strong>apport partiel d\'actif</strong> : LAMBDA transfère une branche autonome d\'activité à MU, mais continue d\'exister. Seule une partie précise de l\'entreprise change de main (ici : la logistique).',
+                visualExplanation: {
+                    before: 'LAMBDA',
+                    beforeLabel: '(commerce + logistique)',
+                    arrow: '→',
+                    after: 'MU',
+                    afterLabel: '(reçoit logistique)',
+                    remainingBefore: 'LAMBDA',
+                    remainingBeforeLabel: '(commerce)'
+                }
+            },
+            {
+                type: 'disparition',
+                question: 'Dans un apport partiel d\'actif, l\'entreprise qui apporte une partie de son activité disparaît-elle ?',
+                choices: [
+                    'Oui, elle disparaît complètement',
+                    'Non, elle continue d\'exister avec ses activités restantes',
+                    'Oui, mais seulement si l\'apport représente plus de 50% de son activité',
+                    'Elle devient une filiale de la société bénéficiaire'
+                ],
+                correct: 1,
+                explanation: '✅ <strong>Aucune disparition</strong> : la société apporteuse continue d\'exister. Elle transfert seulement une branche d\'activité autonome mais conserve le reste de ses activités. Les deux entreprises coexistent.'
+            },
+
+            // Question 6 : Prise de participation
+            {
+                type: 'identification',
+                question: 'La société NU acquiert 70% des parts de la société XI. XI devient une filiale de NU. Quelle est cette opération ?',
+                scenario: 'NU acquiert la majorité du capital de XI, qui devient sa filiale. XI garde son nom, ses statuts, son existence juridique.',
+                visual: 'prise-participation',
+                choices: [
+                    'Modification des statuts (changement juridique)',
+                    'Fusion absorption',
+                    'Fusion création',
+                    'Scission',
+                    'Apport partiel d\'actif',
+                    'Prise de participation'
+                ],
+                correct: 5,
+                explanation: 'C\'est une <strong>prise de participation</strong> (ou prise de contrôle) : NU acquiert des parts de XI pour en devenir l\'actionnaire majoritaire. XI devient une filiale mais reste une entité juridique distincte. Pas de fusion, pas de transfert d\'activité.',
+                visualExplanation: {
+                    parent: 'NU',
+                    parentLabel: '(société mère)',
+                    subsidiary: 'XI',
+                    subsidiaryLabel: '(filiale)',
+                    connection: 'acquiert 70% des parts',
+                    note: 'NU prend le contrôle de XI'
+                }
+            },
+            {
+                type: 'disparition',
+                question: 'Lors d\'une prise de participation, la société dont les parts sont acquises disparaît-elle ?',
+                choices: [
+                    'Oui, elle est absorbée par la société mère',
+                    'Non, elle conserve son existence juridique propre',
+                    'Oui, si la participation est supérieure à 50%',
+                    'Elle devient une simple division de la société mère'
+                ],
+                correct: 1,
+                explanation: '✅ <strong>Aucune disparition</strong> : la filiale reste une société juridiquement distincte avec son propre SIRET, ses propres statuts, ses propres organes de direction. Seul son actionnariat change.'
+            }
+        ];
+
+        // ============================================
+        // CHAPITRE 2 - LOGIQUE DU JEU
+        // ============================================
+        let ch2CurrentQuestion = 0;
+        let ch2Score = 0;
+        let ch2CorrectCount = 0;
+        let ch2SelectedChoice = null;
+        let ch2Answered = false;
+
+        function startChapter2Game() {
+            document.querySelectorAll('.ch2-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch2CaseScreen').classList.add('active');
+        }
+
+        function startChapter2Questions() {
+            ch2CurrentQuestion = 0;
+            ch2Score = 0;
+            ch2CorrectCount = 0;
+            ch2SelectedChoice = null;
+            ch2Answered = false;
+
+            document.getElementById('ch2ScoreDisplay').textContent = '0';
+
+            document.querySelectorAll('.ch2-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch2GameScreen').classList.add('active');
+
+            loadCh2Question();
+        }
+
+        function loadCh2Question() {
+            if (ch2CurrentQuestion >= ch2Questions.length) {
+                showCh2Results();
+                return;
+            }
+
+            ch2SelectedChoice = null;
+            ch2Answered = false;
+            const q = ch2Questions[ch2CurrentQuestion];
+
+            document.getElementById('ch2QuestionNum').textContent = ch2CurrentQuestion + 1;
+
+            let questionHtml = `
+                <div class="question-card">
+                    <div class="question-number">Question ${ch2CurrentQuestion + 1}/4</div>
+                    <div class="question-text">${q.question}</div>
+                    ${q.context ? `<div class="scenario-box" style="margin-top: 12px;">${q.context}</div>` : ''}
+                </div>
+            `;
+
+            // Ajouter le guide explicatif
+            if (q.guide) {
+                questionHtml += q.guide;
+            }
+
+            const choicesHtml = q.choices.map((choice, index) => {
+                const letter = String.fromCharCode(65 + index);
+                return `
+                    <button class="choice-btn" onclick="selectCh2Choice(${index})">
+                        <span class="choice-letter">${letter}</span>
+                        <span>${choice}</span>
+                    </button>
+                `;
+            }).join('');
+
+            questionHtml += `
+                <div class="choices-container">
+                    ${choicesHtml}
+                </div>
+                
+                <button class="btn btn-primary" id="ch2ValidateBtn" onclick="validateCh2Answer()" disabled>
+                    Valider ma réponse
+                </button>
+                
+                <div id="ch2FeedbackContainer"></div>
+            `;
+
+            document.getElementById('ch2QuestionContainer').innerHTML = questionHtml;
+            updateCh2Progress();
+        }
+
+        function selectCh2Choice(index) {
+            if (ch2Answered) return;
+
+            ch2SelectedChoice = index;
+
+            document.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+
+            document.querySelectorAll('.choice-btn')[index].classList.add('selected');
+            document.getElementById('ch2ValidateBtn').disabled = false;
+        }
+
+        function validateCh2Answer() {
+            if (ch2Answered || ch2SelectedChoice === null) return;
+
+            ch2Answered = true;
+            const q = ch2Questions[ch2CurrentQuestion];
+            const isCorrect = ch2SelectedChoice === q.correct;
+
+            const buttons = document.querySelectorAll('.choice-btn');
+            buttons[q.correct].classList.add('correct');
+
+            if (!isCorrect) {
+                buttons[ch2SelectedChoice].classList.add('incorrect');
+            } else {
+                ch2CorrectCount++;
+                ch2Score += 200; // 200 points par question (6 questions = 1200 points max)
+                document.getElementById('ch2ScoreDisplay').textContent = ch2Score;
+            }
+
+            buttons.forEach(btn => btn.style.pointerEvents = 'none');
+            document.getElementById('ch2ValidateBtn').style.display = 'none';
+
+            const feedbackContainer = document.getElementById('ch2FeedbackContainer');
+            const feedbackClass = isCorrect ? 'correct' : 'incorrect';
+            const feedbackTitle = isCorrect ? '✅ Correct !' : '❌ Incorrect';
+
+            feedbackContainer.innerHTML = `
+                <div class="feedback ${feedbackClass}">
+                    <div class="feedback-title">${feedbackTitle}</div>
+                    ${isCorrect ? '<div class="feedback-points">+200 points</div>' : ''}
+                    <div class="feedback-explanation">${q.explanation}</div>
+                </div>
+                <button class="btn btn-primary" onclick="nextCh2Question()" style="margin-top: 16px;">
+                    ${ch2CurrentQuestion < ch2Questions.length - 1 ? 'Question suivante →' : 'Voir les résultats 🏆'}
+                </button>
+            `;
+        }
+
+        function nextCh2Question() {
+            ch2CurrentQuestion++;
+            loadCh2Question();
+        }
+
+        function updateCh2Progress() {
+            const progress = ((ch2CurrentQuestion + 1) / ch2Questions.length) * 100;
+            document.getElementById('ch2ProgressBar').style.width = progress + '%';
+        }
+
+        function showCh2Results() {
+            document.querySelectorAll('.ch2-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch2ResultScreen').classList.add('active');
+
+            document.getElementById('ch2FinalScore').textContent = ch2Score + ' points';
+            document.getElementById('ch2CorrectAnswers').textContent = ch2CorrectCount;
+
+            const badgeContainer = document.getElementById('ch2BadgeContainer');
+            let message = '';
+
+            if (ch2CorrectCount >= 6) {
+                badgeContainer.innerHTML = `
+                    <div class="badge-earned">
+                        <div class="badge-icon">🛡️</div>
+                        <h3>Badge débloqué !</h3>
+                        <p>Défenseur Social</p>
+                    </div>
+                `;
+                message = "Parfait ! Tu maîtrises les impacts sociaux des restructurations et tu es capable de défendre efficacement les droits des salariés. Le chapitre 3 est maintenant débloqué ! 🎯";
+            } else if (ch2CorrectCount >= 5) {
+                badgeContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <div style="font-size: 48px;">👍</div>
+                        <p style="margin-top: 8px;">Très bien !</p>
+                    </div>
+                `;
+                message = "Très bon travail ! Tu as bien compris les principes du transfert des avantages sociaux. Continue comme ça ! 💪";
+            } else {
+                badgeContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <div style="font-size: 48px;">💪</div>
+                        <p style="margin-top: 8px;">Continue !</p>
+                    </div>
+                `;
+                message = "L'impact social des restructurations est complexe. N'hésite pas à recommencer pour mieux comprendre les mécanismes de transfert des avantages ! 📚";
+            }
+
+            document.getElementById('ch2FinalMessage').textContent = message;
+
+            markChapterCompleted(2, ch2Score);
+        }
+
+        function restartChapter2() {
+            startChapter2Questions();
+        }
+
+        // ============================================
+        // CHAPITRE 1 - LOGIQUE DU JEU
+        // ============================================
+        let ch1CurrentQuestion = 0;
+        let ch1Score = 0;
+        let ch1CorrectCount = 0;
+        let ch1SelectedChoice = null;
+        let ch1Answered = false;
+
+        function startChapter1Game() {
+            ch1CurrentQuestion = 0;
+            ch1Score = 0;
+            ch1CorrectCount = 0;
+            ch1SelectedChoice = null;
+            ch1Answered = false;
+
+            document.getElementById('ch1ScoreDisplay').textContent = '0';
+
+            document.querySelectorAll('.ch1-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch1GameScreen').classList.add('active');
+
+            loadCh1Question();
+        }
+
+        function loadCh1Question() {
+            if (ch1CurrentQuestion >= ch1Questions.length) {
+                showCh1Results();
+                return;
+            }
+
+            ch1SelectedChoice = null;
+            ch1Answered = false;
+            const q = ch1Questions[ch1CurrentQuestion];
+
+            document.getElementById('ch1QuestionNum').textContent = ch1CurrentQuestion + 1;
+
+            let questionHtml = `
+                <div class="question-card">
+                    <div class="question-number">${q.type === 'identification' ? '🎯 Identification' : '❓ Question de disparition'}</div>
+                    <div class="question-text">${q.question}</div>
+                    ${q.scenario ? `<div class="scenario-box"><strong>Situation :</strong> ${q.scenario}</div>` : ''}
+                </div>
+            `;
+
+            // Ajouter le schéma visuel pour les questions d'identification
+            if (q.type === 'identification' && q.visual) {
+                questionHtml += generateVisualSchema(q);
+            }
+
+            const choicesHtml = q.choices.map((choice, index) => {
+                const letter = String.fromCharCode(65 + index);
+                return `
+                    <button class="choice-btn" onclick="selectCh1Choice(${index})">
+                        <span class="choice-letter">${letter}</span>
+                        <span>${choice}</span>
+                    </button>
+                `;
+            }).join('');
+
+            questionHtml += `
+                <div class="choices-container">
+                    ${choicesHtml}
+                </div>
+                
+                <button class="btn btn-primary" id="ch1ValidateBtn" onclick="validateCh1Answer()" disabled>
+                    Valider ma réponse
+                </button>
+                
+                <div id="ch1FeedbackContainer"></div>
+            `;
+
+            document.getElementById('ch1QuestionContainer').innerHTML = questionHtml;
+            updateCh1Progress();
+        }
+
+        function generateVisualSchema(q) {
+            let schemaHtml = '<div class="visual-schema">';
+            schemaHtml += '<div class="schema-title">Schéma de la restructuration</div>';
+            schemaHtml += '<div class="schema-content">';
+
+            switch(q.visual) {
+                case 'modification':
+                    schemaHtml += `
+                        <div class="entity-box">
+                            <div class="entity-name">${q.visualExplanation.before}</div>
+                            <div class="entity-label">${q.visualExplanation.beforeLabel}</div>
+                        </div>
+                        <div class="arrow">${q.visualExplanation.arrow}</div>
+                        <div class="entity-box">
+                            <div class="entity-name">${q.visualExplanation.after}</div>
+                            <div class="entity-label">${q.visualExplanation.afterLabel}</div>
+                        </div>
+                    `;
+                    break;
+
+                case 'fusion-absorption':
+                    schemaHtml += `
+                        <div class="entity-box">
+                            <div class="entity-name">${q.visualExplanation.entityA}</div>
+                            <div class="entity-label">Absorbante</div>
+                        </div>
+                        <div class="plus-sign">+</div>
+                        <div class="entity-box disappears">
+                            <div class="entity-name">${q.visualExplanation.entityB}</div>
+                            <div class="entity-label">Absorbée</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="entity-box new">
+                            <div class="entity-name">${q.visualExplanation.result}</div>
+                            <div class="entity-label">${q.visualExplanation.resultLabel}</div>
+                        </div>
+                    `;
+                    break;
+
+                case 'fusion-creation':
+                    schemaHtml += `
+                        <div class="entity-box disappears">
+                            <div class="entity-name">${q.visualExplanation.entityA}</div>
+                            <div class="entity-label">Disparaît</div>
+                        </div>
+                        <div class="plus-sign">+</div>
+                        <div class="entity-box disappears">
+                            <div class="entity-name">${q.visualExplanation.entityB}</div>
+                            <div class="entity-label">Disparaît</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="entity-box new">
+                            <div class="entity-name">${q.visualExplanation.result}</div>
+                            <div class="entity-label">${q.visualExplanation.resultLabel}</div>
+                        </div>
+                    `;
+                    break;
+
+                case 'scission':
+                    schemaHtml += `
+                        <div class="entity-box disappears">
+                            <div class="entity-name">${q.visualExplanation.before}</div>
+                            <div class="entity-label">${q.visualExplanation.beforeLabel}</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            ${q.visualExplanation.results.map(result => `
+                                <div class="entity-box new">
+                                    <div class="entity-name">${result}</div>
+                                    <div class="entity-label">Nouvelle</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    break;
+
+                case 'apport-partiel':
+                    schemaHtml += `
+                        <div style="display: flex; flex-direction: column; gap: 12px; align-items: center;">
+                            <div class="entity-box">
+                                <div class="entity-name">${q.visualExplanation.before}</div>
+                                <div class="entity-label">${q.visualExplanation.beforeLabel}</div>
+                            </div>
+                            <div class="arrow" style="transform: rotate(90deg);">→</div>
+                            <div style="display: flex; gap: 20px; align-items: center;">
+                                <div class="entity-box">
+                                    <div class="entity-name">${q.visualExplanation.remainingBefore}</div>
+                                    <div class="entity-label">${q.visualExplanation.remainingBeforeLabel}</div>
+                                </div>
+                                <div class="arrow">→</div>
+                                <div class="entity-box new">
+                                    <div class="entity-name">${q.visualExplanation.after}</div>
+                                    <div class="entity-label">${q.visualExplanation.afterLabel}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'prise-participation':
+                    schemaHtml += `
+                        <div style="display: flex; flex-direction: column; gap: 12px; align-items: center;">
+                            <div class="entity-box">
+                                <div class="entity-name">${q.visualExplanation.parent}</div>
+                                <div class="entity-label">${q.visualExplanation.parentLabel}</div>
+                            </div>
+                            <div style="font-size: 14px; font-weight: 600; color: #0095D0; padding: 8px; text-align: center;">
+                                ↓ 💰 (paiement) ↓<br>
+                                <span style="font-size: 12px; color: #666;">↑ ${q.visualExplanation.connection} ↑</span>
+                            </div>
+                            <div class="entity-box">
+                                <div class="entity-name">${q.visualExplanation.subsidiary}</div>
+                                <div class="entity-label">${q.visualExplanation.subsidiaryLabel}</div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+            }
+
+            if (q.visualExplanation.note) {
+                schemaHtml += `<div style="width: 100%; text-align: center; margin-top: 12px; font-size: 12px; color: #666; font-style: italic;">${q.visualExplanation.note}</div>`;
+            }
+
+            schemaHtml += '</div></div>';
+            return schemaHtml;
+        }
+
+        function selectCh1Choice(index) {
+            if (ch1Answered) return;
+
+            ch1SelectedChoice = index;
+
+            document.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+
+            document.querySelectorAll('.choice-btn')[index].classList.add('selected');
+            document.getElementById('ch1ValidateBtn').disabled = false;
+        }
+
+        function validateCh1Answer() {
+            if (ch1Answered || ch1SelectedChoice === null) return;
+
+            ch1Answered = true;
+            const q = ch1Questions[ch1CurrentQuestion];
+            const isCorrect = ch1SelectedChoice === q.correct;
+
+            const buttons = document.querySelectorAll('.choice-btn');
+            buttons[q.correct].classList.add('correct');
+
+            if (!isCorrect) {
+                buttons[ch1SelectedChoice].classList.add('incorrect');
+            } else {
+                ch1CorrectCount++;
+                ch1Score += 100;
+                document.getElementById('ch1ScoreDisplay').textContent = ch1Score;
+            }
+
+            buttons.forEach(btn => btn.style.pointerEvents = 'none');
+            document.getElementById('ch1ValidateBtn').style.display = 'none';
+
+            const feedbackContainer = document.getElementById('ch1FeedbackContainer');
+            const feedbackClass = isCorrect ? 'correct' : 'incorrect';
+            const feedbackTitle = isCorrect ? '✅ Correct !' : '❌ Incorrect';
+
+            feedbackContainer.innerHTML = `
+                <div class="feedback ${feedbackClass}">
+                    <div class="feedback-title">${feedbackTitle}</div>
+                    ${isCorrect ? '<div class="feedback-points">+100 points</div>' : ''}
+                    <div class="feedback-explanation">${q.explanation}</div>
+                </div>
+                <button class="btn btn-primary" onclick="nextCh1Question()" style="margin-top: 16px;">
+                    ${ch1CurrentQuestion < ch1Questions.length - 1 ? 'Question suivante →' : 'Voir les résultats 🏆'}
+                </button>
+            `;
+        }
+
+        function nextCh1Question() {
+            ch1CurrentQuestion++;
+            loadCh1Question();
+        }
+
+        function updateCh1Progress() {
+            const progress = ((ch1CurrentQuestion + 1) / ch1Questions.length) * 100;
+            document.getElementById('ch1ProgressBar').style.width = progress + '%';
+        }
+
+        function showCh1Results() {
+            document.querySelectorAll('.ch1-subscreen').forEach(s => s.classList.remove('active'));
+            document.getElementById('ch1ResultScreen').classList.add('active');
+
+            document.getElementById('ch1FinalScore').textContent = ch1Score + ' points';
+            document.getElementById('ch1CorrectAnswers').textContent = ch1CorrectCount;
+
+            const badgeContainer = document.getElementById('ch1BadgeContainer');
+            let message = '';
+
+            if (ch1CorrectCount >= 10) {
+                badgeContainer.innerHTML = `
+                    <div class="badge-earned">
+                        <div class="badge-icon">🏆</div>
+                        <h3>Badge débloqué !</h3>
+                        <p>Expert Restructurations</p>
+                    </div>
+                `;
+                message = "Excellent ! Tu maîtrises parfaitement les différents types de restructurations et leur impact sur les entités juridiques. Le chapitre 2 est maintenant débloqué ! 🎯";
+            } else if (ch1CorrectCount >= 8) {
+                badgeContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <div style="font-size: 48px;">👍</div>
+                        <p style="margin-top: 8px;">Très bien !</p>
+                    </div>
+                `;
+                message = "Très bon travail ! Tu as bien compris les différents types de restructurations. Continue comme ça ! 💪";
+            } else {
+                badgeContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <div style="font-size: 48px;">💪</div>
+                        <p style="margin-top: 8px;">Continue !</p>
+                    </div>
+                `;
+                message = "Les restructurations sont complexes. N'hésite pas à recommencer pour mieux comprendre les différences entre chaque type ! 📚";
+            }
+
+            document.getElementById('ch1FinalMessage').textContent = message;
+
+            markChapterCompleted(1, ch1Score);
+        }
+
+        function restartChapter1() {
+            startChapter1Game();
+        }
+
+        // ============================================
+        // PAGE SCORES FINAUX
+        // ============================================
+        function showFinalScores() {
+            showScreen('finalScoresScreen');
+            renderFinalScores();
+        }
+
+        function renderFinalScores() {
+            const bestScores = getBestScores();
+
+            document.getElementById('finalTotalScore').textContent = bestScores.total;
+
+            const detailContainer = document.getElementById('finalScoresDetail');
+            detailContainer.innerHTML = '';
+
+            const chapters = [
+                { id: 1, name: 'Ch.1 - Restructurations', badge: 'Expert Restructurations', threshold: 1000 },
+                { id: 2, name: 'Ch.2 - Impact Salariés', badge: 'Défenseur Social', threshold: 1000 },
+                { id: 3, name: 'Ch.3 - Procédures Collectives', badge: 'Maître des Procédures', threshold: 1000 },
+                { id: 4, name: 'Ch.4 - Cessation Paiements', badge: 'Expert Cessation', threshold: 800 }
+            ];
+
+            chapters.forEach(ch => {
+                const bestScore = bestScores[`chapter${ch.id}`] || 0;
+                const completed = isChapterCompleted(ch.id);
+
+                const item = document.createElement('div');
+                item.className = 'score-item' + (bestScore >= ch.threshold ? ' best' : '');
+                item.innerHTML = `
+                    <div class="score-chapter">
+                        ${completed ? '✅' : '🔒'} ${ch.name}
+                    </div>
+                    <div class="score-value">${bestScore} pts</div>
+                `;
+                detailContainer.appendChild(item);
+            });
+
+            // Badges
+            const badgesContainer = document.getElementById('finalBadges');
+            badgesContainer.innerHTML = '';
+
+            const badges = [
+                { name: 'Expert Restructurations', icon: '🏆', unlocked: (bestScores.chapter1 || 0) >= 1000 },
+                { name: 'Défenseur Social', icon: '🛡️', unlocked: (bestScores.chapter2 || 0) >= 1000 },
+                { name: 'Maître des Procédures', icon: '⚖️', unlocked: (bestScores.chapter3 || 0) >= 1000 },
+                { name: 'Expert Cessation', icon: '💼', unlocked: (bestScores.chapter4 || 0) >= 800 }
+            ];
+
+            badges.forEach(badge => {
+                const badgeEl = document.createElement('div');
+                badgeEl.className = 'badge' + (badge.unlocked ? '' : ' locked');
+                badgeEl.innerHTML = `
+                    <div class="badge-icon-large">${badge.unlocked ? badge.icon : '🔒'}</div>
+                    <div class="badge-name">${badge.name}</div>
+                `;
+                badgesContainer.appendChild(badgeEl);
+            });
+        }
+
+        // ============================================
+        // INITIALISATION
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            updateHomeUI();
+        });
+    </script>
+</body>
+</html>
