@@ -396,21 +396,21 @@
                 <div class="scoring-grid">
                     <div class="score-card">
                         <div class="score-card-title">⚖️ LÉGALITÉ</div>
-                        <div class="score-threshold score-success">80-100 pts : Excellent</div>
-                        <div class="score-threshold score-warning">50-79 pts : Acceptable</div>
-                        <div class="score-threshold score-danger">&lt; 50 pts : Délit d'entrave !</div>
+                        <div class="score-threshold score-success">80+ pts : Excellent</div>
+                        <div class="score-threshold score-warning">40-79 pts : À améliorer</div>
+                        <div class="score-threshold score-danger">&lt; 40 pts : Délit d'entrave !</div>
                     </div>
                     
                     <div class="score-card">
                         <div class="score-card-title">🤝 CLIMAT SOCIAL</div>
-                        <div class="score-threshold score-success">80-100 pts : Harmonieux</div>
-                        <div class="score-threshold score-warning">50-79 pts : Acceptable</div>
-                        <div class="score-threshold score-danger">&lt; 50 pts : Grève/Démissions !</div>
+                        <div class="score-threshold score-success">60+ pts : Constructif</div>
+                        <div class="score-threshold score-warning">30-59 pts : Tendu</div>
+                        <div class="score-threshold score-danger">&lt; 30 pts : Grève/Démissions !</div>
                     </div>
                 </div>
                 
                 <div class="rule-item" style="margin-top: 20px;">
-                    <strong>Objectif :</strong> Maintenir les deux jauges au-dessus de 50 points. Visez 80+ pour un mandat exemplaire !
+                    <strong>Objectif :</strong> Les jauges démarrent à 50. Être juridiquement rigoureux peut tendre les relations sociales : à vous de trouver le bon équilibre !
                 </div>
             </div>
             
@@ -422,11 +422,11 @@
     <div class="app-header" id="game-header">
         <div class="stats-container">
             <div class="stat-item">
-                <span class="stat-value" id="score-legal">100</span>
+                <span class="stat-value" id="score-legal">50</span>
                 Légalité
             </div>
             <div class="stat-item">
-                <span class="stat-value" id="score-social">100</span>
+                <span class="stat-value" id="score-social">50</span>
                 Climat
             </div>
         </div>
@@ -461,29 +461,29 @@
                 { 
                     text: "Je propose plutôt une réunion courte de 30 minutes pour respecter la loi.", 
                     correct: false, 
-                    legal: -5, 
-                    social: +10, 
+                    legal: -8, 
+                    social: +5, 
                     feedback: "⚠️ Compromis risqué. La réunion doit permettre de traiter vraiment les sujets, pas juste cocher une case." 
                 },
                 { 
                     text: "D'accord, si l'ordre du jour est vide, c'est inutile de se réunir.", 
                     correct: false, 
-                    legal: -20, 
-                    social: +5, 
+                    legal: -18, 
+                    social: +3, 
                     feedback: "❌ Erreur grave ! Dans une entreprise de +300 salariés, la réunion mensuelle est OBLIGATOIRE. L'annuler constitue un délit d'entrave (Art. L2315-27)." 
                 },
                 { 
                     text: "Reportons à la fin du mois, on aura plus de temps.", 
                     correct: false, 
-                    legal: -10, 
+                    legal: -12, 
                     social: 0, 
                     feedback: "❌ Non ! Reporter dans le même mois reste problématique car cela peut créer des décalages récurrents. La date habituelle doit être respectée." 
                 },
                 { 
                     text: "Attention, vous avez l'obligation légale de nous réunir chaque mois.", 
                     correct: true, 
-                    legal: 0, 
-                    social: -5, 
+                    legal: +5, 
+                    social: -2, 
                     feedback: "✅ Exact ! L'employeur doit respecter la périodicité légale. L'initiative de convoquer lui incombe." 
                 }
             ]
@@ -497,28 +497,28 @@
                     text: "On délègue la collecte aux managers de proximité pour gagner du temps.", 
                     correct: false, 
                     legal: -5, 
-                    social: -15, 
+                    social: -12, 
                     feedback: "❌ Terrible idée ! Les managers font partie de la direction. Les salariés ne s'exprimeront pas librement." 
                 },
                 { 
                     text: "On attend qu'ils viennent nous voir dans le local CSE.", 
                     correct: false, 
                     legal: 0, 
-                    social: -10, 
+                    social: -8, 
                     feedback: "❌ Trop passif ! Le rôle d'élu nécessite d'aller activement au contact pour capter les vrais problèmes terrain." 
                 },
                 { 
                     text: "On fait un tour des services et on envoie un mail de consultation.", 
                     correct: true, 
-                    legal: 0, 
-                    social: +10, 
+                    legal: +2, 
+                    social: +8, 
                     feedback: "✅ Parfait ! La collecte active et multicanale des réclamations est la base du rôle de délégation du personnel." 
                 },
                 { 
                     text: "On met une boîte à suggestions anonyme et on la dépouille avant la réunion.", 
                     correct: false, 
                     legal: 0, 
-                    social: +5, 
+                    social: -3, 
                     feedback: "⚠️ Bien mais insuffisant. L'anonymat empêche le suivi individuel et le dialogue direct nécessaire." 
                 }
             ]
@@ -531,28 +531,28 @@
                 { 
                     text: "Non, c'est un moment réservé uniquement aux élus.", 
                     correct: true, 
-                    legal: 0, 
-                    social: +5, 
+                    legal: +3, 
+                    social: +4, 
                     feedback: "✅ Tout à fait ! C'est le moment de coordonner vos positions et préparer vos arguments entre vous." 
                 },
                 { 
                     text: "On l'invite mais uniquement pour la partie questions techniques.", 
                     correct: false, 
-                    legal: 0, 
+                    legal: -5, 
                     social: -5, 
                     feedback: "❌ Non ! Même partiellement, sa présence biaise vos échanges. Les questions techniques se posent en plénière." 
                 },
                 { 
                     text: "Oui, comme ça on discute directement avec lui des sujets.", 
                     correct: false, 
-                    legal: 0, 
-                    social: -10, 
+                    legal: -8, 
+                    social: -8, 
                     feedback: "❌ Mauvaise idée ! La préparatoire est un moment EXCLUSIF aux élus pour définir leur stratégie sans pression." 
                 },
                 { 
                     text: "On fait deux parties : une entre nous, puis une avec lui.", 
                     correct: false, 
-                    legal: 0, 
+                    legal: -3, 
                     social: -3, 
                     feedback: "⚠️ Confus. La préparatoire reste entre élus. Organisez plutôt une réunion informelle séparée si besoin." 
                 }
@@ -566,22 +566,22 @@
                 { 
                     text: "Une heure c'est trop court, prévoyez au moins 3 heures systématiquement.", 
                     correct: false, 
-                    legal: +5, 
+                    legal: -3, 
                     social: -10, 
                     feedback: "⚠️ Vous avez raison sur le principe mais imposer 3h systématiques est aussi rigide. La durée doit s'adapter aux sujets." 
                 },
                 { 
                     text: "OK pour 1h mais envoyez tous les documents pour qu'on prépare efficacement.", 
                     correct: false, 
-                    legal: -10, 
-                    social: 0, 
+                    legal: -12, 
+                    social: +4, 
                     feedback: "❌ Non ! Même avec les documents, accepter une limitation de durée valide cette pratique illégale d'entrave." 
                 },
                 { 
                     text: "Le délai est bon mais vous ne pouvez pas limiter la durée à l'avance.", 
                     correct: true, 
-                    legal: +10, 
-                    social: -5, 
+                    legal: +5, 
+                    social: -2, 
                     feedback: "✅ Exact ! Le minutage excessif ou systématique peut constituer un délit d'entrave. De plus, le Président ne peut clôturer sans avoir étudié l'intégralité de l'ODJ." 
                 },
                 { 
@@ -602,14 +602,14 @@
                     text: "D'accord si c'est vraiment urgent, allez-y.", 
                     correct: false, 
                     legal: -10, 
-                    social: +5, 
+                    social: +4, 
                     feedback: "❌ Non ! Dans les 3 jours avant la réunion, seul le CSE peut demander une modification de l'ODJ, pas l'employeur." 
                 },
                 { 
                     text: "Non, seul le CSE peut modifier l'ODJ dans ce délai.", 
                     correct: true, 
-                    legal: +10, 
-                    social: -5, 
+                    legal: +5, 
+                    social: -2, 
                     feedback: "✅ Exact ! La jurisprudence permet au CSE de modifier l'ODJ : dans les 3 jours si urgent/justifié, à l'unanimité en début de réunion, ou en cours si lien nécessaire avec les points initiaux (vote majoritaire)." 
                 },
                 { 
@@ -637,28 +637,28 @@
                     text: "D'accord, vous connaissez les dossiers, présidez exceptionnellement.", 
                     correct: false, 
                     legal: -15, 
-                    social: +5, 
+                    social: +4, 
                     feedback: "❌ Illégal ! Sans délégation de pouvoir formelle, le DRH ne peut pas présider. La réunion serait nulle." 
                 },
                 { 
                     text: "On fait une réunion informelle pour préparer la vraie réunion.", 
                     correct: false, 
-                    legal: -5, 
+                    legal: -8, 
                     social: +3, 
                     feedback: "⚠️ Confusion dangereuse. Une 'fausse' réunion crée de l'ambiguïté sur les décisions prises." 
                 },
                 { 
                     text: "Non, impossible sans présidence valable, la réunion serait annulée.", 
                     correct: true, 
-                    legal: +10, 
-                    social: -5, 
+                    legal: +4, 
+                    social: -4, 
                     feedback: "✅ Exact ! Une réunion plénière sans présidence valable est nulle. Toutes les décisions pourraient être annulées en justice." 
                 },
                 { 
                     text: "Le secrétaire du CSE peut présider en l'absence du président.", 
                     correct: false, 
-                    legal: -20, 
-                    social: 0, 
+                    legal: -18, 
+                    social: -4, 
                     feedback: "❌ Faux ! Le secrétaire CSE ne peut JAMAIS présider la réunion, c'est une confusion des rôles." 
                 }
             ]
@@ -671,28 +671,28 @@
                 { 
                     text: "Tous les présents : titulaires, suppléants et représentants syndicaux.", 
                     correct: false, 
-                    legal: -20, 
-                    social: 0, 
+                    legal: -15, 
+                    social: +3, 
                     feedback: "❌ Grave erreur ! Seuls les titulaires (ou suppléants remplaçant un absent) votent. Les RS n'ont jamais le droit de vote." 
                 },
                 { 
                     text: "Les titulaires présents et les suppléants remplaçant un titulaire absent.", 
                     correct: true, 
-                    legal: +10, 
+                    legal: +4, 
                     social: 0, 
                     feedback: "✅ Parfait ! C'est la règle : titulaires présents + suppléants remplaçant effectivement un titulaire absent." 
                 },
                 { 
                     text: "Uniquement les titulaires, les suppléants ne votent jamais.", 
                     correct: false, 
-                    legal: -5, 
+                    legal: -8, 
                     social: -5, 
                     feedback: "❌ Incomplet. Les suppléants votent s'ils remplacent un titulaire absent, c'est leur rôle." 
                 },
                 { 
                     text: "Les titulaires plus le président pour départager si égalité.", 
                     correct: false, 
-                    legal: -10, 
+                    legal: -12, 
                     social: -3, 
                     feedback: "❌ Non ! Le président ne vote JAMAIS au CSE, même pour départager. Il n'est pas membre élu." 
                 }
@@ -706,21 +706,21 @@
                 { 
                     text: "Non, vous devez étudier l'ODJ complet ou demander au CSE de reporter.", 
                     correct: true, 
-                    legal: +10, 
-                    social: -5, 
+                    legal: +4, 
+                    social: -4, 
                     feedback: "✅ Exact ! L'employeur doit étudier l'intégralité de l'ODJ. Une clôture unilatérale sans accord du CSE est irrégulière." 
                 },
                 { 
                     text: "D'accord, on reprendra ces points en priorité le mois prochain.", 
                     correct: false, 
                     legal: -10, 
-                    social: +5, 
+                    social: +4, 
                     feedback: "❌ Non ! Accepter valide cette pratique illégale. L'employeur ne peut pas décider seul de tronquer l'ODJ." 
                 },
                 { 
                     text: "OK mais envoyez-nous vos positions écrites sur les points restants.", 
                     correct: false, 
-                    legal: -8, 
+                    legal: -10, 
                     social: +3, 
                     feedback: "❌ Insuffisant. Le débat oral en séance est essentiel. Des positions écrites ne remplacent pas la délibération." 
                 },
@@ -741,29 +741,29 @@
                 { 
                     text: "Je peux m'en inspirer mais je rédige ma propre version.", 
                     correct: false, 
-                    legal: +3, 
-                    social: 0, 
+                    legal: -3, 
+                    social: +3, 
                     feedback: "⚠️ Acceptable mais méfiance : vérifiez qu'il n'oriente pas le contenu. Mieux vaut partir de vos notes." 
                 },
                 { 
                     text: "Merci, ça m'arrange, je le signe tout de suite.", 
                     correct: false, 
-                    legal: -10, 
-                    social: +5, 
+                    legal: -12, 
+                    social: +4, 
                     feedback: "❌ Piège ! La rédaction du PV est la prérogative EXCLUSIVE du secrétaire. Un PV rédigé par l'employeur n'a aucune valeur." 
                 },
                 { 
                     text: "On le co-rédige ensemble pour être sûr d'être d'accord.", 
                     correct: false, 
-                    legal: -5, 
+                    legal: -8, 
                     social: +3, 
                     feedback: "❌ Non ! Le PV est la vision du secrétaire. L'employeur pourra contester après mais pas co-rédiger." 
                 },
                 { 
                     text: "Non, c'est mon rôle légal de secrétaire de le rédiger.", 
                     correct: true, 
-                    legal: +10, 
-                    social: -5, 
+                    legal: +4, 
+                    social: -2, 
                     feedback: "✅ Bravo ! Vous protégez votre prérogative essentielle. Le PV est VOTRE responsabilité exclusive." 
                 }
             ]
@@ -776,29 +776,29 @@
                 { 
                     text: "Je reformule de façon plus vague mais je garde l'idée.", 
                     correct: false, 
-                    legal: -3, 
-                    social: +3, 
+                    legal: -8, 
+                    social: +4, 
                     feedback: "❌ Dénaturer les propos est aussi grave que les supprimer. Le PV doit être exact, pas diplomatique." 
                 },
                 { 
                     text: "Je mets ce passage en annexe confidentielle.", 
                     correct: false, 
-                    legal: +3, 
+                    legal: -3, 
                     social: 0, 
                     feedback: "⚠️ Compromis bancal. Le PV forme un tout. Les annexes ne changent pas le fait que c'était dit en séance." 
                 },
                 { 
                     text: "D'accord, je retire pour préserver la confidentialité.", 
                     correct: false, 
-                    legal: 0, 
+                    legal: -10, 
                     social: +5, 
                     feedback: "❌ Non ! Le PV doit refléter FIDÈLEMENT les débats. Censurer après coup est une falsification." 
                 },
                 { 
                     text: "Je refuse, ces propos ont été tenus en séance.", 
                     correct: true, 
-                    legal: +10, 
-                    social: -10, 
+                    legal: +4, 
+                    social: -4, 
                     feedback: "✅ Courageux et juste ! Le PV est la mémoire juridique. Cette information n'est pas automatiquement soumise au secret. La confidentialité doit être décrétée par le Président AU MOMENT où il communique l'information, pas après." 
                 }
             ]
@@ -811,28 +811,28 @@
                 { 
                     text: "On organise un vote électronique cette semaine.", 
                     correct: false, 
-                    legal: +2, 
+                    legal: -5, 
                     social: +3, 
                     feedback: "⚠️ Possible si votre règlement intérieur le prévoit, sinon c'est en séance plénière uniquement." 
                 },
                 { 
                     text: "Je le fais signer par le président immédiatement.", 
                     correct: false, 
-                    legal: -5, 
+                    legal: -10, 
                     social: -3, 
                     feedback: "❌ Le président ne valide pas seul. C'est l'instance qui approuve collectivement." 
                 },
                 { 
                     text: "On vote l'approbation au début de la prochaine réunion.", 
                     correct: true, 
-                    legal: 0, 
-                    social: 0, 
+                    legal: +3, 
+                    social: +3, 
                     feedback: "✅ C'est la procédure standard. Premier point de l'ODJ suivant : approbation du PV précédent." 
                 },
                 { 
                     text: "J'envoie un mail pour approbation tacite sous 48h.", 
                     correct: false, 
-                    legal: 0, 
+                    legal: -8, 
                     social: 0, 
                     feedback: "❌ Non, l'approbation tacite n'existe pas pour les PV de CSE. Il faut un vote formel." 
                 }
@@ -847,28 +847,28 @@
                     text: "Il faut demander l'autorisation du président pour y accéder.", 
                     correct: false, 
                     legal: -10, 
-                    social: -10, 
+                    social: -8, 
                     feedback: "❌ Absolument pas ! L'accès au PV est un droit des salariés, pas une faveur de la direction." 
                 },
                 { 
                     text: "Je l'envoie uniquement aux adhérents syndicaux.", 
                     correct: false, 
-                    legal: 0, 
-                    social: -10, 
+                    legal: -5, 
+                    social: -8, 
                     feedback: "❌ Discriminatoire ! Le CSE représente TOUS les salariés, syndiqués ou non." 
                 },
                 { 
                     text: "Désolé, c'est confidentiel, je ne peux que vous résumer oralement.", 
                     correct: false, 
-                    legal: -5, 
-                    social: -15, 
+                    legal: -8, 
+                    social: -12, 
                     feedback: "❌ Faux ! Sauf données sensibles spécifiques, le PV est un document public pour les salariés." 
                 },
                 { 
                     text: "Je l'affiche sur les panneaux CSE et l'intranet dans les 48h.", 
                     correct: true, 
-                    legal: 0, 
-                    social: +10, 
+                    legal: +2, 
+                    social: +9, 
                     feedback: "✅ Parfait ! Transparence totale. Le PV approuvé (et épuré des données sensibles) doit être accessible à tous." 
                 }
             ]
@@ -877,7 +877,9 @@
 
     // --- VARIABLES GLOBALES ---
     let currentStep = 0;
-    let stats = { legal: 100, social: 100 };
+    let stats = { legal: 50, social: 50 };
+    let correctCount = 0;
+    let wrongCount = 0;
     let hasAnswered = false;
 
     // --- FONCTIONS ---
@@ -936,6 +938,13 @@
     function handleChoice(choice) {
         hasAnswered = true;
         
+        // Comptage bonnes/mauvaises réponses
+        if (choice.correct) {
+            correctCount++;
+        } else {
+            wrongCount++;
+        }
+        
         // Mise à jour stats
         stats.legal += choice.legal;
         stats.social += choice.social;
@@ -951,14 +960,14 @@
         legalElement.innerText = stats.legal;
         socialElement.innerText = stats.social;
         
-        // Ajouter classe danger si < 50
-        if (stats.legal < 50) {
+        // Ajouter classe danger si < 40
+        if (stats.legal < 40) {
             legalElement.classList.add('danger');
         } else {
             legalElement.classList.remove('danger');
         }
         
-        if (stats.social < 50) {
+        if (stats.social < 40) {
             socialElement.classList.add('danger');
         } else {
             socialElement.classList.remove('danger');
@@ -1002,35 +1011,62 @@
         let socialStatus = "";
         let globalMessage = "";
         
+        // Grade basé sur le nombre de bonnes réponses
+        const totalQuestions = scenarios.length;
+        const scoreRatio = correctCount / totalQuestions;
+        let gradeLabel = "";
+        let gradeColor = "";
+        
+        if (scoreRatio >= 0.9) {
+            gradeLabel = "A — Expert CSE";
+            gradeColor = "#4caf50";
+        } else if (scoreRatio >= 0.75) {
+            gradeLabel = "B — Bon niveau";
+            gradeColor = "#8bc34a";
+        } else if (scoreRatio >= 0.58) {
+            gradeLabel = "C — Passable";
+            gradeColor = "#ff9800";
+        } else if (scoreRatio >= 0.42) {
+            gradeLabel = "D — Insuffisant";
+            gradeColor = "#ff5722";
+        } else {
+            gradeLabel = "E — Formation urgente";
+            gradeColor = "#f44336";
+        }
+        
         // Analyse Légalité
         if (stats.legal >= 80) {
             legalStatus = "✅ Excellente maîtrise juridique";
-        } else if (stats.legal >= 50) {
-            legalStatus = "⚠️ Conformité acceptable mais perfectible";
+        } else if (stats.legal >= 60) {
+            legalStatus = "👍 Bonne conformité juridique";
+        } else if (stats.legal >= 40) {
+            legalStatus = "⚠️ Conformité fragile, des lacunes à combler";
         } else {
             legalStatus = "🚨 ALERTE : Risque de délit d'entrave !";
         }
         
         // Analyse Climat Social
-        if (stats.social >= 80) {
-            socialStatus = "✅ Climat social harmonieux";
-        } else if (stats.social >= 50) {
-            socialStatus = "⚠️ Climat social acceptable";
+        if (stats.social >= 60) {
+            socialStatus = "✅ Climat social constructif";
+        } else if (stats.social >= 45) {
+            socialStatus = "⚠️ Climat social tendu mais gérable";
+        } else if (stats.social >= 30) {
+            socialStatus = "😤 Relations sociales dégradées";
         } else {
             socialStatus = "🚨 DANGER : Risque de grève/démissions !";
         }
         
-        // Message global
-        if (stats.legal >= 80 && stats.social >= 80) {
+        // Message global basé sur le combo score + erreurs
+        if (correctCount >= 11) {
             globalMessage = "🏆 EXCELLENT MANDAT ! Vous maîtrisez parfaitement l'équilibre entre respect du cadre légal et maintien d'un dialogue social constructif. Vous êtes un secrétaire CSE exemplaire !";
-        } else if (stats.legal >= 50 && stats.social >= 50) {
-            globalMessage = "👍 Mandat correct. Vous évitez les écueils majeurs mais il reste des marges de progression pour optimiser votre action.";
-        } else if (stats.legal < 50 && stats.social < 50) {
-            globalMessage = "💥 Situation critique sur tous les fronts ! Formation urgente recommandée pour éviter des conséquences graves.";
-        } else if (stats.legal < 50) {
-            globalMessage = "⚖️ Votre mandat est en danger juridique. Les erreurs légales s'accumulent et pourraient mener à des poursuites.";
+        } else if (correctCount >= 9) {
+            globalMessage = "👍 Bon mandat. Quelques hésitations mais une solide compréhension des fondamentaux. Continuez à vous former !";
+        } else if (correctCount >= 7) {
+            globalMessage = "⚠️ Mandat fragile. Trop d'erreurs qui pourraient avoir des conséquences concrètes. Une remise à niveau est recommandée.";
+        } else if (correctCount >= 5) {
+            globalMessage = "🚨 Mandat en danger. Les erreurs s'accumulent et exposent le CSE à des risques juridiques et sociaux sérieux. Formation prioritaire !";
         } else {
-            globalMessage = "😤 Le dialogue social est rompu. Votre CSE risque l'implosion malgré le respect des formes légales.";
+            globalMessage = "💥 Situation critique ! Ce niveau d'erreur mettrait gravement en péril le fonctionnement du CSE. Une formation complète est indispensable.";
         }
         
         // Affichage
@@ -1039,17 +1075,27 @@
         
         document.getElementById('scenario-text').innerHTML = `
             <div class="end-screen">
+                <div style="background: ${gradeColor}15; border: 2px solid ${gradeColor}; border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: center;">
+                    <div style="font-size: 0.9rem; color: #666; margin-bottom: 5px;">NOTE GLOBALE</div>
+                    <div style="font-size: 2rem; font-weight: 800; color: ${gradeColor};">${gradeLabel}</div>
+                    <div style="font-size: 1.1rem; margin-top: 8px; color: var(--text);">
+                        ✅ ${correctCount} bonne${correctCount > 1 ? 's' : ''} réponse${correctCount > 1 ? 's' : ''} 
+                        &nbsp;·&nbsp; 
+                        ❌ ${wrongCount} erreur${wrongCount > 1 ? 's' : ''} 
+                        &nbsp;sur ${totalQuestions} questions
+                    </div>
+                </div>
                 <div class="final-scores">
                     <div class="final-score-card">
                         <div>⚖️ LÉGALITÉ</div>
-                        <div class="final-score-value" style="color: ${stats.legal >= 50 ? 'var(--success)' : 'var(--danger)'}">
+                        <div class="final-score-value" style="color: ${stats.legal >= 60 ? 'var(--success)' : stats.legal >= 40 ? 'var(--warning)' : 'var(--danger)'}">
                             ${stats.legal}/100
                         </div>
                         <div>${legalStatus}</div>
                     </div>
                     <div class="final-score-card">
                         <div>🤝 CLIMAT SOCIAL</div>
-                        <div class="final-score-value" style="color: ${stats.social >= 50 ? 'var(--success)' : 'var(--danger)'}">
+                        <div class="final-score-value" style="color: ${stats.social >= 50 ? 'var(--success)' : stats.social >= 30 ? 'var(--warning)' : 'var(--danger)'}">
                             ${stats.social}/100
                         </div>
                         <div>${socialStatus}</div>
