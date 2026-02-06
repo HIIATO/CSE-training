@@ -1018,19 +1018,19 @@
         let gradeColor = "";
         
         if (scoreRatio >= 0.9) {
-            gradeLabel = "A — Expert CSE";
+            gradeLabel = "A — Maître Jedi du CSE";
             gradeColor = "#4caf50";
         } else if (scoreRatio >= 0.75) {
-            gradeLabel = "B — Bon niveau";
+            gradeLabel = "B — Padawan prometteur";
             gradeColor = "#8bc34a";
         } else if (scoreRatio >= 0.58) {
-            gradeLabel = "C — Passable";
+            gradeLabel = "C — Peut mieux faire (le prof l'a dit)";
             gradeColor = "#ff9800";
         } else if (scoreRatio >= 0.42) {
-            gradeLabel = "D — Insuffisant";
+            gradeLabel = "D — L'inspecteur du travail vous surveille";
             gradeColor = "#ff5722";
         } else {
-            gradeLabel = "E — Formation urgente";
+            gradeLabel = "E — Retournez directement en formation";
             gradeColor = "#f44336";
         }
         
@@ -1058,15 +1058,15 @@
         
         // Message global basé sur le combo score + erreurs
         if (correctCount >= 11) {
-            globalMessage = "🏆 EXCELLENT MANDAT ! Vous maîtrisez parfaitement l'équilibre entre respect du cadre légal et maintien d'un dialogue social constructif. Vous êtes un secrétaire CSE exemplaire !";
+            globalMessage = "🏆 EXCELLENT MANDAT ! Même l'inspecteur du travail vous applaudirait (et croyez-nous, c'est rare). Vous maîtrisez parfaitement l'équilibre entre rigueur juridique et dialogue social. Le Code du travail n'a plus de secrets pour vous… ou presque. 😏";
         } else if (correctCount >= 9) {
-            globalMessage = "👍 Bon mandat. Quelques hésitations mais une solide compréhension des fondamentaux. Continuez à vous former !";
+            globalMessage = "👍 Bon mandat ! Quelques hésitations, mais rien qui justifie une grève… pour l'instant. Vous avez les bases solides, il reste à peaufiner les réflexes. Un ou deux cafés avec le Code du travail et vous serez au top. ☕";
         } else if (correctCount >= 7) {
-            globalMessage = "⚠️ Mandat fragile. Trop d'erreurs qui pourraient avoir des conséquences concrètes. Une remise à niveau est recommandée.";
+            globalMessage = "⚠️ Mandat fragile. Disons que votre boîte mail risque de recevoir quelques courriers recommandés si vous continuez comme ça. Les fondamentaux sont là, mais les erreurs commencent à coûter cher. Une petite formation de rattrapage s'impose ! 📚";
         } else if (correctCount >= 5) {
-            globalMessage = "🚨 Mandat en danger. Les erreurs s'accumulent et exposent le CSE à des risques juridiques et sociaux sérieux. Formation prioritaire !";
+            globalMessage = "🚨 Mandat en danger ! L'avocat de l'entreprise se frotte les mains, et les salariés préparent leurs pancartes. À ce rythme, votre prochain PV sera rédigé par le tribunal. Formation urgente recommandée ! 🆘";
         } else {
-            globalMessage = "💥 Situation critique ! Ce niveau d'erreur mettrait gravement en péril le fonctionnement du CSE. Une formation complète est indispensable.";
+            globalMessage = "💥 Houston, on a un problème ! Si c'était un vrai CSE, l'inspection du travail camperait dans le hall d'entrée et les syndicats auraient déjà commandé les gilets jaunes. Bonne nouvelle : c'est un jeu. Mauvaise nouvelle : il faut TOUT reprendre. 🎓";
         }
         
         // Affichage
