@@ -55,6 +55,8 @@ body{
   border-radius:12px;padding:11px 14px;cursor:pointer;
   transition:background .15s,border-color .15s;
   user-select:none;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
 }
 .opt:hover:not(.disabled){background:rgba(255,255,255,0.20);border-color:rgba(255,255,255,0.42)}
 .opt.selected{background:rgba(2,143,208,0.28);border-color:var(--bl)}
@@ -68,12 +70,13 @@ body{
   font-size:12px;font-weight:800;
   display:flex;align-items:center;justify-content:center;
   transition:background .15s,border-color .15s;
+  pointer-events:none;
 }
 .opt.selected .opt-letter{background:var(--bl);border-color:var(--bl)}
 .opt.correct .opt-letter{background:var(--ok);border-color:var(--ok);color:#000}
 .opt.wrong .opt-letter{background:var(--err);border-color:var(--err)}
 .opt.missed .opt-letter{border-color:var(--ok);color:var(--ok)}
-.opt-text{font-size:13px;line-height:1.5;text-align:justify;padding-top:2px}
+.opt-text{font-size:13px;line-height:1.5;text-align:justify;padding-top:2px;pointer-events:none}
 .feedback{
   margin-top:14px;border-radius:12px;padding:12px 15px;
   font-size:12.5px;line-height:1.6;font-weight:500;text-align:justify;display:none
