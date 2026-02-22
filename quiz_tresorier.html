@@ -251,6 +251,32 @@ function renderQ() {
 
 function makeHandler(idx) { return function() { toggleOpt(idx); }; }
 
+function applySelected(el, isSelected) {
+  if (isSelected) {
+    el.style.background = "rgba(2,100,180,0.92)";
+    el.style.border = "3px solid #ffffff";
+    el.style.boxShadow = "0 0 0 3px rgba(255,255,255,0.65), 0 4px 20px rgba(0,0,0,0.5)";
+    el.style.transform = "scale(1.01)";
+    var letter = el.querySelector(".opt-letter");
+    if (letter) {
+      letter.style.background = "#ffffff";
+      letter.style.borderColor = "#ffffff";
+      letter.style.color = "#0265a0";
+    }
+  } else {
+    el.style.background = "";
+    el.style.border = "";
+    el.style.boxShadow = "";
+    el.style.transform = "";
+    var letter = el.querySelector(".opt-letter");
+    if (letter) {
+      letter.style.background = "";
+      letter.style.borderColor = "";
+      letter.style.color = "";
+    }
+  }
+}
+
 function toggleOpt(idx) {
   if (state.validated) return;
   var q = QUIZ[state.cur];
@@ -264,8 +290,9 @@ function toggleOpt(idx) {
   var opts = document.querySelectorAll(".opt");
   for (var i=0; i<opts.length; i++) {
     var oi = parseInt(opts[i].dataset.idx);
-    if (state.sel.indexOf(oi)!==-1) opts[i].classList.add("selected");
-    else opts[i].classList.remove("selected");
+    var sel = state.sel.indexOf(oi)!==-1;
+    opts[i].classList.toggle("selected", sel);
+    applySelected(opts[i], sel);
   }
 }
 
