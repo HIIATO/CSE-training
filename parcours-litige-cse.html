@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Le Parcours d'un Litige — Jeu CSE</title>
+<style>
+:root {
+  --bg-primary: #f0f6ff;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --accent: #2563eb;
+  --accent-light: #3b82f6;
+  --accent-soft: #dbeafe;
+  --accent-softer: #eff6ff;
+  --success: #059669;
+  --success-bg: #d1fae5;
+  --success-border: #6ee7b7;
+  --warning: #d97706;
+  --warning-bg: #fef3c7;
+  --warning-border: #fcd34d;
+  --danger: #dc2626;
+  --danger-bg: #fee2e2;
+  --danger-border: #fca5a5;
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border: #cbd5e1;
+  --border-light: #e2e8f0;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --shadow: 0 2px 12px rgba(37,99,235,0.08);
+  --shadow-md: 0 4px 20px rgba(37,99,235,0.1);
+  --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100dvh;overflow-x:hidden;line-height:1.55;cursor:default}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 30% -10%,rgba(37,99,235,.07) 0%,transparent 55%),radial-gradient(ellipse at 80% 110%,rgba(37,99,235,.05) 0%,transparent 50%);pointer-events:none;z-index:0}
+.fade-in{animation:fadeIn .4s ease-out}.slide-up{animation:slideUp .4s ease-out}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+@keyframes badgeUnlock{0%{transform:scale(0) rotate(-15deg);opacity:0}60%{transform:scale(1.15) rotate(3deg);opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes scoreFloat{0%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-120%) scale(1.4)}}
+#app{position:relative;z-index:1;max-width:600px;margin:0 auto;padding:16px;min-height:100dvh}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;border:none;border-radius:var(--radius);font-size:1rem;font-weight:600;cursor:pointer;transition:all var(--transition);touch-action:manipulation;user-select:none;-webkit-user-select:none;line-height:1.3}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#1d4ed8);color:#fff;box-shadow:0 3px 12px rgba(37,99,235,.25)}
+.btn-primary:hover,.btn-primary:focus{transform:translateY(-1px);box-shadow:0 5px 20px rgba(37,99,235,.3)}
+.btn-primary:active{transform:translateY(0)}
+.btn-secondary{background:var(--bg-card);color:var(--text-primary);border:1.5px solid var(--border)}
+.btn-secondary:hover{background:var(--accent-soft);border-color:var(--accent-light)}
+.btn-menu{background:var(--accent-soft);color:var(--accent);border:1.5px solid var(--accent);padding:8px 16px;font-size:.82rem;font-weight:700;border-radius:var(--radius-sm)}
+.btn-menu:hover{background:var(--accent);color:#fff}
+.btn-sm{padding:10px 18px;font-size:.875rem}.btn-block{width:100%}
+.card{background:var(--bg-card);border:1px solid var(--border-light);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.top-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 0;margin-bottom:8px;gap:6px}
+.top-bar .phase-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);font-weight:700;background:var(--accent-soft);padding:4px 10px;border-radius:20px}
+.top-bar .score-display{font-size:.85rem;color:var(--text-secondary);font-weight:600}
+.top-bar .score-display span{color:var(--accent);font-size:1.05rem}
+.progress-container{width:100%;height:7px;background:var(--accent-soft);border-radius:4px;overflow:hidden;margin-bottom:10px}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--accent-light),var(--accent));border-radius:4px;transition:width .6s ease}
+.risk-container{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:8px 12px;background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border-light)}
+.risk-label{font-size:.7rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;min-width:46px}
+.risk-bar-wrap{flex:1;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden}
+.risk-bar{height:100%;background:var(--success);border-radius:4px;transition:width .6s ease,background .4s ease}
+.risk-bar.medium{background:var(--warning)}.risk-bar.high{background:var(--danger)}
+.risk-value{font-size:.8rem;font-weight:700;min-width:28px;text-align:right}
+.home-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:90dvh;text-align:center;gap:16px;padding:0 8px}
+.home-screen .logo{width:72px;height:72px;background:linear-gradient(135deg,var(--accent-soft),#bfdbfe);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:2.2rem;box-shadow:var(--shadow-md)}
+.home-screen h1{font-size:1.5rem;font-weight:800;color:var(--accent);line-height:1.25}
+.home-screen .subtitle{color:var(--text-secondary);font-size:.88rem;max-width:360px;line-height:1.5}
+.home-rules{text-align:left;max-width:360px;width:100%;margin:4px 0}
+.home-rules .rule-section{margin-bottom:10px}
+.home-rules .rule-title{font-size:.78rem;font-weight:700;color:var(--accent);margin-bottom:4px}
+.home-rules .rule-text{font-size:.78rem;color:var(--text-secondary);line-height:1.45}
+.home-actions{display:flex;flex-direction:column;gap:10px;width:100%;max-width:300px;margin-top:8px}
+.scenario-header{margin-bottom:12px;text-align:center}
+.chapter-tag{display:inline-block;padding:4px 12px;border-radius:20px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+.chapter-tag.phase1{background:#dbeafe;color:#1d4ed8}
+.chapter-tag.phase2{background:#fef3c7;color:#b45309}
+.chapter-tag.phase3{background:#d1fae5;color:#047857}
+.scenario-header h2{font-size:1.2rem;font-weight:700;color:var(--text-primary)}
+.scenario-context{color:var(--text-secondary);font-size:.88rem;line-height:1.6;margin-bottom:16px;padding:14px 16px;background:var(--accent-softer);border-left:3px solid var(--accent-light);border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+.scenario-objective{font-size:.82rem;color:var(--accent);font-weight:600;margin-bottom:16px;text-align:center}
+.choices{display:flex;flex-direction:column;gap:10px}
+.choice-btn{display:block;width:100%;text-align:left;padding:15px 18px;background:var(--bg-card);border:1.5px solid var(--border);border-radius:var(--radius);color:var(--text-primary);font-size:.88rem;cursor:pointer;transition:all var(--transition);line-height:1.45;touch-action:manipulation}
+.choice-btn:hover{border-color:var(--accent-light);background:var(--accent-softer);transform:translateX(3px)}
+.choice-btn:active{transform:translateX(1px)}
+.choice-btn.selected-good{border-color:var(--success);background:var(--success-bg);animation:pulse .3s ease}
+.choice-btn.selected-bad{border-color:var(--danger);background:var(--danger-bg);animation:shake .4s ease}
+.choice-btn.selected-ok{border-color:var(--warning);background:var(--warning-bg)}
+.choice-btn.disabled{pointer-events:none;opacity:.55}
+.feedback-box{padding:16px;border-radius:var(--radius);margin-top:16px;font-size:.84rem;line-height:1.55;animation:slideUp .3s ease}
+.feedback-box.good{background:var(--success-bg);border:1px solid var(--success-border)}
+.feedback-box.bad{background:var(--danger-bg);border:1px solid var(--danger-border)}
+.feedback-box.ok{background:var(--warning-bg);border:1px solid var(--warning-border)}
+.feedback-box .fb-title{font-weight:700;margin-bottom:6px}
+.feedback-box .fb-impact{font-size:.78rem;color:var(--text-muted);margin-top:8px}
+.next-btn-wrap{margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.dnd-instruction{font-size:.82rem;color:var(--text-secondary);margin-bottom:16px;text-align:center;line-height:1.4}
+.dnd-items{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:20px;min-height:44px}
+.dnd-item{padding:10px 14px;background:var(--bg-card);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.8rem;cursor:default;touch-action:none;user-select:none;-webkit-user-select:none;transition:all .15s ease;box-shadow:0 1px 4px rgba(0,0,0,.06);position:relative;z-index:1}
+.dnd-item.dragging{opacity:.85;transform:scale(1.08);z-index:9999;box-shadow:0 8px 30px rgba(0,0,0,.18);position:fixed;pointer-events:none}
+.dnd-item.placed{opacity:.4;pointer-events:none}
+.dnd-item.selected-dnd{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+.dnd-zones{display:grid;grid-template-columns:1fr 1fr;gap:10px;grid-auto-rows:1fr}
+@media(max-width:500px){.dnd-zones{grid-template-columns:1fr}}
+.dnd-zone{padding:14px;border:2px dashed var(--border);border-radius:var(--radius);min-height:90px;transition:all .2s ease;background:rgba(255,255,255,.5);cursor:pointer;display:flex;flex-direction:column}
+.dnd-zone.drag-over{border-color:var(--accent-light);background:var(--accent-softer);border-style:solid}
+.dnd-zone .zone-title{font-size:.68rem;text-transform:uppercase;letter-spacing:.8px;font-weight:700;margin-bottom:8px;text-align:center}
+.dnd-zone .zone-title.fort{color:var(--success)}.dnd-zone .zone-title.moyen{color:var(--warning)}.dnd-zone .zone-title.faible{color:var(--text-muted)}.dnd-zone .zone-title.risque{color:var(--danger)}
+.dnd-zone .zone-items{display:flex;flex-wrap:wrap;gap:6px}
+.zone-item{padding:5px 10px;background:var(--accent-softer);border-radius:6px;font-size:.72rem;display:flex;align-items:center;gap:6px;border:1px solid var(--border-light)}
+.zone-item .remove-item{cursor:pointer;color:var(--text-muted);font-size:1rem;line-height:1;font-weight:700}
+.zone-item.correct{background:var(--success-bg);color:var(--success);border-color:var(--success-border)}
+.zone-item.wrong{background:var(--danger-bg);color:var(--danger);border-color:var(--danger-border)}
+.dnd-validate-wrap{margin-top:16px;text-align:center}
+.debrief-card{text-align:center}
+.debrief-card h2{font-size:1.25rem;margin-bottom:12px;color:var(--text-primary)}
+.debrief-card .key-takeaway{background:var(--accent-softer);border:1px solid var(--accent-soft);border-radius:var(--radius);padding:16px;margin:16px 0;font-size:.84rem;line-height:1.6;text-align:left;color:var(--text-secondary)}
+.final-score{font-size:3rem;font-weight:800;color:var(--accent);line-height:1}
+.badges-grid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:20px 0}
+.badge-item{display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 8px;background:var(--bg-card);border:1.5px solid var(--border-light);border-radius:var(--radius);width:96px;text-align:center;box-shadow:var(--shadow)}
+.badge-item.unlocked{border-color:var(--accent-light);background:var(--accent-softer);animation:badgeUnlock .5s ease}
+.badge-item.locked{opacity:.35}
+.badge-icon{font-size:1.7rem}.badge-name{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted)}
+.synthesis-card{text-align:left;margin:16px 0}.synthesis-card h3{font-size:1rem;margin-bottom:12px;color:var(--accent)}
+.synthesis-step{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
+.synthesis-num{min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;border-radius:50%;font-size:.8rem;font-weight:700;flex-shrink:0}
+.synthesis-text{font-size:.84rem;color:var(--text-secondary);line-height:1.5}.synthesis-text strong{color:var(--text-primary)}
+.review-list{margin:16px 0}
+.review-item{padding:12px;border-left:3px solid var(--border);margin-bottom:8px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;background:var(--accent-softer)}
+.review-item.good-review{border-left-color:var(--success);background:#f0fdf4}
+.review-item.bad-review{border-left-color:var(--danger);background:#fef2f2}
+.review-item.ok-review{border-left-color:var(--warning);background:#fffbeb}
+.review-item .ri-title{font-weight:700;font-size:.84rem;margin-bottom:3px}
+.review-item .ri-detail{font-size:.76rem;color:var(--text-secondary)}
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.35);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn .2s ease}
+.modal-content{background:var(--bg-secondary);border:1px solid var(--border-light);border-radius:var(--radius);padding:24px;max-width:480px;width:100%;max-height:80dvh;overflow-y:auto;animation:slideUp .3s ease;box-shadow:0 8px 40px rgba(0,0,0,.12)}
+.modal-content h3{font-size:1.1rem;margin-bottom:16px;color:var(--text-primary)}
+.modal-close{float:right;background:none;border:none;color:var(--text-muted);font-size:1.5rem;cursor:pointer;line-height:1}
+.alert-banner{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--danger);color:#fff;padding:12px 24px;border-radius:var(--radius);font-size:.84rem;font-weight:700;z-index:2000;animation:slideUp .3s ease;box-shadow:0 4px 20px rgba(220,38,38,.3);text-align:center;max-width:90%}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.score-change{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:2rem;font-weight:800;z-index:500;pointer-events:none;animation:scoreFloat 1s ease forwards;text-shadow:0 2px 8px rgba(0,0,0,.1)}
+.score-change.positive{color:var(--success)}.score-change.negative{color:var(--danger)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+var PHASES=[{id:'internal',name:'Phase Interne',tag:'phase1',label:'Entreprise'},{id:'precontentious',name:'Phase Précontentieuse',tag:'phase2',label:'Preuve & Dossier'},{id:'judicial',name:'Phase Judiciaire',tag:'phase3',label:'Orientation & Procédure'}];
+var BADGES=[
+{id:'archiviste',name:'Archiviste',icon:'📋',desc:'Preuve impeccable — dossier probatoire renforcé.',tip:'Toujours dater, signer, conserver les originaux. Un bon dossier = chronologie + pièces cohérentes.'},
+{id:'desescalade',name:'Désescalade',icon:'🕊️',desc:'Résolution interne privilégiée — dialogue avant escalade.',tip:'Le recours interne est souvent plus rapide et préserve la relation de travail.'},
+{id:'procedurier',name:'Procédurier propre',icon:'⚖️',desc:'Aucune erreur de rôle — resté dans le cadre du mandat CSE.',tip:'Le CSE assiste, alerte, collecte. Il ne se substitue ni à l\'avocat, ni au juge.'},
+{id:'stratege',name:'Stratège',icon:'🎯',desc:'Bon choix de voie judiciaire — orientation efficace.',tip:'Référé = urgence / évidence. Fond = contestation complexe.'},
+{id:'zerorisk',name:'Zéro risque',icon:'🛡️',desc:'Risque < 30 sur toute la partie — dossier solide.',tip:'Éviter : preuve illicite, diffamation, action hors rôle, précipitation.'}
+];
+var SCENARIOS=[
+/* ===== PHASE 1 : INTERNE (amiable, négociation) — réponses mélangées ===== */
+{id:'s1',phase:0,title:'Sanction imminente',context:'Un salarié vous contacte en urgence : convocation à un entretien préalable demain matin. Il est stressé, ne comprend pas les motifs, et n\'a presque aucun document.',objective:'🎯 Agir vite, dans votre rôle d\'élu CSE : assister et préparer sans déborder.',type:'choice',choices:[
+{text:'Contacter le RH pour demander un report de l\'entretien et proposer un échange informel sur les motifs avant la convocation officielle',quality:'ok',feedback:'Chercher le dialogue est positif, mais le report n\'est pas garanti et le RH n\'a aucune obligation d\'échanger avant l\'entretien. Vous risquez de perdre du temps de préparation.',score:40,risk:10,badges:['desescalade']},
+{text:'Rédiger un courrier de contestation au nom du salarié et l\'envoyer à la direction avant l\'entretien',quality:'bad',feedback:'Rédiger un courrier juridique au nom du salarié dépasse votre rôle de CSE. De plus, contester avant de connaître les motifs précis est précipité.',score:-20,risk:20,badges:[]},
+{text:'Demander la convocation écrite, identifier les motifs, préparer une chronologie des faits avec le salarié, et lui rappeler son droit d\'être assisté',quality:'good',feedback:'Vous restez dans votre rôle : vérifier la procédure, préparer, assister. Le bon réflexe.',score:120,risk:0,badges:['desescalade','procedurier']},
+{text:'Conseiller au salarié de ne pas se rendre à l\'entretien pour gagner du temps',quality:'bad',feedback:'Ne pas se présenter est risqué : l\'employeur peut poursuivre la procédure en l\'absence du salarié.',score:-30,risk:25,badges:[]}
+]},
+{id:'s2',phase:0,title:'Différend sur les objectifs',context:'Un salarié conteste ses objectifs annuels qu\'il juge irréalistes. Son manager refuse d\'en discuter. Le climat se tend, mais aucune procédure n\'est encore engagée.',objective:'🎯 Trouver une issue amiable en restant dans le rôle du CSE.',type:'choice',choices:[
+{text:'Dire au salarié de refuser formellement ses objectifs et de ne plus les appliquer en attendant une clarification',quality:'bad',feedback:'Refuser d\'exécuter ses objectifs peut être considéré comme une faute. Le salarié doit exprimer son désaccord tout en continuant à travailler.',score:-25,risk:25,badges:[]},
+{text:'Remonter le sujet lors de la prochaine réunion CSE en demandant un point général sur la politique d\'objectifs',quality:'ok',feedback:'Pertinent sur le plan collectif, mais ne résout pas le cas individuel immédiat. Le salarié reste sans solution à court terme.',score:50,risk:5,badges:['desescalade']},
+{text:'Conseiller au salarié d\'envoyer directement un mail de mise en demeure à son manager pour exiger la révision',quality:'bad',feedback:'Une mise en demeure est un acte juridique prématuré. Cela risque de braquer le manager et de fermer la porte au dialogue.',score:-15,risk:20,badges:[]},
+{text:'Proposer au salarié de formaliser ses points de désaccord par écrit, puis solliciter un entretien tripartite (salarié, manager, RH)',quality:'good',feedback:'Approche structurée et dans votre rôle : vous facilitez le dialogue sans vous substituer aux parties. La formalisation crée aussi une trace utile.',score:120,risk:0,badges:['desescalade','procedurier']}
+]},
+{id:'s3',phase:0,title:'Tension sur le temps de travail',context:'Plusieurs salariés se plaignent officieusement de dépassements d\'horaires réguliers. Personne n\'a encore formalisé de plainte. L\'ambiance se dégrade.',objective:'🎯 Amorcer un dialogue constructif et poser les bases d\'une résolution interne.',type:'choice',choices:[
+{text:'Envoyer un courrier recommandé à la direction exigeant le paiement immédiat de toutes les heures supplémentaires',quality:'bad',feedback:'Sans éléments concrets ni tentative de dialogue, cette démarche agressive sera rejetée et crispe les relations.',score:-15,risk:20,badges:[]},
+{text:'Proposer aux salariés de noter précisément leurs horaires pendant 2 semaines, puis demander une rencontre avec la direction sur la base de ces relevés',quality:'good',feedback:'Méthode rigoureuse : vous constituez des éléments factuels avant d\'engager le dialogue. La direction ne pourra pas balayer des données concrètes.',score:120,risk:0,badges:['archiviste','desescalade']},
+{text:'Conseiller aux salariés de quitter leur poste à l\'heure exacte prévue au contrat sans prévenir leur hiérarchie',quality:'bad',feedback:'Un départ collectif non coordonné peut désorganiser le service et être perçu comme un mouvement de grève sauvage.',score:-20,risk:25,badges:[]},
+{text:'Inscrire immédiatement le sujet à l\'ordre du jour de la prochaine réunion CSE sans éléments chiffrés',quality:'ok',feedback:'C\'est dans votre droit, mais sans données précises, la direction pourra facilement minimiser le problème.',score:45,risk:5,badges:['desescalade']}
+]},
+/* ===== PHASE 2 : PRÉCONTENTIEUX ===== */
+{id:'s4',phase:1,title:'Construire la chronologie',context:'Le dossier d\'un salarié en conflit contient des faits épars et des dates floues. Avant toute démarche formelle, il faut reconstruire le fil des événements.',objective:'🎯 Remettez ces événements dans l\'ordre chronologique.',type:'order',items:[
+{id:'o1',text:'Signature du contrat et validation de la période d\'essai',order:1},
+{id:'o2',text:'Changement de manager — premiers désaccords',order:2},
+{id:'o3',text:'Entretien annuel défavorable malgré des résultats corrects',order:3},
+{id:'o4',text:'Alerte au médecin du travail pour souffrance psychologique',order:4},
+{id:'o5',text:'Absence de réaction du manager malgré l\'alerte du médecin du travail',order:5},
+{id:'o6',text:'Arrêt maladie prolongé pour burn-out, aggravé par l\'inaction managériale',order:6},
+{id:'o7',text:'Réception d\'une convocation à entretien préalable à licenciement',order:7}
+],feedback_good:'Chronologie parfaite ! C\'est le socle de tout dossier solide.',feedback_partial:'Presque ! Quelques inversions — attention, une chronologie imprécise fragilise le récit.',feedback_bad:'L\'ordre n\'est pas correct. Reprenez en croisant les dates avec les documents.',badges:['archiviste']},
+{id:'s5',phase:1,title:'Tri de preuves',context:'Vous avez rassemblé plusieurs éléments pour le dossier. Classez-les selon leur force probatoire.',objective:'🎯 Glissez chaque élément dans la bonne catégorie, ou sélectionnez puis appuyez sur une zone.',type:'dnd-proof',items:[
+{id:'p1',text:'Emails professionnels datés',correct:'fort',explanation:'Preuves solides, admissibles et difficiles à contester.'},
+{id:'p2',text:'Témoignage écrit, daté et signé',correct:'fort',explanation:'L\'attestation conforme a une forte valeur probatoire.'},
+{id:'p3',text:'Fiches de paie',correct:'fort',explanation:'Document officiel, très difficile à contester.'},
+{id:'p4',text:'SMS échangés',correct:'moyen',explanation:'Recevables mais l\'authenticité peut être contestée.'},
+{id:'p5',text:'Planning affiché (photo)',correct:'moyen',explanation:'Utile mais la date de la photo peut être remise en cause.'},
+{id:'p6',text:'Captures d\'écran non datées',correct:'faible',explanation:'Sans date ni contexte, valeur très limitée.'},
+{id:'p7',text:'Enregistrement clandestin',correct:'risque',explanation:'Preuve risquée ! Peut être écartée et expose celui qui l\'a fait.'}
+],zones:[{id:'fort',label:'Fort',css:'fort'},{id:'moyen',label:'Moyen',css:'moyen'},{id:'faible',label:'Faible',css:'faible'},{id:'risque',label:'Risqué / Illicite',css:'risque'}],badges:['archiviste']},
+{id:'s6',phase:1,title:'Choisir la voie',context:'Le salarié a constitué un dossier solide. Il vous demande maintenant vers quelle démarche s\'orienter.',objective:'🎯 Orienter le salarié de manière responsable, sans se substituer à un avocat.',type:'choice',choices:[
+{text:'Lui suggérer de tenter d\'abord une médiation conventionnelle avant toute saisine, même si les voies internes ont échoué',quality:'ok',feedback:'La médiation est une bonne idée, mais elle n\'est pas toujours adaptée. Si le dialogue est rompu ou l\'urgence avérée, elle peut faire perdre du temps.',score:50,risk:5,badges:['desescalade']},
+{text:'Lui recommander de saisir directement le conseil de prud\'hommes au fond pour marquer le coup',quality:'bad',feedback:'La saisine au fond sans avoir exploré les alternatives est précipitée. Le juge appréciera que des tentatives amiables aient été faites.',score:-15,risk:15,badges:[]},
+{text:'Lui conseiller de consulter un avocat spécialisé pour évaluer les options, après avoir vérifié que les voies internes ont été épuisées',quality:'good',feedback:'Parfait. Vous orientez sans décider, et vous vérifiez que le dialogue interne a eu lieu. C\'est le rôle du CSE.',score:110,risk:0,badges:['procedurier','stratege']},
+{text:'Le rassurer en lui disant que son dossier est solide et qu\'il n\'a pas vraiment besoin d\'un professionnel du droit',quality:'bad',feedback:'Même un bon dossier nécessite un regard professionnel pour évaluer la stratégie et les risques.',score:-25,risk:20,badges:[]}
+]},
+/* ===== PHASE 3 : JUDICIAIRE ===== */
+{id:'s7',phase:2,title:'Référé ou fond ?',context:'Deux situations : un salarié n\'a pas reçu ses documents de fin de contrat 3 semaines après son départ. Un autre conteste le motif économique de son licenciement.',objective:'🎯 Identifier la procédure adaptée à chaque situation.',type:'choice',choices:[
+{text:'Fond pour les deux affaires, afin de traiter l\'ensemble dans une seule procédure cohérente',quality:'ok',feedback:'Juridiquement possible, mais pas optimal. La remise de documents est une obligation évidente : le référé permettrait de l\'obtenir en quelques semaines au lieu de mois.',score:40,risk:5,badges:[]},
+{text:'Référé pour les documents manquants (obligation claire) et fond pour le licenciement contesté (débat complexe sur le motif)',quality:'good',feedback:'Exact. Le référé traite l\'urgent et l\'incontestable. Le fond permet l\'examen approfondi du motif.',score:120,risk:0,badges:['stratege']},
+{text:'Négociation amiable pour les documents, prud\'hommes au fond pour le licenciement — sans urgence pour aucun',quality:'bad',feedback:'Les documents de fin de contrat sont dus immédiatement. Attendre retarde le salarié dans ses démarches (Pôle emploi, mutuelle...).',score:-20,risk:15,badges:[]},
+{text:'Référé pour les deux, car la rapidité est toujours préférable',quality:'bad',feedback:'Le juge des référés ne peut pas trancher une contestation sérieuse comme un motif de licenciement.',score:-15,risk:15,badges:[]}
+]},
+{id:'s8',phase:2,title:'Les acteurs au bon moment',context:'Dans le cadre d\'un litige, plusieurs actions doivent être menées. Chaque intervenant a un rôle précis.',objective:'🎯 Glissez chaque acteur sur l\'action correspondante, ou sélectionnez puis appuyez.',type:'dnd-actors',pairs:[
+{action:'Assister le salarié en entretien préalable',correctActor:'CSE',explanation:'L\'élu CSE peut assister le salarié lors de l\'entretien préalable.'},
+{action:'Rédiger les conclusions juridiques pour le tribunal',correctActor:'Avocat',explanation:'Seul l\'avocat rédige les conclusions et plaide devant la juridiction.'},
+{action:'Engager une action de substitution au nom des salariés',correctActor:'Syndicat',explanation:'Le syndicat peut agir en substitution pour défendre les intérêts collectifs ou individuels.'},
+{action:'Fournir les pièces de son dossier personnel',correctActor:'Salarié',explanation:'C\'est au salarié de rassembler et fournir ses propres pièces.'},
+{action:'Constater les infractions au droit du travail sur site',correctActor:'Inspection',explanation:'L\'inspection du travail a le pouvoir de constater et verbaliser.'},
+{action:'Informer sur les droits applicables au litige',correctActor:'Juriste Hiiato',explanation:'Le juriste Hiiato apporte un éclairage juridique et informe les élus et salariés sur leurs droits.'}
+],actors:['CSE','Syndicat','Inspection','Avocat','Salarié','Juriste Hiiato'],badges:['procedurier']},
+{id:'s9',phase:2,title:'Cohérence du récit',context:'À l\'audience, le salarié et l\'employeur présentent deux versions divergentes. Le juge va s\'appuyer principalement sur les pièces versées au dossier.',objective:'🎯 Adopter la meilleure stratégie probatoire pour l\'audience.',type:'choice',choices:[
+{text:'Ajouter au dossier tous les éléments disponibles, même partiellement exploitables, pour montrer l\'ampleur de la situation',quality:'ok',feedback:'L\'intention est compréhensible, mais des pièces faibles ou hors sujet diluent la force du dossier. Le juge peut douter de la rigueur globale.',score:30,risk:15,badges:[]},
+{text:'Adapter légèrement le récit en fonction des pièces adverses découvertes tardivement, pour mieux répondre point par point',quality:'bad',feedback:'Modifier son récit en cours de procédure est très risqué. Le juge y verra une incohérence, voire un manque de sincérité.',score:-25,risk:25,badges:[]},
+{text:'Maintenir un récit stable et structuré, en ne versant que des pièces vérifiables qui se confirment mutuellement',quality:'good',feedback:'Le juge cherche la cohérence interne. Un récit clair appuyé par des pièces concordantes a plus de poids qu\'un dossier volumineux mais décousu.',score:120,risk:0,badges:['archiviste','stratege']},
+{text:'Se concentrer sur un seul témoignage fort plutôt que multiplier les pièces, pour simplifier la lecture du juge',quality:'bad',feedback:'Un dossier reposant sur un seul élément est fragile. Si ce témoignage est contesté, tout s\'effondre.',score:-20,risk:20,badges:[]}
+]}
+];
+var DEBRIEF_CONTENT=[
+{title:'Phase Interne — Ce qu\'il faut retenir',content:'Le CSE joue un rôle de facilitateur et de médiateur. Privilégiez le dialogue, la formalisation des désaccords, et les canaux internes. Documentez sans confronter.',errors:'Erreurs classiques : agir sans éléments factuels, posture agressive, court-circuiter le dialogue, minimiser.'},
+{title:'Phase Précontentieuse — Ce qu\'il faut retenir',content:'Le dossier se construit méthodiquement : chronologie claire, preuves classées par force, orientation vers un professionnel. Le CSE accompagne et oriente, il ne promet pas de résultat.',errors:'Erreurs classiques : preuves illicites, promesse de victoire, saisine précipitée, chronologie bâclée.'},
+{title:'Phase Judiciaire — Ce qu\'il faut retenir',content:'Distinguer référé (urgent, évident) et fond (contestation complexe). Chaque acteur intervient à son niveau. La cohérence du récit et des pièces est décisive.',errors:'Erreurs classiques : confusion référé/fond, mélange des rôles, récit incohérent, dossier non sélectif.'}
+];
+
+/* === STATE === */
+var state={screen:'home',currentScenario:0,score:0,risk:0,maxRisk:0,badges:[],choices:[]};
+var scenarioAnswered=false;
+function saveState(){try{localStorage.setItem('cse_litige_v4',JSON.stringify(state))}catch(e){}}
+function loadState(){try{var s=localStorage.getItem('cse_litige_v4');if(s){var p=JSON.parse(s);if(p&&p.screen){state=Object.assign({},state,p);return true}}}catch(e){}return false}
+function resetState(){state={screen:'home',currentScenario:0,score:0,risk:0,maxRisk:0,badges:[],choices:[]};scenarioAnswered=false;saveState()}
+
+var orderSequence=[];var dndPlacements={};var dndSelectedItem=null;var selectedActor=null;var actorAssignments={};
+var dragState={active:false,el:null,startX:0,startY:0,offsetX:0,offsetY:0,origRect:null,moved:false};
+var app=document.getElementById('app');
+
+/* Fisher-Yates shuffle, guarantees no element stays at its original index */
+function goodShuffle(arr){
+  var a=arr.slice();
+  for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*i);var t=a[i];a[i]=a[j];a[j]=t}
+  /* If any item is still at its original index, reshuffle */
+  var stuck=false;for(var k=0;k<a.length;k++){if(a[k]===arr[k]){stuck=true;break}}
+  if(stuck)return goodShuffle(arr);
+  return a;
+}
+
+function render(){
+  scenarioAnswered=false;orderSequence=[];dndPlacements={};dndSelectedItem=null;selectedActor=null;actorAssignments={};dragState.active=false;
+  switch(state.screen){case'home':renderHome();break;case'scenario':renderScenario();break;case'debrief':renderDebrief();break;case'final':renderFinal();break;default:renderHome()}
+  saveState();
+}
+
+/* === HOME === */
+function renderHome(){
+  app.innerHTML='<div class="home-screen fade-in"><div class="logo">⚖️</div><h1>Le Parcours d\'un Litige</h1><p class="subtitle">Incarnez un élu CSE et prenez les bonnes décisions à chaque étape d\'un litige.</p><div class="home-rules"><div class="rule-section"><div class="rule-title">🎮 Objectif</div><div class="rule-text">Traversez 3 phases (interne → précontentieux → judiciaire) en 9 scénarios. Chaque décision rapporte des points et peut faire monter votre jauge de risque.</div></div><div class="rule-section"><div class="rule-title">⚠️ Risque</div><div class="rule-text">Si la jauge dépasse 80, votre dossier est fragilisé et vous perdez des points. Visez un risque bas pour décrocher le badge "Zéro risque".</div></div><div class="rule-section"><div class="rule-title">🏆 Badges</div><div class="rule-text">5 badges à débloquer : Archiviste, Désescalade, Procédurier propre, Stratège, Zéro risque. Chacun débloque un conseil dans votre carnet.</div></div><div class="rule-section"><div class="rule-title">🖐️ Interactions</div><div class="rule-text">Certains exercices sont interactifs : glissez les éléments (souris ou doigt) ou sélectionnez puis appuyez sur la cible. Vous pouvez recommencer avant de valider.</div></div></div><div class="home-actions"><button class="btn btn-primary btn-block" onclick="startGame()">▶ Commencer le parcours</button><button class="btn btn-secondary btn-block btn-sm" onclick="showNotebook()">🏆 Carnet de badges</button></div></div>';
+}
+function startGame(){resetState();state.screen='scenario';render()}
+function goHome(){state.screen='home';saveState();render()}
+
+function renderTopBar(){
+  var sc=SCENARIOS[state.currentScenario],phase=PHASES[sc.phase];
+  var progress=(state.currentScenario/SCENARIOS.length)*100;
+  var riskClass=state.risk>60?'high':state.risk>30?'medium':'';
+  var riskColor=state.risk>60?'var(--danger)':state.risk>30?'var(--warning)':'var(--text-muted)';
+  return '<div class="top-bar"><span class="phase-label">'+phase.label+' — '+(state.currentScenario+1)+'/9</span><span class="score-display">Score: <span>'+state.score+'</span></span><button class="btn btn-menu" onclick="goHome()">🏠 Menu</button></div><div class="progress-container"><div class="progress-bar" style="width:'+progress+'%"></div></div><div class="risk-container"><span class="risk-label">Risque</span><div class="risk-bar-wrap"><div class="risk-bar '+riskClass+'" style="width:'+Math.min(state.risk,100)+'%"></div></div><span class="risk-value" style="color:'+riskColor+'">'+state.risk+'</span></div>';
+}
+
+function renderScenario(){
+  var sc=SCENARIOS[state.currentScenario],phase=PHASES[sc.phase],content='';
+  switch(sc.type){case'choice':content=renderChoice(sc,phase);break;case'order':content=renderOrder(sc,phase);break;case'dnd-proof':content=renderDndProof(sc,phase);break;case'dnd-actors':content=renderDndActors(sc,phase);break}
+  app.innerHTML=renderTopBar()+content;
+  if(sc.type==='dnd-proof'||sc.type==='dnd-actors')bindDragEvents();
+}
+function retryScenario(){render()}
+
+/* === CHOICE === */
+function renderChoice(sc,phase){
+  var h='<div class="card slide-up"><div class="scenario-header"><span class="chapter-tag '+phase.tag+'">'+phase.name+'</span><h2>'+sc.title+'</h2></div><div class="scenario-context">'+sc.context+'</div><div class="scenario-objective">'+sc.objective+'</div><div class="choices">';
+  sc.choices.forEach(function(c,i){h+='<button class="choice-btn" onclick="selectChoice('+i+')">'+c.text+'</button>'});
+  return h+'</div><div id="feedback-area"></div><div id="next-area"></div></div>';
+}
+function selectChoice(index){
+  if(scenarioAnswered)return;scenarioAnswered=true;
+  var sc=SCENARIOS[state.currentScenario],ch=sc.choices[index];
+  document.querySelectorAll('.choice-btn').forEach(function(b,i){b.classList.add('disabled');if(i===index)b.classList.add(ch.quality==='good'?'selected-good':ch.quality==='ok'?'selected-ok':'selected-bad')});
+  applyChoice(sc,ch);
+  var fc=ch.quality==='good'?'good':ch.quality==='ok'?'ok':'bad';
+  var ft=ch.quality==='good'?'✅ Bonne décision !':ch.quality==='ok'?'⚠️ Acceptable, mais...':'❌ Mauvais choix';
+  document.getElementById('feedback-area').innerHTML='<div class="feedback-box '+fc+'"><div class="fb-title">'+ft+'</div><div>'+ch.feedback+'</div><div class="fb-impact">Score: '+(ch.score>0?'+':'')+ch.score+' · Risque: '+(ch.risk>0?'+':'')+ch.risk+'</div></div>';
+  document.getElementById('next-area').innerHTML='<div class="next-btn-wrap"><button class="btn btn-primary" onclick="nextStep()">Continuer →</button></div>';
+  rerenderBars();saveState();
+}
+
+/* === ORDER (now 7 items) === */
+function renderOrder(sc,phase){
+  var sh=goodShuffle(sc.items);orderSequence=[];
+  var total=sc.items.length;
+  var h='<div class="card slide-up"><div class="scenario-header"><span class="chapter-tag '+phase.tag+'">'+phase.name+'</span><h2>'+sc.title+'</h2></div><div class="scenario-context">'+sc.context+'</div><div class="scenario-objective">'+sc.objective+'</div><div class="dnd-instruction">Appuyez sur les événements dans l\'ordre chronologique</div><div id="order-items">';
+  sh.forEach(function(item){h+='<button class="choice-btn" data-id="'+item.id+'" data-order="'+item.order+'" onclick="tapOrder(\''+item.id+'\','+item.order+')">'+item.text+'</button>'});
+  return h+'</div><div id="order-sequence" style="margin-top:10px;font-size:.8rem;color:var(--accent);text-align:center"></div><div id="order-retry" style="text-align:center;margin-top:8px"></div><div id="feedback-area"></div><div id="next-area"></div></div>';
+}
+function tapOrder(id,co){
+  if(scenarioAnswered)return;var btn=document.querySelector('[data-id="'+id+'"]');if(!btn||btn.classList.contains('disabled'))return;
+  var sc=SCENARIOS[state.currentScenario];var total=sc.items.length;
+  orderSequence.push({id:id,correctOrder:co});btn.classList.add('disabled');btn.style.opacity='.45';
+  btn.innerHTML='<span style="color:var(--accent);font-weight:700;margin-right:6px">'+orderSequence.length+'.</span> '+btn.textContent.trim();
+  document.getElementById('order-sequence').textContent='Sélection : '+orderSequence.length+'/'+total;
+  if(orderSequence.length>0&&orderSequence.length<total)document.getElementById('order-retry').innerHTML='<button class="btn btn-secondary btn-sm" onclick="retryScenario()">↩ Recommencer</button>';
+  if(orderSequence.length===total)validateOrder();
+}
+function validateOrder(){
+  scenarioAnswered=true;document.getElementById('order-retry').innerHTML='';
+  var sc=SCENARIOS[state.currentScenario],total=sc.items.length,cc=0;
+  orderSequence.forEach(function(item,idx){if(item.correctOrder===idx+1)cc++});
+  var sd,rd,fb,fc;
+  if(cc===total){sd=130;rd=0;fb=sc.feedback_good;fc='good';sc.badges.forEach(function(b){if(state.badges.indexOf(b)===-1)state.badges.push(b)})}
+  else if(cc>=total-2){sd=60;rd=5;fb=sc.feedback_partial;fc='ok'}else{sd=-20;rd=15;fb=sc.feedback_bad;fc='bad'}
+  applyScore(sc,sd,rd,cc===total?'good':cc>=total-2?'ok':'bad',cc+'/'+total+' dans l\'ordre correct');
+  document.getElementById('feedback-area').innerHTML='<div class="feedback-box '+fc+'"><div class="fb-title">'+(cc===total?'✅ Parfait !':cc>=total-2?'⚠️ Presque !':'❌ À revoir')+' ('+cc+'/'+total+')</div><div>'+fb+'</div><div class="fb-impact">Score: '+(sd>0?'+':'')+sd+'</div></div>';
+  document.getElementById('next-area').innerHTML='<div class="next-btn-wrap"><button class="btn btn-primary" onclick="nextStep()">Continuer →</button></div>';
+  rerenderBars();saveState();
+}
+
+/* === DRAG ENGINE (Pointer Events) === */
+function bindDragEvents(){
+  document.querySelectorAll('.dnd-item').forEach(function(el){el.addEventListener('pointerdown',onDragStart,{passive:false})});
+  document.addEventListener('pointermove',onDragMove,{passive:false});
+  document.addEventListener('pointerup',onDragEnd,{passive:false});
+}
+function onDragStart(e){
+  var el=e.currentTarget;if(el.classList.contains('placed')||scenarioAnswered)return;
+  e.preventDefault();el.setPointerCapture(e.pointerId);
+  var rect=el.getBoundingClientRect();
+  dragState={active:true,el:el,startX:e.clientX,startY:e.clientY,offsetX:e.clientX-rect.left,offsetY:e.clientY-rect.top,origRect:rect,moved:false};
+}
+function onDragMove(e){
+  if(!dragState.active)return;e.preventDefault();
+  var dx=e.clientX-dragState.startX,dy=e.clientY-dragState.startY;
+  if(!dragState.moved&&(Math.abs(dx)>2||Math.abs(dy)>2)){
+    dragState.moved=true;dragState.el.classList.add('dragging');
+    dragState.el.style.width=dragState.origRect.width+'px';
+    document.querySelectorAll('.dnd-item.selected-dnd').forEach(function(x){x.classList.remove('selected-dnd')});
+    dndSelectedItem=null;selectedActor=null;
+  }
+  if(dragState.moved){
+    dragState.el.style.left=(e.clientX-dragState.offsetX)+'px';
+    dragState.el.style.top=(e.clientY-dragState.offsetY)+'px';
+    highlightZoneUnder(e.clientX,e.clientY);
+  }
+}
+function onDragEnd(e){
+  if(!dragState.active)return;
+  var wasMoved=dragState.moved,el=dragState.el;
+  document.querySelectorAll('.dnd-zone.drag-over,[data-action-index].drag-over').forEach(function(z){z.classList.remove('drag-over')});
+  if(wasMoved){
+    el.classList.remove('dragging');el.style.position='';el.style.left='';el.style.top='';el.style.width='';
+    var zone=getZoneUnder(e.clientX,e.clientY);
+    if(zone){var sc=SCENARIOS[state.currentScenario];if(sc.type==='dnd-proof')dropProof(el,zone);else if(sc.type==='dnd-actors')dropActor(el,zone)}
+  } else { handleTapSelect(el) }
+  dragState={active:false,el:null,startX:0,startY:0,offsetX:0,offsetY:0,origRect:null,moved:false};
+}
+function highlightZoneUnder(x,y){
+  document.querySelectorAll('.dnd-zone,[data-action-index]').forEach(function(z){
+    var r=z.getBoundingClientRect();z.classList.toggle('drag-over',x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom);
+  });
+}
+function getZoneUnder(x,y){
+  var els=document.querySelectorAll('.dnd-zone,[data-action-index]');
+  for(var i=0;i<els.length;i++){var r=els[i].getBoundingClientRect();if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)return els[i]}
+  return null;
+}
+function handleTapSelect(el){
+  var sc=SCENARIOS[state.currentScenario];
+  if(sc.type==='dnd-proof'){
+    if(el.classList.contains('placed'))return;
+    document.querySelectorAll('.dnd-item.selected-dnd').forEach(function(x){x.classList.remove('selected-dnd')});
+    if(dndSelectedItem===el){dndSelectedItem=null;return}dndSelectedItem=el;el.classList.add('selected-dnd');
+  } else if(sc.type==='dnd-actors'){
+    if(el.classList.contains('placed'))return;
+    document.querySelectorAll('.dnd-item.selected-dnd').forEach(function(x){x.classList.remove('selected-dnd')});
+    if(selectedActor===el){selectedActor=null;return}selectedActor=el;el.classList.add('selected-dnd');
+  }
+}
+
+/* === DND PROOF === */
+function renderDndProof(sc,phase){
+  var sh=goodShuffle(sc.items);dndPlacements={};dndSelectedItem=null;
+  var h='<div class="card slide-up"><div class="scenario-header"><span class="chapter-tag '+phase.tag+'">'+phase.name+'</span><h2>'+sc.title+'</h2></div><div class="scenario-context">'+sc.context+'</div><div class="scenario-objective">'+sc.objective+'</div><div class="dnd-items" id="dnd-source">';
+  sh.forEach(function(item){h+='<div class="dnd-item" data-id="'+item.id+'" data-correct="'+item.correct+'">'+item.text+'</div>'});
+  h+='</div><div class="dnd-zones" id="dnd-zones">';
+  sc.zones.forEach(function(z){h+='<div class="dnd-zone" data-zone="'+z.id+'" onclick="dndTapZone(\''+z.id+'\')"><div class="zone-title '+z.css+'">'+z.label+'</div><div class="zone-items" id="zone-'+z.id+'"></div></div>'});
+  return h+'</div><div style="text-align:center;margin-top:8px"><button class="btn btn-secondary btn-sm" onclick="retryScenario()">↩ Recommencer</button></div><div class="dnd-validate-wrap" id="dnd-validate" style="display:none"><button class="btn btn-primary" onclick="validateProof()">Valider</button></div><div id="feedback-area"></div><div id="next-area"></div></div>';
+}
+function dropProof(el,zone){
+  var zid=zone.dataset.zone;if(!zid)return;
+  var iid=el.dataset.id,txt=el.textContent.trim();
+  dndPlacements[iid]=zid;el.classList.add('placed');el.classList.remove('selected-dnd');dndSelectedItem=null;
+  document.getElementById('zone-'+zid).innerHTML+='<div class="zone-item" data-item-id="'+iid+'">'+txt+' <span class="remove-item" onclick="event.stopPropagation();removeProofItem(\''+iid+'\',\''+zid+'\')">×</span></div>';
+  checkAllPlaced();
+}
+function dndTapZone(zid){if(!dndSelectedItem||scenarioAnswered)return;dropProof(dndSelectedItem,{dataset:{zone:zid}})}
+function removeProofItem(iid,zid){
+  if(scenarioAnswered)return;delete dndPlacements[iid];
+  var zi=document.getElementById('zone-'+zid),el=zi?zi.querySelector('[data-item-id="'+iid+'"]'):null;if(el)el.remove();
+  var src=document.querySelector('.dnd-item[data-id="'+iid+'"]');if(src)src.classList.remove('placed');
+  document.getElementById('dnd-validate').style.display='none';
+}
+function checkAllPlaced(){
+  var sc=SCENARIOS[state.currentScenario];
+  if(sc.type==='dnd-proof'&&Object.keys(dndPlacements).length===sc.items.length)document.getElementById('dnd-validate').style.display='block';
+  if(sc.type==='dnd-actors'&&Object.keys(actorAssignments).length===sc.pairs.length)document.getElementById('dnd-actor-validate').style.display='block';
+}
+function validateProof(){
+  scenarioAnswered=true;var sc=SCENARIOS[state.currentScenario],correct=0;
+  sc.items.forEach(function(item){var p=dndPlacements[item.id],zi=document.getElementById('zone-'+p),el=zi?zi.querySelector('[data-item-id="'+item.id+'"]'):null;if(p===item.correct){correct++;if(el)el.classList.add('correct')}else{if(el)el.classList.add('wrong')}});
+  var t=sc.items.length,r=correct/t,sd,rd,fc,ft;
+  if(r>=.85){sd=140;rd=0;fc='good';ft='✅ Excellent tri !';sc.badges.forEach(function(b){if(state.badges.indexOf(b)===-1)state.badges.push(b)})}
+  else if(r>=.5){sd=60;rd=10;fc='ok';ft='⚠️ Classement partiel'}else{sd=-20;rd=20;fc='bad';ft='❌ Classement incorrect'}
+  applyScore(sc,sd,rd,r>=.85?'good':r>=.5?'ok':'bad',correct+'/'+t+' classés');
+  var expl='';sc.items.forEach(function(item){var ok=dndPlacements[item.id]===item.correct;expl+='<div style="margin-bottom:6px;font-size:.8rem"><span style="color:'+(ok?'var(--success)':'var(--danger)')+';font-weight:700">'+item.text+'</span> → '+item.correct.toUpperCase()+' '+(ok?'✓':'✗')+'<br><span style="color:var(--text-secondary)">'+item.explanation+'</span></div>'});
+  document.getElementById('dnd-validate').style.display='none';
+  document.getElementById('feedback-area').innerHTML='<div class="feedback-box '+fc+'"><div class="fb-title">'+ft+' ('+correct+'/'+t+')</div>'+expl+'<div class="fb-impact">Score: '+(sd>0?'+':'')+sd+'</div></div>';
+  document.getElementById('next-area').innerHTML='<div class="next-btn-wrap"><button class="btn btn-primary" onclick="nextStep()">Continuer →</button></div>';
+  document.querySelectorAll('.dnd-item').forEach(function(e){e.style.pointerEvents='none'});document.querySelectorAll('.remove-item').forEach(function(e){e.style.display='none'});
+  rerenderBars();saveState();
+}
+
+/* === DND ACTORS === */
+function renderDndActors(sc,phase){
+  var sh=goodShuffle(sc.actors);selectedActor=null;actorAssignments={};
+  var h='<div class="card slide-up"><div class="scenario-header"><span class="chapter-tag '+phase.tag+'">'+phase.name+'</span><h2>'+sc.title+'</h2></div><div class="scenario-context">'+sc.context+'</div><div class="scenario-objective">'+sc.objective+'</div><div class="dnd-items" id="actor-source">';
+  sh.forEach(function(a){h+='<div class="dnd-item" data-actor="'+a+'">'+a+'</div>'});
+  h+='</div><div style="display:flex;flex-direction:column;gap:8px;margin-top:12px" id="action-targets">';
+  sc.pairs.forEach(function(p,i){h+='<div class="choice-btn" data-action-index="'+i+'" onclick="actorTapAction('+i+')" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="flex:1">'+p.action+'</span><span class="actor-slot" id="slot-'+i+'" style="min-width:90px;text-align:right;color:var(--text-muted);font-weight:700;font-size:.76rem">—</span></div>'});
+  return h+'</div><div style="text-align:center;margin-top:8px"><button class="btn btn-secondary btn-sm" onclick="retryScenario()">↩ Recommencer</button></div><div class="dnd-validate-wrap" id="dnd-actor-validate" style="display:none"><button class="btn btn-primary" onclick="validateActors()">Valider</button></div><div id="feedback-area"></div><div id="next-area"></div></div>';
+}
+function dropActor(el,row){
+  var ai=row.dataset.actionIndex;if(ai===undefined||ai===null)return;ai=parseInt(ai);
+  var an=el.dataset.actor;if(!an)return;
+  Object.keys(actorAssignments).forEach(function(k){if(actorAssignments[k]===an){delete actorAssignments[k];document.getElementById('slot-'+k).textContent='—';document.getElementById('slot-'+k).style.color='var(--text-muted)'}});
+  var prev=actorAssignments[ai];if(prev){var pi=document.querySelector('.dnd-item[data-actor="'+prev+'"]');if(pi)pi.classList.remove('placed')}
+  actorAssignments[ai]=an;document.getElementById('slot-'+ai).textContent=an;document.getElementById('slot-'+ai).style.color='var(--accent)';
+  el.classList.add('placed');el.classList.remove('selected-dnd');selectedActor=null;checkAllPlaced();
+}
+function actorTapAction(ai){if(!selectedActor||scenarioAnswered)return;dropActor(selectedActor,{dataset:{actionIndex:ai}})}
+function validateActors(){
+  scenarioAnswered=true;var sc=SCENARIOS[state.currentScenario],correct=0;
+  sc.pairs.forEach(function(p,i){var a=actorAssignments[i],s=document.getElementById('slot-'+i),row=document.querySelector('[data-action-index="'+i+'"]');if(a===p.correctActor){correct++;if(row)row.classList.add('selected-good')}else{if(row)row.classList.add('selected-bad');if(s)s.textContent=(a||'—')+' → '+p.correctActor}row.style.pointerEvents='none'});
+  var t=sc.pairs.length,r=correct/t,sd,rd,fc,ft;
+  if(r>=.8){sd=130;rd=0;fc='good';ft='✅ Associations correctes !';sc.badges.forEach(function(b){if(state.badges.indexOf(b)===-1)state.badges.push(b)})}
+  else if(r>=.5){sd=50;rd=10;fc='ok';ft='⚠️ Quelques confusions'}else{sd=-20;rd=20;fc='bad';ft='❌ Rôles mal identifiés'}
+  applyScore(sc,sd,rd,r>=.8?'good':r>=.5?'ok':'bad',correct+'/'+t+' associations correctes');
+  var expl='';sc.pairs.forEach(function(p){expl+='<div style="margin-bottom:6px;font-size:.8rem"><strong>'+p.action+'</strong> → <span style="color:var(--accent)">'+p.correctActor+'</span><br><span style="color:var(--text-secondary)">'+p.explanation+'</span></div>'});
+  document.getElementById('dnd-actor-validate').style.display='none';
+  document.getElementById('feedback-area').innerHTML='<div class="feedback-box '+fc+'"><div class="fb-title">'+ft+' ('+correct+'/'+t+')</div>'+expl+'<div class="fb-impact">Score: '+(sd>0?'+':'')+sd+'</div></div>';
+  document.getElementById('next-area').innerHTML='<div class="next-btn-wrap"><button class="btn btn-primary" onclick="nextStep()">Continuer →</button></div>';
+  document.querySelectorAll('.dnd-item').forEach(function(e){e.style.pointerEvents='none'});rerenderBars();saveState();
+}
+
+/* === SCORING === */
+function applyChoice(sc,ch){
+  state.score=Math.max(0,state.score+ch.score);state.risk=Math.min(100,Math.max(0,state.risk+ch.risk));state.maxRisk=Math.max(state.maxRisk,state.risk);
+  if(ch.badges)ch.badges.forEach(function(b){if(state.badges.indexOf(b)===-1)state.badges.push(b)});
+  state.choices.push({scenarioId:sc.id,title:sc.title,choiceText:ch.text,quality:ch.quality,scoreDelta:ch.score,riskDelta:ch.risk});
+  showScoreChange(ch.score);checkRiskAlert();
+}
+function applyScore(sc,sd,rd,q,ct){
+  state.score=Math.max(0,state.score+sd);state.risk=Math.min(100,Math.max(0,state.risk+rd));state.maxRisk=Math.max(state.maxRisk,state.risk);
+  state.choices.push({scenarioId:sc.id,title:sc.title,quality:q,scoreDelta:sd,riskDelta:rd,choiceText:ct});
+  showScoreChange(sd);checkRiskAlert();
+}
+
+/* === NAV === */
+function nextStep(){
+  var ni=state.currentScenario+1,cp=SCENARIOS[state.currentScenario].phase;
+  var np=ni<SCENARIOS.length?SCENARIOS[ni].phase:-1;
+  if(ni>=SCENARIOS.length){state.screen='final';render();return}
+  if(np!==cp){state.screen='debrief';render();return}
+  state.currentScenario=ni;state.screen='scenario';render();
+}
+
+/* === DEBRIEF === */
+function renderDebrief(){
+  var cp=SCENARIOS[state.currentScenario].phase,d=DEBRIEF_CONTENT[cp];
+  app.innerHTML='<div class="card debrief-card slide-up"><div style="font-size:2rem;margin-bottom:8px">📊</div><h2>'+d.title+'</h2><div class="key-takeaway"><strong>Notion clé :</strong><br>'+d.content+'</div><div style="background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:var(--radius);padding:14px;margin-bottom:16px;text-align:left;font-size:.83rem"><strong style="color:var(--danger)">⚠ Erreurs fréquentes :</strong><br>'+d.errors+'</div><div style="font-size:.85rem;color:var(--text-secondary);margin-bottom:16px">Score : <strong style="color:var(--accent)">'+state.score+'</strong> · Risque : <strong>'+state.risk+'</strong></div><div class="toolbar"><button class="btn btn-primary" onclick="continueAfterDebrief()">Chapitre suivant →</button><button class="btn btn-menu" onclick="goHome()">🏠 Menu</button></div></div>';
+}
+function continueAfterDebrief(){state.currentScenario++;state.screen='scenario';render()}
+
+/* === FINAL === */
+function renderFinal(){
+  var earned=state.badges.filter(function(v,i,a){return a.indexOf(v)===i});
+  if(state.maxRisk<30&&earned.indexOf('zerorisk')===-1)earned.push('zerorisk');
+  var bH='';BADGES.forEach(function(b){var u=earned.indexOf(b.id)!==-1;bH+='<div class="badge-item '+(u?'unlocked':'locked')+'" onclick="'+(u?"showBadgeDetail('"+b.id+"')":'')+'""><div class="badge-icon">'+b.icon+'</div><div class="badge-name">'+b.name+'</div></div>'});
+  var rH='';state.choices.forEach(function(c){var cl=c.quality==='good'?'good-review':c.quality==='ok'?'ok-review':'bad-review';var ic=c.quality==='good'?'✅':c.quality==='ok'?'⚠️':'❌';rH+='<div class="review-item '+cl+'"><div class="ri-title">'+ic+' '+c.title+'</div><div class="ri-detail">'+(c.choiceText||'')+' — Score: '+(c.scoreDelta>0?'+':'')+c.scoreDelta+'</div></div>'});
+  app.innerHTML='<div class="card debrief-card slide-up" style="text-align:center"><div style="font-size:2.5rem;margin-bottom:8px">🏁</div><h2>Parcours terminé !</h2><div class="final-score">'+state.score+'</div><div style="font-size:.85rem;color:var(--text-secondary);margin-bottom:4px">points sur 1000</div><div style="font-size:.85rem;margin-bottom:20px">Risque final : <strong style="color:'+(state.risk>50?'var(--danger)':state.risk>25?'var(--warning)':'var(--success)')+'">'+state.risk+'</strong> · Max : <strong>'+state.maxRisk+'</strong></div><h3 style="font-size:1rem;margin-bottom:8px">🏆 Badges</h3><div class="badges-grid">'+bH+'</div><div class="synthesis-card card"><h3>📌 Méthode en 4 étapes</h3><div class="synthesis-step"><div class="synthesis-num">1</div><div class="synthesis-text"><strong>Qualifier</strong> — Identifier la nature du litige et l\'urgence.</div></div><div class="synthesis-step"><div class="synthesis-num">2</div><div class="synthesis-text"><strong>Action CSE</strong> — Assister, alerter, accompagner.</div></div><div class="synthesis-step"><div class="synthesis-num">3</div><div class="synthesis-text"><strong>Preuve</strong> — Chronologie, pièces datées, témoignages conformes.</div></div><div class="synthesis-step"><div class="synthesis-num">4</div><div class="synthesis-text"><strong>Orientation</strong> — Médiation, référé ou fond. Consulter un professionnel.</div></div></div><h3 style="font-size:1rem;margin:16px 0 8px">📋 Résumé</h3><div class="review-list">'+rH+'</div><div class="toolbar"><button class="btn btn-primary" onclick="resetAndHome()">🔄 Recommencer</button><button class="btn btn-secondary" onclick="showNotebook()">🏆 Carnet</button></div></div>';
+  saveState();
+}
+
+/* === UTILS === */
+function showScoreChange(d){if(d===0)return;var el=document.createElement('div');el.className='score-change '+(d>0?'positive':'negative');el.textContent=(d>0?'+':'')+d;document.body.appendChild(el);setTimeout(function(){el.remove()},1100)}
+function checkRiskAlert(){if(state.risk>80){var a=document.createElement('div');a.className='alert-banner';a.textContent='⚠️ DOSSIER FRAGILISÉ — Risque critique !';document.body.appendChild(a);setTimeout(function(){a.remove()},3000);state.score=Math.max(0,state.score-50)}}
+function rerenderBars(){var pb=document.querySelector('.progress-bar'),rb=document.querySelector('.risk-bar'),rv=document.querySelector('.risk-value'),sd=document.querySelector('.score-display span');if(pb)pb.style.width=(state.currentScenario/SCENARIOS.length)*100+'%';if(rb){rb.style.width=Math.min(state.risk,100)+'%';rb.className='risk-bar'+(state.risk>60?' high':state.risk>30?' medium':'')}if(rv){rv.textContent=state.risk;rv.style.color=state.risk>60?'var(--danger)':state.risk>30?'var(--warning)':'var(--text-muted)'}if(sd)sd.textContent=state.score}
+
+/* === MODALS === */
+function showNotebook(){var h='';BADGES.forEach(function(b){var u=state.badges.indexOf(b.id)!==-1||(b.id==='zerorisk'&&state.maxRisk<30&&state.choices.length>0);h+='<div style="margin-bottom:14px;padding:12px;background:'+(u?'var(--accent-softer)':'#f8fafc')+';border-radius:var(--radius);border:1px solid '+(u?'var(--accent-soft)':'var(--border-light)')+'"><div style="font-size:1.2rem;margin-bottom:4px">'+b.icon+' '+b.name+' '+(u?'':'🔒')+'</div>'+(u?'<div style="font-size:.8rem;color:var(--text-secondary);margin-bottom:6px">'+b.desc+'</div><div style="font-size:.8rem;color:var(--accent);padding:8px;background:var(--accent-soft);border-radius:6px">💡 '+b.tip+'</div>':'<div style="font-size:.8rem;color:var(--text-muted)">Badge verrouillé.</div>')+'</div>'});showModal('🏆 Carnet de badges',h)}
+function showBadgeDetail(id){var b=BADGES.find(function(x){return x.id===id});if(!b)return;showModal(b.icon+' '+b.name,'<p style="margin-bottom:12px">'+b.desc+'</p><div style="padding:12px;background:var(--accent-softer);border-radius:var(--radius);font-size:.85rem;color:var(--accent)">💡 '+b.tip+'</div>')}
+function showModal(title,content){var o=document.createElement('div');o.className='modal-overlay';o.onclick=function(e){if(e.target===o)o.remove()};o.innerHTML='<div class="modal-content"><button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()" aria-label="Fermer">×</button><h3>'+title+'</h3><div style="font-size:.88rem;line-height:1.6;color:var(--text-secondary)">'+content+'</div></div>';document.body.appendChild(o)}
+function resetAndHome(){resetState();render()}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){var m=document.querySelector('.modal-overlay');if(m)m.remove()}});
+
+loadState();
+if(state.screen==='scenario'&&state.currentScenario>0&&state.choices.length>0){render()}
+else{state.screen='home';render()}
+</script>
+</body>
+</html>
