@@ -101,7 +101,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .next-btn-wrap{margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 .dnd-instruction{font-size:.82rem;color:var(--text-secondary);margin-bottom:16px;text-align:center;line-height:1.4}
 .dnd-items{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:20px;min-height:44px}
-.dnd-item{padding:10px 14px;background:var(--bg-card);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.8rem;cursor:default;touch-action:auto;user-select:none;-webkit-user-select:none;transition:border-color .15s ease,background .15s ease,box-shadow .15s ease,opacity .15s ease;box-shadow:0 1px 4px rgba(0,0,0,.06);position:relative;z-index:1}
+.dnd-item{padding:10px 14px;background:var(--bg-card);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.8rem;cursor:default;-webkit-tap-highlight-color:rgba(37,99,235,.15);transition:border-color .15s ease,background .15s ease,box-shadow .15s ease,opacity .15s ease;box-shadow:0 1px 4px rgba(0,0,0,.06);position:relative;z-index:1}
 .dnd-item.dragging{opacity:.9;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.15);position:fixed;pointer-events:none;transition:none;will-change:transform;touch-action:none}
 .dnd-item.placed{opacity:.4;pointer-events:none}
 .dnd-item.selected-dnd{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
@@ -330,13 +330,14 @@ function validateOrder(){
 }
 
 /* === INTERACTION ENGINE ===
-   Desktop (mouse): real drag & drop with transform
-   Mobile (touch): tap to select item, tap zone to place — simple and reliable
-   Detect via matchMedia or first event type
+   Selection: inline onclick= in HTML (most reliable in sandboxed iframes)
+   Drag: mousedown only, auto-detected (no device sniffing)
+   Scroll: never blocked — zero touch listeners, zero preventDefault on touch
 */
 var zoneCache=[];
 var rafId=0;
 var DRAG_THRESHOLD=6;
+var hasDragged=false;
 
 function cacheZones(){
   zoneCache=[];
@@ -347,21 +348,15 @@ function cacheZones(){
 }
 
 function bindDragEvents(){
-  document.querySelectorAll('.dnd-item').forEach(function(el){
-    /* Mouse for desktop drag */
-    el.addEventListener('mousedown',onMouseDown);
-    /* Click for tap-select (works on both desktop and mobile) */
-    el.addEventListener('click',onItemClick);
-  });
+  /* Mouse drag only — attached to document to avoid per-element issues */
+  document.addEventListener('mousedown',onDocMouseDown);
 }
 
-/* ---- TAP SELECT (universal fallback, primary on mobile) ---- */
-var itemClickBlocked=false; /* block click after a drag */
-
-function onItemClick(e){
-  if(itemClickBlocked){itemClickBlocked=false;return}
-  var el=e.currentTarget;
-  if(el.classList.contains('placed')||scenarioAnswered)return;
+/* ---- TAP SELECT (called from inline onclick in HTML) ---- */
+function tapItem(itemId){
+  if(scenarioAnswered||hasDragged)return;
+  var el=document.querySelector('.dnd-item[data-id="'+itemId+'"]')||document.querySelector('.dnd-item[data-actor="'+itemId+'"]');
+  if(!el||el.classList.contains('placed'))return;
   var sc=SCENARIOS[state.currentScenario];
   if(sc.type==='dnd-proof'){
     document.querySelectorAll('.dnd-item.selected-dnd').forEach(function(x){x.classList.remove('selected-dnd')});
@@ -374,11 +369,14 @@ function onItemClick(e){
   }
 }
 
-/* ---- MOUSE DRAG (desktop only) ---- */
-function onMouseDown(e){
+/* ---- MOUSE DRAG (desktop — document level) ---- */
+function onDocMouseDown(e){
   if(e.button!==0)return;
-  var el=e.currentTarget;if(el.classList.contains('placed')||scenarioAnswered)return;
+  var el=e.target.closest('.dnd-item');
+  if(!el||el.classList.contains('placed')||scenarioAnswered)return;
+  /* Don't preventDefault here — allows click to fire if no drag */
   var rect=el.getBoundingClientRect();
+  hasDragged=false;
   dragState={active:true,el:el,startX:e.clientX,startY:e.clientY,
     anchorX:rect.left,anchorY:rect.top,origRect:rect,
     moved:false,curX:e.clientX,curY:e.clientY};
@@ -392,7 +390,7 @@ function onMouseMove(e){
     var dx=e.clientX-dragState.startX,dy=e.clientY-dragState.startY;
     if(dx*dx+dy*dy<DRAG_THRESHOLD*DRAG_THRESHOLD)return;
     dragState.moved=true;
-    itemClickBlocked=true;
+    hasDragged=true;
     var el=dragState.el;
     el.classList.add('dragging');
     el.style.width=dragState.origRect.width+'px';
@@ -435,13 +433,15 @@ function onMouseUp(e){
     if(zone){var sc=SCENARIOS[state.currentScenario];if(sc.type==='dnd-proof')dropProof(el,zone);else if(sc.type==='dnd-actors')dropActor(el,zone)}
   }
   dragState={active:false,el:null,startX:0,startY:0,anchorX:0,anchorY:0,origRect:null,moved:false,curX:0,curY:0};
+  /* Reset hasDragged after a tick so click handler can check it */
+  setTimeout(function(){hasDragged=false},50);
 }
 
 /* === DND PROOF === */
 function renderDndProof(sc,phase){
   var sh=goodShuffle(sc.items);dndPlacements={};dndSelectedItem=null;
   var h='<div class="card slide-up"><div class="scenario-header"><span class="chapter-tag '+phase.tag+'">'+phase.name+'</span><h2>'+sc.title+'</h2></div><div class="scenario-context">'+sc.context+'</div><div class="scenario-objective">'+sc.objective+'</div><div class="dnd-items" id="dnd-source">';
-  sh.forEach(function(item){h+='<div class="dnd-item" data-id="'+item.id+'" data-correct="'+item.correct+'">'+item.text+'</div>'});
+  sh.forEach(function(item){h+='<div class="dnd-item" data-id="'+item.id+'" data-correct="'+item.correct+'" onclick="tapItem(\''+item.id+'\')">'+item.text+'</div>'});
   h+='</div><div class="dnd-zones" id="dnd-zones">';
   sc.zones.forEach(function(z){h+='<div class="dnd-zone" data-zone="'+z.id+'" onclick="dndTapZone(\''+z.id+'\')"><div class="zone-title '+z.css+'">'+z.label+'</div><div class="zone-items" id="zone-'+z.id+'"></div></div>'});
   return h+'</div><div style="text-align:center;margin-top:8px"><button class="btn btn-secondary btn-sm" onclick="retryScenario()">↩ Recommencer</button></div><div class="dnd-validate-wrap" id="dnd-validate" style="display:none"><button class="btn btn-primary" onclick="validateProof()">Valider</button></div><div id="feedback-area"></div><div id="next-area"></div></div>';
@@ -484,7 +484,7 @@ function validateProof(){
 function renderDndActors(sc,phase){
   var sh=goodShuffle(sc.actors);selectedActor=null;actorAssignments={};
   var h='<div class="card slide-up"><div class="scenario-header"><span class="chapter-tag '+phase.tag+'">'+phase.name+'</span><h2>'+sc.title+'</h2></div><div class="scenario-context">'+sc.context+'</div><div class="scenario-objective">'+sc.objective+'</div><div class="dnd-items" id="actor-source">';
-  sh.forEach(function(a){h+='<div class="dnd-item" data-actor="'+a+'">'+a+'</div>'});
+  sh.forEach(function(a){h+='<div class="dnd-item" data-actor="'+a+'" onclick="tapItem(\''+a+'\')">'+a+'</div>'});
   h+='</div><div style="display:flex;flex-direction:column;gap:8px;margin-top:12px" id="action-targets">';
   sc.pairs.forEach(function(p,i){h+='<div class="choice-btn" data-action-index="'+i+'" onclick="actorTapAction('+i+')" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="flex:1">'+p.action+'</span><span class="actor-slot" id="slot-'+i+'" style="min-width:90px;text-align:right;color:var(--text-muted);font-weight:700;font-size:.76rem">—</span></div>'});
   return h+'</div><div style="text-align:center;margin-top:8px"><button class="btn btn-secondary btn-sm" onclick="retryScenario()">↩ Recommencer</button></div><div class="dnd-validate-wrap" id="dnd-actor-validate" style="display:none"><button class="btn btn-primary" onclick="validateActors()">Valider</button></div><div id="feedback-area"></div><div id="next-area"></div></div>';
