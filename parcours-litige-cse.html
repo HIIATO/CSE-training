@@ -344,10 +344,10 @@ function cacheZones(){
 }
 var rafId=0;
 var DRAG_THRESHOLD=8;
+var lastTouchTime=0;
 
 function bindDragEvents(){
   document.querySelectorAll('.dnd-item').forEach(function(el){
-    /* Use touch events on touch devices for scroll compatibility */
     el.addEventListener('touchstart',onTouchStart,{passive:true});
     el.addEventListener('mousedown',onMouseDown,{passive:false});
   });
@@ -355,6 +355,8 @@ function bindDragEvents(){
 
 /* ---- MOUSE (desktop) ---- */
 function onMouseDown(e){
+  /* Skip if this is a ghost click from a recent touch */
+  if(Date.now()-lastTouchTime<500)return;
   if(e.button!==0)return;
   var el=e.currentTarget;if(el.classList.contains('placed')||scenarioAnswered)return;
   e.preventDefault();
@@ -383,6 +385,7 @@ function onMouseUp(e){
 
 /* ---- TOUCH (mobile) ---- */
 function onTouchStart(e){
+  lastTouchTime=Date.now();
   var el=e.currentTarget;if(el.classList.contains('placed')||scenarioAnswered)return;
   if(e.touches.length!==1)return;
   var t=e.touches[0];
