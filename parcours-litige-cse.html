@@ -101,8 +101,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .next-btn-wrap{margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 .dnd-instruction{font-size:.82rem;color:var(--text-secondary);margin-bottom:16px;text-align:center;line-height:1.4}
 .dnd-items{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:20px;min-height:44px}
-.dnd-item{padding:10px 14px;background:var(--bg-card);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.8rem;cursor:default;touch-action:none;user-select:none;-webkit-user-select:none;transition:border-color .15s ease,background .15s ease,box-shadow .15s ease,opacity .15s ease;box-shadow:0 1px 4px rgba(0,0,0,.06);position:relative;z-index:1}
-.dnd-item.dragging{opacity:.9;z-index:9999;box-shadow:0 8px 30px rgba(0,0,0,.18);position:fixed;pointer-events:none;transition:none;will-change:left,top}
+.dnd-item{padding:10px 14px;background:var(--bg-card);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.8rem;cursor:default;touch-action:auto;user-select:none;-webkit-user-select:none;transition:border-color .15s ease,background .15s ease,box-shadow .15s ease,opacity .15s ease;box-shadow:0 1px 4px rgba(0,0,0,.06);position:relative;z-index:1}
+.dnd-item.dragging{opacity:.9;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.15);position:fixed;pointer-events:none;transition:none;will-change:transform;touch-action:none}
 .dnd-item.placed{opacity:.4;pointer-events:none}
 .dnd-item.selected-dnd{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
 .dnd-zones{display:grid;grid-template-columns:1fr 1fr;gap:10px;grid-auto-rows:1fr}
@@ -329,7 +329,11 @@ function validateOrder(){
   rerenderBars();saveState();
 }
 
-/* === DRAG ENGINE (Pointer Events — fluid) === */
+/* === DRAG ENGINE ===
+   - Desktop: pointerdown/move/up — immediate drag
+   - Touch: touchstart/move/end — waits for horizontal intent, allows vertical scroll
+   - Uses transform:translate for GPU compositing (no layout thrash)
+*/
 var zoneCache=[];
 function cacheZones(){
   zoneCache=[];
@@ -338,43 +342,118 @@ function cacheZones(){
     zoneCache.push({el:z,left:r.left,right:r.right,top:r.top,bottom:r.bottom});
   });
 }
+var rafId=0;
+var DRAG_THRESHOLD=8;
+
 function bindDragEvents(){
   document.querySelectorAll('.dnd-item').forEach(function(el){
-    el.addEventListener('pointerdown',onDragStart,{passive:false});
+    /* Use touch events on touch devices for scroll compatibility */
+    el.addEventListener('touchstart',onTouchStart,{passive:true});
+    el.addEventListener('mousedown',onMouseDown,{passive:false});
   });
 }
-var rafId=0;
-function onDragStart(e){
+
+/* ---- MOUSE (desktop) ---- */
+function onMouseDown(e){
+  if(e.button!==0)return;
   var el=e.currentTarget;if(el.classList.contains('placed')||scenarioAnswered)return;
   e.preventDefault();
   var rect=el.getBoundingClientRect();
-  dragState={active:true,el:el,startX:e.clientX,startY:e.clientY,offsetX:e.clientX-rect.left,offsetY:e.clientY-rect.top,origRect:rect,moved:false,curX:e.clientX,curY:e.clientY};
-  document.addEventListener('pointermove',onDragMove,{passive:false});
-  document.addEventListener('pointerup',onDragEnd,{passive:false});
-  document.addEventListener('pointercancel',onDragEnd,{passive:false});
+  dragState={active:true,el:el,startX:e.clientX,startY:e.clientY,
+    offsetX:e.clientX-rect.left,offsetY:e.clientY-rect.top,
+    anchorX:rect.left,anchorY:rect.top,
+    origRect:rect,moved:false,curX:e.clientX,curY:e.clientY,isTouch:false,decided:true};
+  document.addEventListener('mousemove',onMouseMove);
+  document.addEventListener('mouseup',onMouseUp);
 }
-function onDragMove(e){
+function onMouseMove(e){
   if(!dragState.active)return;
-  e.preventDefault();
   dragState.curX=e.clientX;dragState.curY=e.clientY;
   if(!dragState.moved){
     var dx=e.clientX-dragState.startX,dy=e.clientY-dragState.startY;
-    if(Math.abs(dx)<2&&Math.abs(dy)<2)return;
-    dragState.moved=true;
-    dragState.el.classList.add('dragging');
-    dragState.el.style.width=dragState.origRect.width+'px';
-    dragState.el.style.left=(e.clientX-dragState.offsetX)+'px';
-    dragState.el.style.top=(e.clientY-dragState.offsetY)+'px';
-    document.querySelectorAll('.dnd-item.selected-dnd').forEach(function(x){x.classList.remove('selected-dnd')});
-    dndSelectedItem=null;selectedActor=null;
-    cacheZones();
-    rafLoop();
+    if(dx*dx+dy*dy<DRAG_THRESHOLD*DRAG_THRESHOLD)return;
+    startDragging();
   }
+}
+function onMouseUp(e){
+  document.removeEventListener('mousemove',onMouseMove);
+  document.removeEventListener('mouseup',onMouseUp);
+  finishDrag();
+}
+
+/* ---- TOUCH (mobile) ---- */
+function onTouchStart(e){
+  var el=e.currentTarget;if(el.classList.contains('placed')||scenarioAnswered)return;
+  if(e.touches.length!==1)return;
+  var t=e.touches[0];
+  var rect=el.getBoundingClientRect();
+  dragState={active:true,el:el,startX:t.clientX,startY:t.clientY,
+    offsetX:t.clientX-rect.left,offsetY:t.clientY-rect.top,
+    anchorX:rect.left,anchorY:rect.top,
+    origRect:rect,moved:false,curX:t.clientX,curY:t.clientY,isTouch:true,decided:false};
+  /* passive:false so we CAN preventDefault once drag is confirmed */
+  el.addEventListener('touchmove',onTouchMove,{passive:false});
+  el.addEventListener('touchend',onTouchEnd);
+  el.addEventListener('touchcancel',onTouchEnd);
+}
+function onTouchMove(e){
+  if(!dragState.active)return;
+  var t=e.touches[0];
+  dragState.curX=t.clientX;dragState.curY=t.clientY;
+  if(!dragState.decided){
+    var dx=t.clientX-dragState.startX,dy=t.clientY-dragState.startY;
+    var dist2=dx*dx+dy*dy;
+    if(dist2<DRAG_THRESHOLD*DRAG_THRESHOLD)return;
+    /* Decide: mostly horizontal = drag, mostly vertical = scroll */
+    if(Math.abs(dy)>Math.abs(dx)*1.2){
+      /* Vertical scroll — abort drag, let browser scroll */
+      cleanupTouch();
+      dragState.active=false;
+      return;
+    }
+    dragState.decided=true;
+  }
+  /* Drag confirmed — prevent scroll */
+  e.preventDefault();
+  if(!dragState.moved) startDragging();
+}
+function onTouchEnd(e){
+  cleanupTouch();
+  if(!dragState.decided&&dragState.active){
+    /* Was a tap */
+    handleTapSelect(dragState.el);
+    dragState.active=false;
+    return;
+  }
+  finishDrag();
+}
+function cleanupTouch(){
+  if(dragState.el){
+    dragState.el.removeEventListener('touchmove',onTouchMove);
+    dragState.el.removeEventListener('touchend',onTouchEnd);
+    dragState.el.removeEventListener('touchcancel',onTouchEnd);
+  }
+}
+
+/* ---- SHARED ---- */
+function startDragging(){
+  dragState.moved=true;
+  var el=dragState.el;
+  el.classList.add('dragging');
+  el.style.width=dragState.origRect.width+'px';
+  el.style.left=dragState.anchorX+'px';
+  el.style.top=dragState.anchorY+'px';
+  el.style.transform='translate(0,0)';
+  document.querySelectorAll('.dnd-item.selected-dnd').forEach(function(x){x.classList.remove('selected-dnd')});
+  dndSelectedItem=null;selectedActor=null;
+  cacheZones();
+  rafLoop();
 }
 function rafLoop(){
   if(!dragState.active||!dragState.moved)return;
-  dragState.el.style.left=(dragState.curX-dragState.offsetX)+'px';
-  dragState.el.style.top=(dragState.curY-dragState.offsetY)+'px';
+  var dx=dragState.curX-dragState.startX;
+  var dy=dragState.curY-dragState.startY;
+  dragState.el.style.transform='translate('+dx+'px,'+dy+'px)';
   /* highlight zone */
   var x=dragState.curX,y=dragState.curY;
   for(var i=0;i<zoneCache.length;i++){
@@ -385,22 +464,20 @@ function rafLoop(){
   }
   rafId=requestAnimationFrame(rafLoop);
 }
-function onDragEnd(e){
-  if(!dragState.active)return;
+function finishDrag(){
   cancelAnimationFrame(rafId);
-  document.removeEventListener('pointermove',onDragMove);
-  document.removeEventListener('pointerup',onDragEnd);
-  document.removeEventListener('pointercancel',onDragEnd);
+  if(!dragState.active)return;
   var wasMoved=dragState.moved,el=dragState.el;
   var cx=dragState.curX,cy=dragState.curY;
   for(var i=0;i<zoneCache.length;i++)zoneCache[i].el.classList.remove('drag-over');
   if(wasMoved){
-    el.classList.remove('dragging');el.style.position='';el.style.left='';el.style.top='';el.style.width='';el.style.willChange='';
+    el.classList.remove('dragging');
+    el.style.position='';el.style.left='';el.style.top='';el.style.width='';el.style.transform='';el.style.willChange='';
     var zone=null;
     for(var j=0;j<zoneCache.length;j++){var z=zoneCache[j];if(cx>=z.left&&cx<=z.right&&cy>=z.top&&cy<=z.bottom){zone=z.el;break}}
     if(zone){var sc=SCENARIOS[state.currentScenario];if(sc.type==='dnd-proof')dropProof(el,zone);else if(sc.type==='dnd-actors')dropActor(el,zone)}
-  } else { handleTapSelect(el) }
-  dragState={active:false,el:null,startX:0,startY:0,offsetX:0,offsetY:0,origRect:null,moved:false,curX:0,curY:0};
+  } else if(!dragState.isTouch){ handleTapSelect(el) }
+  dragState={active:false,el:null,startX:0,startY:0,offsetX:0,offsetY:0,anchorX:0,anchorY:0,origRect:null,moved:false,curX:0,curY:0,isTouch:false,decided:false};
 }
 function handleTapSelect(el){
   var sc=SCENARIOS[state.currentScenario];
