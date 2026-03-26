@@ -101,8 +101,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .next-btn-wrap{margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 .dnd-instruction{font-size:.82rem;color:var(--text-secondary);margin-bottom:16px;text-align:center;line-height:1.4}
 .dnd-items{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:20px;min-height:44px}
-.dnd-item{padding:10px 14px;background:var(--bg-card);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.8rem;cursor:default;touch-action:none;user-select:none;-webkit-user-select:none;transition:all .15s ease;box-shadow:0 1px 4px rgba(0,0,0,.06);position:relative;z-index:1}
-.dnd-item.dragging{opacity:.85;transform:scale(1.08);z-index:9999;box-shadow:0 8px 30px rgba(0,0,0,.18);position:fixed;pointer-events:none}
+.dnd-item{padding:10px 14px;background:var(--bg-card);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.8rem;cursor:default;touch-action:none;user-select:none;-webkit-user-select:none;transition:border-color .15s ease,background .15s ease,box-shadow .15s ease,opacity .15s ease;box-shadow:0 1px 4px rgba(0,0,0,.06);position:relative;z-index:1}
+.dnd-item.dragging{opacity:.9;z-index:9999;box-shadow:0 8px 30px rgba(0,0,0,.18);position:fixed;pointer-events:none;transition:none;will-change:left,top}
 .dnd-item.placed{opacity:.4;pointer-events:none}
 .dnd-item.selected-dnd{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
 .dnd-zones{display:grid;grid-template-columns:1fr 1fr;gap:10px;grid-auto-rows:1fr}
@@ -329,53 +329,78 @@ function validateOrder(){
   rerenderBars();saveState();
 }
 
-/* === DRAG ENGINE (Pointer Events) === */
-function bindDragEvents(){
-  document.querySelectorAll('.dnd-item').forEach(function(el){el.addEventListener('pointerdown',onDragStart,{passive:false})});
-  document.addEventListener('pointermove',onDragMove,{passive:false});
-  document.addEventListener('pointerup',onDragEnd,{passive:false});
+/* === DRAG ENGINE (Pointer Events — fluid) === */
+var zoneCache=[];
+function cacheZones(){
+  zoneCache=[];
+  document.querySelectorAll('.dnd-zone,[data-action-index]').forEach(function(z){
+    var r=z.getBoundingClientRect();
+    zoneCache.push({el:z,left:r.left,right:r.right,top:r.top,bottom:r.bottom});
+  });
 }
+function bindDragEvents(){
+  document.querySelectorAll('.dnd-item').forEach(function(el){
+    el.addEventListener('pointerdown',onDragStart,{passive:false});
+  });
+}
+var rafId=0;
 function onDragStart(e){
   var el=e.currentTarget;if(el.classList.contains('placed')||scenarioAnswered)return;
-  e.preventDefault();el.setPointerCapture(e.pointerId);
+  e.preventDefault();
   var rect=el.getBoundingClientRect();
-  dragState={active:true,el:el,startX:e.clientX,startY:e.clientY,offsetX:e.clientX-rect.left,offsetY:e.clientY-rect.top,origRect:rect,moved:false};
+  dragState={active:true,el:el,startX:e.clientX,startY:e.clientY,offsetX:e.clientX-rect.left,offsetY:e.clientY-rect.top,origRect:rect,moved:false,curX:e.clientX,curY:e.clientY};
+  document.addEventListener('pointermove',onDragMove,{passive:false});
+  document.addEventListener('pointerup',onDragEnd,{passive:false});
+  document.addEventListener('pointercancel',onDragEnd,{passive:false});
 }
 function onDragMove(e){
-  if(!dragState.active)return;e.preventDefault();
-  var dx=e.clientX-dragState.startX,dy=e.clientY-dragState.startY;
-  if(!dragState.moved&&(Math.abs(dx)>2||Math.abs(dy)>2)){
-    dragState.moved=true;dragState.el.classList.add('dragging');
+  if(!dragState.active)return;
+  e.preventDefault();
+  dragState.curX=e.clientX;dragState.curY=e.clientY;
+  if(!dragState.moved){
+    var dx=e.clientX-dragState.startX,dy=e.clientY-dragState.startY;
+    if(Math.abs(dx)<2&&Math.abs(dy)<2)return;
+    dragState.moved=true;
+    dragState.el.classList.add('dragging');
     dragState.el.style.width=dragState.origRect.width+'px';
-    document.querySelectorAll('.dnd-item.selected-dnd').forEach(function(x){x.classList.remove('selected-dnd')});
-    dndSelectedItem=null;selectedActor=null;
-  }
-  if(dragState.moved){
     dragState.el.style.left=(e.clientX-dragState.offsetX)+'px';
     dragState.el.style.top=(e.clientY-dragState.offsetY)+'px';
-    highlightZoneUnder(e.clientX,e.clientY);
+    document.querySelectorAll('.dnd-item.selected-dnd').forEach(function(x){x.classList.remove('selected-dnd')});
+    dndSelectedItem=null;selectedActor=null;
+    cacheZones();
+    rafLoop();
   }
+}
+function rafLoop(){
+  if(!dragState.active||!dragState.moved)return;
+  dragState.el.style.left=(dragState.curX-dragState.offsetX)+'px';
+  dragState.el.style.top=(dragState.curY-dragState.offsetY)+'px';
+  /* highlight zone */
+  var x=dragState.curX,y=dragState.curY;
+  for(var i=0;i<zoneCache.length;i++){
+    var z=zoneCache[i];
+    var over=x>=z.left&&x<=z.right&&y>=z.top&&y<=z.bottom;
+    if(over&&!z.el.classList.contains('drag-over'))z.el.classList.add('drag-over');
+    else if(!over&&z.el.classList.contains('drag-over'))z.el.classList.remove('drag-over');
+  }
+  rafId=requestAnimationFrame(rafLoop);
 }
 function onDragEnd(e){
   if(!dragState.active)return;
+  cancelAnimationFrame(rafId);
+  document.removeEventListener('pointermove',onDragMove);
+  document.removeEventListener('pointerup',onDragEnd);
+  document.removeEventListener('pointercancel',onDragEnd);
   var wasMoved=dragState.moved,el=dragState.el;
-  document.querySelectorAll('.dnd-zone.drag-over,[data-action-index].drag-over').forEach(function(z){z.classList.remove('drag-over')});
+  var cx=dragState.curX,cy=dragState.curY;
+  for(var i=0;i<zoneCache.length;i++)zoneCache[i].el.classList.remove('drag-over');
   if(wasMoved){
-    el.classList.remove('dragging');el.style.position='';el.style.left='';el.style.top='';el.style.width='';
-    var zone=getZoneUnder(e.clientX,e.clientY);
+    el.classList.remove('dragging');el.style.position='';el.style.left='';el.style.top='';el.style.width='';el.style.willChange='';
+    var zone=null;
+    for(var j=0;j<zoneCache.length;j++){var z=zoneCache[j];if(cx>=z.left&&cx<=z.right&&cy>=z.top&&cy<=z.bottom){zone=z.el;break}}
     if(zone){var sc=SCENARIOS[state.currentScenario];if(sc.type==='dnd-proof')dropProof(el,zone);else if(sc.type==='dnd-actors')dropActor(el,zone)}
   } else { handleTapSelect(el) }
-  dragState={active:false,el:null,startX:0,startY:0,offsetX:0,offsetY:0,origRect:null,moved:false};
-}
-function highlightZoneUnder(x,y){
-  document.querySelectorAll('.dnd-zone,[data-action-index]').forEach(function(z){
-    var r=z.getBoundingClientRect();z.classList.toggle('drag-over',x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom);
-  });
-}
-function getZoneUnder(x,y){
-  var els=document.querySelectorAll('.dnd-zone,[data-action-index]');
-  for(var i=0;i<els.length;i++){var r=els[i].getBoundingClientRect();if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)return els[i]}
-  return null;
+  dragState={active:false,el:null,startX:0,startY:0,offsetX:0,offsetY:0,origRect:null,moved:false,curX:0,curY:0};
 }
 function handleTapSelect(el){
   var sc=SCENARIOS[state.currentScenario];
