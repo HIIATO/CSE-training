@@ -101,7 +101,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .next-btn-wrap{margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 .dnd-instruction{font-size:.82rem;color:var(--text-secondary);margin-bottom:16px;text-align:center;line-height:1.4}
 .dnd-items{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:20px;min-height:44px}
-.dnd-item{padding:10px 14px;background:var(--bg-card);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.8rem;cursor:default;touch-action:pan-y;user-select:none;-webkit-user-select:none;transition:border-color .15s ease,background .15s ease,box-shadow .15s ease,opacity .15s ease;box-shadow:0 1px 4px rgba(0,0,0,.06);position:relative;z-index:1}
+.dnd-item{padding:10px 14px;background:var(--bg-card);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.8rem;cursor:default;-webkit-tap-highlight-color:rgba(37,99,235,.15);transition:border-color .15s ease,background .15s ease,box-shadow .15s ease,opacity .15s ease;box-shadow:0 1px 4px rgba(0,0,0,.06);position:relative;z-index:1}
 .dnd-item.dragging{opacity:.9;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.15);position:fixed;pointer-events:none;transition:none;will-change:transform;touch-action:none}
 .dnd-item.placed{opacity:.4;pointer-events:none}
 .dnd-item.selected-dnd{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
@@ -330,13 +330,13 @@ function validateOrder(){
 }
 
 /* === INTERACTION ENGINE ===
-   Desktop (mouse): real drag & drop with transform
-   Mobile (touch): tap to select item, tap zone to place — simple and reliable
-   Detect via matchMedia or first event type
+   Touch device: ONLY click handlers (tap select + tap zone). No mousedown. No interference with scroll.
+   Desktop: mousedown for drag + click for select fallback.
 */
 var zoneCache=[];
 var rafId=0;
 var DRAG_THRESHOLD=6;
+var isTouchDevice=('ontouchstart' in window)||(navigator.maxTouchPoints>0);
 
 function cacheZones(){
   zoneCache=[];
@@ -348,15 +348,17 @@ function cacheZones(){
 
 function bindDragEvents(){
   document.querySelectorAll('.dnd-item').forEach(function(el){
-    /* Mouse for desktop drag */
-    el.addEventListener('mousedown',onMouseDown);
-    /* Click for tap-select (works on both desktop and mobile) */
+    if(!isTouchDevice){
+      /* Desktop only: mouse drag */
+      el.addEventListener('mousedown',onMouseDown);
+    }
+    /* Both: click for tap-select */
     el.addEventListener('click',onItemClick);
   });
 }
 
-/* ---- TAP SELECT (universal fallback, primary on mobile) ---- */
-var itemClickBlocked=false; /* block click after a drag */
+/* ---- TAP SELECT ---- */
+var itemClickBlocked=false;
 
 function onItemClick(e){
   if(itemClickBlocked){itemClickBlocked=false;return}
