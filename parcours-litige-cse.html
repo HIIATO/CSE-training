@@ -188,7 +188,7 @@ var SCENARIOS=[
 {id:'o6',text:'Arrêt maladie prolongé pour burn-out, aggravé par l\'inaction managériale',order:6},
 {id:'o7',text:'Réception d\'une convocation à entretien préalable à licenciement',order:7}
 ],feedback_good:'Chronologie parfaite ! C\'est le socle de tout dossier solide.',feedback_partial:'Presque ! Quelques inversions — attention, une chronologie imprécise fragilise le récit.',feedback_bad:'L\'ordre n\'est pas correct. Reprenez en croisant les dates avec les documents.',badges:['archiviste']},
-{id:'s5',phase:1,title:'Tri de preuves',context:'Vous avez rassemblé plusieurs éléments pour le dossier. Classez-les selon leur force probatoire.',objective:'🎯 Glissez chaque élément dans la bonne catégorie, ou sélectionnez puis appuyez sur une zone.',type:'dnd-proof',items:[
+{id:'s5',phase:1,title:'Tri de preuves',context:'Vous avez rassemblé plusieurs éléments pour le dossier. Classez-les selon leur force probatoire.',objective:'🎯 Appuyez sur un élément pour le sélectionner, puis sur la catégorie. Sur PC, vous pouvez aussi glisser-déposer.',type:'dnd-proof',items:[
 {id:'p1',text:'Emails professionnels datés',correct:'fort',explanation:'Preuves solides, admissibles et difficiles à contester.'},
 {id:'p2',text:'Témoignage écrit, daté et signé',correct:'fort',explanation:'L\'attestation conforme a une forte valeur probatoire.'},
 {id:'p3',text:'Fiches de paie',correct:'fort',explanation:'Document officiel, très difficile à contester.'},
@@ -210,7 +210,7 @@ var SCENARIOS=[
 {text:'Négociation amiable pour les documents, prud\'hommes au fond pour le licenciement — sans urgence pour aucun',quality:'bad',feedback:'Les documents de fin de contrat sont dus immédiatement. Attendre retarde le salarié dans ses démarches (Pôle emploi, mutuelle...).',score:-20,risk:15,badges:[]},
 {text:'Référé pour les deux, car la rapidité est toujours préférable',quality:'bad',feedback:'Le juge des référés ne peut pas trancher une contestation sérieuse comme un motif de licenciement.',score:-15,risk:15,badges:[]}
 ]},
-{id:'s8',phase:2,title:'Les acteurs au bon moment',context:'Dans le cadre d\'un litige, plusieurs actions doivent être menées. Chaque intervenant a un rôle précis.',objective:'🎯 Glissez chaque acteur sur l\'action correspondante, ou sélectionnez puis appuyez.',type:'dnd-actors',pairs:[
+{id:'s8',phase:2,title:'Les acteurs au bon moment',context:'Dans le cadre d\'un litige, plusieurs actions doivent être menées. Chaque intervenant a un rôle précis.',objective:'🎯 Appuyez sur un acteur, puis sur l\'action correspondante. Sur PC, glisser-déposer possible.',type:'dnd-actors',pairs:[
 {action:'Assister le salarié en entretien préalable',correctActor:'CSE',explanation:'L\'élu CSE peut assister le salarié lors de l\'entretien préalable.'},
 {action:'Rédiger les conclusions juridiques pour le tribunal',correctActor:'Avocat',explanation:'Seul l\'avocat rédige les conclusions et plaide devant la juridiction.'},
 {action:'Engager une action de substitution au nom des salariés',correctActor:'Syndicat',explanation:'Le syndicat peut agir en substitution pour défendre les intérêts collectifs ou individuels.'},
@@ -329,12 +329,15 @@ function validateOrder(){
   rerenderBars();saveState();
 }
 
-/* === DRAG ENGINE ===
-   - Desktop: pointerdown/move/up — immediate drag
-   - Touch: touchstart/move/end — waits for horizontal intent, allows vertical scroll
-   - Uses transform:translate for GPU compositing (no layout thrash)
+/* === INTERACTION ENGINE ===
+   Desktop (mouse): real drag & drop with transform
+   Mobile (touch): tap to select item, tap zone to place — simple and reliable
+   Detect via matchMedia or first event type
 */
 var zoneCache=[];
+var rafId=0;
+var DRAG_THRESHOLD=6;
+
 function cacheZones(){
   zoneCache=[];
   document.querySelectorAll('.dnd-zone,[data-action-index]').forEach(function(z){
@@ -342,29 +345,43 @@ function cacheZones(){
     zoneCache.push({el:z,left:r.left,right:r.right,top:r.top,bottom:r.bottom});
   });
 }
-var rafId=0;
-var DRAG_THRESHOLD=8;
-var lastTouchTime=0;
 
 function bindDragEvents(){
   document.querySelectorAll('.dnd-item').forEach(function(el){
-    el.addEventListener('touchstart',onTouchStart,{passive:true});
-    el.addEventListener('mousedown',onMouseDown,{passive:false});
+    /* Mouse for desktop drag */
+    el.addEventListener('mousedown',onMouseDown);
+    /* Click for tap-select (works on both desktop and mobile) */
+    el.addEventListener('click',onItemClick);
   });
 }
 
-/* ---- MOUSE (desktop) ---- */
+/* ---- TAP SELECT (universal fallback, primary on mobile) ---- */
+var itemClickBlocked=false; /* block click after a drag */
+
+function onItemClick(e){
+  if(itemClickBlocked){itemClickBlocked=false;return}
+  var el=e.currentTarget;
+  if(el.classList.contains('placed')||scenarioAnswered)return;
+  var sc=SCENARIOS[state.currentScenario];
+  if(sc.type==='dnd-proof'){
+    document.querySelectorAll('.dnd-item.selected-dnd').forEach(function(x){x.classList.remove('selected-dnd')});
+    if(dndSelectedItem===el){dndSelectedItem=null;return}
+    dndSelectedItem=el;el.classList.add('selected-dnd');
+  } else if(sc.type==='dnd-actors'){
+    document.querySelectorAll('.dnd-item.selected-dnd').forEach(function(x){x.classList.remove('selected-dnd')});
+    if(selectedActor===el){selectedActor=null;return}
+    selectedActor=el;el.classList.add('selected-dnd');
+  }
+}
+
+/* ---- MOUSE DRAG (desktop only) ---- */
 function onMouseDown(e){
-  /* Skip if this is a ghost click from a recent touch */
-  if(Date.now()-lastTouchTime<500)return;
   if(e.button!==0)return;
   var el=e.currentTarget;if(el.classList.contains('placed')||scenarioAnswered)return;
-  e.preventDefault();
   var rect=el.getBoundingClientRect();
   dragState={active:true,el:el,startX:e.clientX,startY:e.clientY,
-    offsetX:e.clientX-rect.left,offsetY:e.clientY-rect.top,
-    anchorX:rect.left,anchorY:rect.top,
-    origRect:rect,moved:false,curX:e.clientX,curY:e.clientY,isTouch:false,decided:true};
+    anchorX:rect.left,anchorY:rect.top,origRect:rect,
+    moved:false,curX:e.clientX,curY:e.clientY};
   document.addEventListener('mousemove',onMouseMove);
   document.addEventListener('mouseup',onMouseUp);
 }
@@ -374,90 +391,25 @@ function onMouseMove(e){
   if(!dragState.moved){
     var dx=e.clientX-dragState.startX,dy=e.clientY-dragState.startY;
     if(dx*dx+dy*dy<DRAG_THRESHOLD*DRAG_THRESHOLD)return;
-    startDragging();
+    dragState.moved=true;
+    itemClickBlocked=true;
+    var el=dragState.el;
+    el.classList.add('dragging');
+    el.style.width=dragState.origRect.width+'px';
+    el.style.left=dragState.anchorX+'px';
+    el.style.top=dragState.anchorY+'px';
+    el.style.transform='translate(0,0)';
+    document.querySelectorAll('.dnd-item.selected-dnd').forEach(function(x){x.classList.remove('selected-dnd')});
+    dndSelectedItem=null;selectedActor=null;
+    cacheZones();
+    rafLoop();
   }
-}
-function onMouseUp(e){
-  document.removeEventListener('mousemove',onMouseMove);
-  document.removeEventListener('mouseup',onMouseUp);
-  finishDrag();
-}
-
-/* ---- TOUCH (mobile) ---- */
-function onTouchStart(e){
-  lastTouchTime=Date.now();
-  var el=e.currentTarget;if(el.classList.contains('placed')||scenarioAnswered)return;
-  if(e.touches.length!==1)return;
-  var t=e.touches[0];
-  var rect=el.getBoundingClientRect();
-  dragState={active:true,el:el,startX:t.clientX,startY:t.clientY,
-    offsetX:t.clientX-rect.left,offsetY:t.clientY-rect.top,
-    anchorX:rect.left,anchorY:rect.top,
-    origRect:rect,moved:false,curX:t.clientX,curY:t.clientY,isTouch:true,decided:false};
-  /* passive:false so we CAN preventDefault once drag is confirmed */
-  el.addEventListener('touchmove',onTouchMove,{passive:false});
-  el.addEventListener('touchend',onTouchEnd);
-  el.addEventListener('touchcancel',onTouchEnd);
-}
-function onTouchMove(e){
-  if(!dragState.active)return;
-  var t=e.touches[0];
-  dragState.curX=t.clientX;dragState.curY=t.clientY;
-  if(!dragState.decided){
-    var dx=t.clientX-dragState.startX,dy=t.clientY-dragState.startY;
-    var dist2=dx*dx+dy*dy;
-    if(dist2<DRAG_THRESHOLD*DRAG_THRESHOLD)return;
-    /* Decide: mostly horizontal = drag, mostly vertical = scroll */
-    if(Math.abs(dy)>Math.abs(dx)*1.2){
-      /* Vertical scroll — abort drag, let browser scroll */
-      cleanupTouch();
-      dragState.active=false;
-      return;
-    }
-    dragState.decided=true;
-  }
-  /* Drag confirmed — prevent scroll */
-  e.preventDefault();
-  if(!dragState.moved) startDragging();
-}
-function onTouchEnd(e){
-  cleanupTouch();
-  if(!dragState.decided&&dragState.active){
-    /* Was a tap */
-    handleTapSelect(dragState.el);
-    dragState.active=false;
-    return;
-  }
-  finishDrag();
-}
-function cleanupTouch(){
-  if(dragState.el){
-    dragState.el.removeEventListener('touchmove',onTouchMove);
-    dragState.el.removeEventListener('touchend',onTouchEnd);
-    dragState.el.removeEventListener('touchcancel',onTouchEnd);
-  }
-}
-
-/* ---- SHARED ---- */
-function startDragging(){
-  dragState.moved=true;
-  var el=dragState.el;
-  el.classList.add('dragging');
-  el.style.width=dragState.origRect.width+'px';
-  el.style.left=dragState.anchorX+'px';
-  el.style.top=dragState.anchorY+'px';
-  el.style.transform='translate(0,0)';
-  document.querySelectorAll('.dnd-item.selected-dnd').forEach(function(x){x.classList.remove('selected-dnd')});
-  dndSelectedItem=null;selectedActor=null;
-  cacheZones();
-  rafLoop();
 }
 function rafLoop(){
   if(!dragState.active||!dragState.moved)return;
   var dx=dragState.curX-dragState.startX;
   var dy=dragState.curY-dragState.startY;
   dragState.el.style.transform='translate('+dx+'px,'+dy+'px)';
-  /* highlight zone */
   var x=dragState.curX,y=dragState.curY;
   for(var i=0;i<zoneCache.length;i++){
     var z=zoneCache[i];
@@ -467,32 +419,22 @@ function rafLoop(){
   }
   rafId=requestAnimationFrame(rafLoop);
 }
-function finishDrag(){
+function onMouseUp(e){
   cancelAnimationFrame(rafId);
+  document.removeEventListener('mousemove',onMouseMove);
+  document.removeEventListener('mouseup',onMouseUp);
   if(!dragState.active)return;
   var wasMoved=dragState.moved,el=dragState.el;
   var cx=dragState.curX,cy=dragState.curY;
   for(var i=0;i<zoneCache.length;i++)zoneCache[i].el.classList.remove('drag-over');
   if(wasMoved){
     el.classList.remove('dragging');
-    el.style.position='';el.style.left='';el.style.top='';el.style.width='';el.style.transform='';el.style.willChange='';
+    el.style.position='';el.style.left='';el.style.top='';el.style.width='';el.style.transform='';
     var zone=null;
     for(var j=0;j<zoneCache.length;j++){var z=zoneCache[j];if(cx>=z.left&&cx<=z.right&&cy>=z.top&&cy<=z.bottom){zone=z.el;break}}
     if(zone){var sc=SCENARIOS[state.currentScenario];if(sc.type==='dnd-proof')dropProof(el,zone);else if(sc.type==='dnd-actors')dropActor(el,zone)}
-  } else if(!dragState.isTouch){ handleTapSelect(el) }
-  dragState={active:false,el:null,startX:0,startY:0,offsetX:0,offsetY:0,anchorX:0,anchorY:0,origRect:null,moved:false,curX:0,curY:0,isTouch:false,decided:false};
-}
-function handleTapSelect(el){
-  var sc=SCENARIOS[state.currentScenario];
-  if(sc.type==='dnd-proof'){
-    if(el.classList.contains('placed'))return;
-    document.querySelectorAll('.dnd-item.selected-dnd').forEach(function(x){x.classList.remove('selected-dnd')});
-    if(dndSelectedItem===el){dndSelectedItem=null;return}dndSelectedItem=el;el.classList.add('selected-dnd');
-  } else if(sc.type==='dnd-actors'){
-    if(el.classList.contains('placed'))return;
-    document.querySelectorAll('.dnd-item.selected-dnd').forEach(function(x){x.classList.remove('selected-dnd')});
-    if(selectedActor===el){selectedActor=null;return}selectedActor=el;el.classList.add('selected-dnd');
   }
+  dragState={active:false,el:null,startX:0,startY:0,anchorX:0,anchorY:0,origRect:null,moved:false,curX:0,curY:0};
 }
 
 /* === DND PROOF === */
