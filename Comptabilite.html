@@ -602,7 +602,9 @@ const GAME_CONFIG = {
     storageKeys: {
         progress:'compta_game_progress',
         bestScores:'compta_game_best_scores',
-        lastScores:'compta_game_last_scores'
+        lastScores:'compta_game_last_scores',
+        firstAnswers:'compta_game_first_answers',
+        bestAnswers:'compta_game_best_answers'
     }
 };
 
@@ -630,13 +632,51 @@ function getPlayerDisplayName() {
 }
 
 // ============================================
-// TRACKING DES RÉPONSES (session courante)
+// STOCKAGE DES RÉPONSES (localStorage)
 // ============================================
-// sessionAnswers[chapterId] = [ {question, correct, userAnswer, isCorrect}, ...]
+// Structure : { 1: [{questionText, correctAnswer, userAnswer, isCorrect, score}], ... }
 let sessionAnswers = { 1:[], 2:[], 3:[], 4:[] };
+
+function getFirstAnswers() {
+    const s = localStorage.getItem(GAME_CONFIG.storageKeys.firstAnswers);
+    return s ? JSON.parse(s) : { 1:[], 2:[], 3:[], 4:[] };
+}
+function saveFirstAnswers(data) {
+    localStorage.setItem(GAME_CONFIG.storageKeys.firstAnswers, JSON.stringify(data));
+}
+function getBestAnswers() {
+    const s = localStorage.getItem(GAME_CONFIG.storageKeys.bestAnswers);
+    return s ? JSON.parse(s) : { 1:[], 2:[], 3:[], 4:[] };
+}
+function saveBestAnswers(data) {
+    localStorage.setItem(GAME_CONFIG.storageKeys.bestAnswers, JSON.stringify(data));
+}
 
 function recordAnswer(chapterId, questionText, correctAnswer, userAnswer, isCorrect) {
     sessionAnswers[chapterId].push({ questionText, correctAnswer, userAnswer, isCorrect });
+}
+
+// Appelé à la fin d'un chapitre pour persister les réponses
+function persistChapterAnswers(chapterId, score) {
+    const answers = sessionAnswers[chapterId];
+    if (!answers || answers.length === 0) return;
+
+    const firstAnswers = getFirstAnswers();
+    const bestAnswers = getBestAnswers();
+    const bestScores = getBestScores();
+
+    // Première fois : on sauvegarde si pas encore de réponses stockées
+    if (!firstAnswers[chapterId] || firstAnswers[chapterId].length === 0) {
+        firstAnswers[chapterId] = answers.map(a => Object.assign({}, a));
+        saveFirstAnswers(firstAnswers);
+    }
+
+    // Meilleur score : on sauvegarde si score supérieur
+    const prevBest = bestScores['chapter' + chapterId] || 0;
+    if (score >= prevBest) {
+        bestAnswers[chapterId] = answers.map(a => Object.assign({}, a));
+        saveBestAnswers(bestAnswers);
+    }
 }
 
 function stripHTML(html) {
@@ -808,26 +848,42 @@ function exportPDF() {
     y += 4;
 
     // --- DÉTAIL DES RÉPONSES PAR CHAPITRE ---
+    // Source : première tentative sauvegardée (localStorage) ou session courante
+    const firstAnswersStored = getFirstAnswers();
+    const bestAnswersStored = getBestAnswers();
+    const bestScoresForPDF = getBestScores();
+
     const chTitles = ['', 'Chapitre 1 — Fondamentaux : À quoi ça sert ?', 'Chapitre 2 — La grande structure', 'Chapitre 3 — Les détails', 'Chapitre 4 — Les ajustements'];
     const chColors = [[], [0,149,208], [46,125,50], [230,81,0], [123,31,162]];
 
     for (let chId = 1; chId <= 4; chId++) {
-        const answers = sessionAnswers[chId];
+        // Priorité : 1ère tentative stockée, sinon session courante
+        const firstStored = firstAnswersStored[chId];
+        const answers = (firstStored && firstStored.length > 0) ? firstStored : sessionAnswers[chId];
+        const isFirstAttempt = (firstStored && firstStored.length > 0);
+
         if (!answers || answers.length === 0) continue;
 
         newPageIfNeeded(24);
 
         const correctCount = answers.filter(a => a.isCorrect).length;
         const pct = Math.round((correctCount / answers.length) * 100);
+        const bestScoreCh = bestScoresForPDF['chapter' + chId] || 0;
+        const label = isFirstAttempt ? '1ère tentative' : 'Session courante';
 
         // Bandeau titre chapitre
-        const chCol = chColors[chId]; fillRect(0, y, pageW, 12, chCol[0], chCol[1], chCol[2]);
+        const chCol = chColors[chId]; fillRect(0, y, pageW, 14, chCol[0], chCol[1], chCol[2]);
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        doc.text(chTitles[chId], margin, y + 8);
-        doc.text(correctCount + '/' + answers.length + ' (' + pct + '%)', pageW - margin, y + 8, { align:'right' });
-        y += 16;
+        doc.text(chTitles[chId], margin, y + 6);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text(label + ' — ' + correctCount + '/' + answers.length + ' correct(s) (' + pct + '%)', margin, y + 12);
+        if (bestScoreCh > 0) {
+            doc.text('Meilleur score : ' + bestScoreCh + ' pts', pageW - margin, y + 9, { align:'right' });
+        }
+        y += 18;
 
         // Barre de progression
         fillRect(margin, y, contentW, 4, 220, 220, 220);
@@ -890,7 +946,12 @@ function exportPDF() {
 
     // Note si aucune réponse enregistrée
     let anyAnswers = false;
-    for (let i = 1; i <= 4; i++) { if (sessionAnswers[i] && sessionAnswers[i].length > 0) { anyAnswers = true; break; } }
+    const firstCheck = getFirstAnswers();
+    for (let i = 1; i <= 4; i++) {
+        if ((firstCheck[i] && firstCheck[i].length > 0) || (sessionAnswers[i] && sessionAnswers[i].length > 0)) {
+            anyAnswers = true; break;
+        }
+    }
     if (!anyAnswers) {
         newPageIfNeeded(20);
         fillRect(margin, y, contentW, 14, 255, 243, 205);
@@ -939,15 +1000,18 @@ function sendByEmail() {
     }
     body += '\nSCORE TOTAL : ' + bestScores.total + ' points\n\n';
 
-    // Détail session par chapitre
+    // Détail session par chapitre — priorité aux réponses de 1ère tentative stockées
     let hasDetails = false;
-    const chTitles = ['', 'Ch.1 — Fondamentaux', 'Ch.2 — La grande structure', 'Ch.3 — Les détails', 'Ch.4 — Les ajustements'];
+    const firstStoredEmail = getFirstAnswers();
+    const chTitlesEmail = ['', 'Ch.1 — Fondamentaux', 'Ch.2 — La grande structure', 'Ch.3 — Les détails', 'Ch.4 — Les ajustements'];
     for (let chId = 1; chId <= 4; chId++) {
-        const answers = sessionAnswers[chId];
+        const firstSt = firstStoredEmail[chId];
+        const answers = (firstSt && firstSt.length > 0) ? firstSt : sessionAnswers[chId];
+        const isFirst = (firstSt && firstSt.length > 0);
         if (!answers || answers.length === 0) continue;
-        if (!hasDetails) { body += '=== DÉTAIL DES RÉPONSES (session en cours) ===\n\n'; hasDetails = true; }
+        if (!hasDetails) { body += '=== DÉTAIL DES RÉPONSES (1ère tentative) ===\n\n'; hasDetails = true; }
         const correct = answers.filter(a => a.isCorrect).length;
-        body += chTitles[chId] + ' — ' + correct + '/' + answers.length + ' correct(s)\n';
+        body += chTitlesEmail[chId] + ' — ' + (isFirst ? '1ère tentative' : 'session') + ' : ' + correct + '/' + answers.length + '\n';
         body += '─'.repeat(40) + '\n';
         answers.forEach((a, i) => {
             body += (a.isCorrect ? '✓' : '✗') + ' Q' + (i+1) + ' : ' + a.questionText + '\n';
@@ -1015,6 +1079,10 @@ function markChapterCompleted(chapterId, score) {
         for (let i = 1; i <= 4; i++) bestScores.total += bestScores[`chapter${i}`] || 0;
         saveBestScores(bestScores);
     }
+
+    // Persister les réponses (première fois + meilleur score)
+    persistChapterAnswers(chapterId, score);
+
     updateHomeUI();
 }
 
@@ -1135,6 +1203,8 @@ function confirmReset() {
         localStorage.removeItem(GAME_CONFIG.storageKeys.progress);
         localStorage.removeItem(GAME_CONFIG.storageKeys.bestScores);
         localStorage.removeItem(GAME_CONFIG.storageKeys.lastScores);
+        localStorage.removeItem(GAME_CONFIG.storageKeys.firstAnswers);
+        localStorage.removeItem(GAME_CONFIG.storageKeys.bestAnswers);
         sessionAnswers = { 1:[], 2:[], 3:[], 4:[] };
         alert('✅ Ta progression a été réinitialisée !');
         showHome();
