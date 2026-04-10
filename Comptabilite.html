@@ -236,22 +236,6 @@
 <body>
 <div class="game-container">
 
-    <!-- EN-TÊTE -->
-    <div class="header" id="mainHeader">
-        <div class="header-logo">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1904.42 963.08" width="120" height="60">
-                <path fill="#fff" d="M1281.38,290.16v93h75v83h-75v146.5c0,4.54,4.98,14.31,8.51,17.49,5.2,4.7,19.17,9.01,25.99,9.01h40.5v77c-16.53,1.49-33.91,3.18-50.54,3.04-74.73-.62-107.93-30.49-110.51-105.49-1.68-48.82,1.35-98.64.05-147.55h-58v250h-85v-37c-1.77-.26-2.19-.06-3.46,1.04-3.28,2.84-7.21,8.57-11.01,11.99-47.15,42.34-123.19,43.71-176.05,10.99-110.23-68.23-108.12-247.89,6.5-310.54,55.44-30.3,130.87-25.02,176.05,20.99,2.18,2.22,3.48,6.38,6.97,6.53v-35.5l1.5-1.5h142.5v-68l86-25h0ZM946.17,456.46c-92.05,8.86-107.58,144.55-26.15,179.56,57.71,24.82,126.22-9.75,131.34-74.37,5.23-65.92-38.7-111.59-105.19-105.19h0Z"/>
-                <polygon fill="#fff" points="383.38 250.16 383.38 435.16 556.38 435.16 556.38 384.16 648.38 384.16 648.38 716.16 556.38 716.16 556.38 523.16 383.38 523.16 383.38 716.16 291.38 716.16 291.38 250.16 383.38 250.16"/>
-                <path fill="#fff" d="M1518.17,374.46c122.63-6.83,213.97,99.76,184.13,220.13-37.26,150.32-245.86,179.21-323.73,45.88-65.91-112.85,7.59-258.66,139.6-266.01h0ZM1519.17,458.46c-57.91,5.89-88.64,64.09-74.51,117.92,22.76,86.7,149.5,87.03,173.43,1,18.55-66.68-29.62-125.98-98.92-118.92h0Z"/>
-                <rect fill="#fff" x="684.38" y="383.16" width="85" height="333"/>
-                <path fill="#028fd0" d="M719.15,237.44c45.71-5.23,76.87,44.84,51.45,83.45-23.56,35.79-79.14,30.53-94.99-9.47-12.93-32.63,8.66-69.99,43.54-73.98h0Z"/>
-                <path fill="#028fd0" d="M592.13,238.42c41.61-5.63,74.75,28.66,61.7,69.7-14.75,46.36-81.29,49.41-100.64,4.72-13.07-30.19,5.15-69.84,38.94-74.42Z"/>
-            </svg>
-        </div>
-        <h1>Compta Game</h1>
-        <p>Apprends la comptabilité en t'amusant</p>
-    </div>
-
     <!-- ÉCRAN SAISIE JOUEUR -->
     <div class="screen active" id="playerFormScreen">
         <div class="header">
@@ -295,8 +279,22 @@
 
     <!-- ÉCRAN ACCUEIL -->
     <div class="screen" id="homeScreen">
+        <div class="header">
+            <div class="header-logo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1904.42 963.08" width="120" height="60">
+                    <path fill="#fff" d="M1281.38,290.16v93h75v83h-75v146.5c0,4.54,4.98,14.31,8.51,17.49,5.2,4.7,19.17,9.01,25.99,9.01h40.5v77c-16.53,1.49-33.91,3.18-50.54,3.04-74.73-.62-107.93-30.49-110.51-105.49-1.68-48.82,1.35-98.64.05-147.55h-58v250h-85v-37c-1.77-.26-2.19-.06-3.46,1.04-3.28,2.84-7.21,8.57-11.01,11.99-47.15,42.34-123.19,43.71-176.05,10.99-110.23-68.23-108.12-247.89,6.5-310.54,55.44-30.3,130.87-25.02,176.05,20.99,2.18,2.22,3.48,6.38,6.97,6.53v-35.5l1.5-1.5h142.5v-68l86-25h0ZM946.17,456.46c-92.05,8.86-107.58,144.55-26.15,179.56,57.71,24.82,126.22-9.75,131.34-74.37,5.23-65.92-38.7-111.59-105.19-105.19h0Z"/>
+                    <polygon fill="#fff" points="383.38 250.16 383.38 435.16 556.38 435.16 556.38 384.16 648.38 384.16 648.38 716.16 556.38 716.16 556.38 523.16 383.38 523.16 383.38 716.16 291.38 716.16 291.38 250.16 383.38 250.16"/>
+                    <path fill="#fff" d="M1518.17,374.46c122.63-6.83,213.97,99.76,184.13,220.13-37.26,150.32-245.86,179.21-323.73,45.88-65.91-112.85,7.59-258.66,139.6-266.01h0ZM1519.17,458.46c-57.91,5.89-88.64,64.09-74.51,117.92,22.76,86.7,149.5,87.03,173.43,1,18.55-66.68-29.62-125.98-98.92-118.92h0Z"/>
+                    <rect fill="#fff" x="684.38" y="383.16" width="85" height="333"/>
+                    <path fill="#028fd0" d="M719.15,237.44c45.71-5.23,76.87,44.84,51.45,83.45-23.56,35.79-79.14,30.53-94.99-9.47-12.93-32.63,8.66-69.99,43.54-73.98h0Z"/>
+                    <path fill="#028fd0" d="M592.13,238.42c41.61-5.63,74.75,28.66,61.7,69.7-14.75,46.36-81.29,49.41-100.64,4.72-13.07-30.19,5.15-69.84,38.94-74.42Z"/>
+                </svg>
+            </div>
+            <h1>Compta Game</h1>
+            <p id="homeHeaderSubtitle">Apprends la comptabilité en t'amusant</p>
+        </div>
         <div class="content">
-            <div class="info-banner">🔓 Tous les chapitres sont accessibles librement !</div>
+            <div class="info-banner" id="homeBanner">🔓 Tous les chapitres sont accessibles librement !</div>
 
             <div class="progress-section">
                 <h3>📊 Ta Progression</h3>
@@ -332,6 +330,20 @@
 
     <!-- ÉCRAN SCORES -->
     <div class="screen" id="scoresScreen">
+        <div class="header">
+            <div class="header-logo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1904.42 963.08" width="120" height="60">
+                    <path fill="#fff" d="M1281.38,290.16v93h75v83h-75v146.5c0,4.54,4.98,14.31,8.51,17.49,5.2,4.7,19.17,9.01,25.99,9.01h40.5v77c-16.53,1.49-33.91,3.18-50.54,3.04-74.73-.62-107.93-30.49-110.51-105.49-1.68-48.82,1.35-98.64.05-147.55h-58v250h-85v-37c-1.77-.26-2.19-.06-3.46,1.04-3.28,2.84-7.21,8.57-11.01,11.99-47.15,42.34-123.19,43.71-176.05,10.99-110.23-68.23-108.12-247.89,6.5-310.54,55.44-30.3,130.87-25.02,176.05,20.99,2.18,2.22,3.48,6.38,6.97,6.53v-35.5l1.5-1.5h142.5v-68l86-25h0ZM946.17,456.46c-92.05,8.86-107.58,144.55-26.15,179.56,57.71,24.82,126.22-9.75,131.34-74.37,5.23-65.92-38.7-111.59-105.19-105.19h0Z"/>
+                    <polygon fill="#fff" points="383.38 250.16 383.38 435.16 556.38 435.16 556.38 384.16 648.38 384.16 648.38 716.16 556.38 716.16 556.38 523.16 383.38 523.16 383.38 716.16 291.38 716.16 291.38 250.16 383.38 250.16"/>
+                    <path fill="#fff" d="M1518.17,374.46c122.63-6.83,213.97,99.76,184.13,220.13-37.26,150.32-245.86,179.21-323.73,45.88-65.91-112.85,7.59-258.66,139.6-266.01h0ZM1519.17,458.46c-57.91,5.89-88.64,64.09-74.51,117.92,22.76,86.7,149.5,87.03,173.43,1,18.55-66.68-29.62-125.98-98.92-118.92h0Z"/>
+                    <rect fill="#fff" x="684.38" y="383.16" width="85" height="333"/>
+                    <path fill="#028fd0" d="M719.15,237.44c45.71-5.23,76.87,44.84,51.45,83.45-23.56,35.79-79.14,30.53-94.99-9.47-12.93-32.63,8.66-69.99,43.54-73.98h0Z"/>
+                    <path fill="#028fd0" d="M592.13,238.42c41.61-5.63,74.75,28.66,61.7,69.7-14.75,46.36-81.29,49.41-100.64,4.72-13.07-30.19,5.15-69.84,38.94-74.42Z"/>
+                </svg>
+            </div>
+            <h1>Mes Scores</h1>
+            <p>Compta Game — HIIATO</p>
+        </div>
         <div class="content">
             <div class="score-tabs">
                 <div class="score-tab active" id="tabBest" onclick="switchScoreTab('best')">🏆 Meilleurs scores</div>
@@ -661,7 +673,7 @@ function exportPDF() {
     function strokeRect(x, yy, w, h, r, g, b) { doc.setDrawColor(r, g, b); doc.rect(x, yy, w, h, 'S'); }
 
     // --- EN-TÊTE PRINCIPAL ---
-    fillRect(0, 0, pageW, 42, ...blue);
+    fillRect(0, 0, pageW, 42, blue[0], blue[1], blue[2]);
     // Logo texte HIIATO
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(22);
@@ -678,8 +690,8 @@ function exportPDF() {
 
     // --- FICHE JOUEUR ---
     fillRect(margin, y, contentW, 36, 232, 248, 253);
-    strokeRect(margin, y, contentW, 36, ...blue);
-    doc.setTextColor(...blue);
+    strokeRect(margin, y, contentW, 36, blue[0], blue[1], blue[2]);
+    doc.setTextColor(blue[0], blue[1], blue[2]);
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.text('👤 Informations du joueur', margin + 4, y + 8);
@@ -706,7 +718,7 @@ function exportPDF() {
     y += 42;
 
     // --- TABLEAU SCORES GLOBAUX ---
-    doc.setTextColor(...blue);
+    doc.setTextColor(blue[0], blue[1], blue[2]);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.text('Récapitulatif des scores', margin, y);
@@ -718,7 +730,7 @@ function exportPDF() {
     const colW = contentW / 3;
 
     // Header tableau
-    fillRect(margin, y, contentW, 8, ...blue);
+    fillRect(margin, y, contentW, 8, blue[0], blue[1], blue[2]);
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(8.5);
     doc.setFont('helvetica', 'bold');
@@ -731,7 +743,7 @@ function exportPDF() {
     const maxScores = [800, 1200, 2700, 1200];
     for (let i = 1; i <= 4; i++) {
         const bg = i % 2 === 0 ? [240, 251, 255] : [255, 255, 255];
-        fillRect(margin, y, contentW, 7, ...bg);
+        fillRect(margin, y, contentW, 7, bg[0], bg[1], bg[2]);
         strokeRect(margin, y, contentW, 7, 220, 220, 220);
         doc.setTextColor(50, 50, 50);
         doc.setFont('helvetica', 'normal');
@@ -748,7 +760,7 @@ function exportPDF() {
         y += 7;
     }
     // Ligne total
-    fillRect(margin, y, contentW, 8, ...darkBlue);
+    fillRect(margin, y, contentW, 8, darkBlue[0], darkBlue[1], darkBlue[2]);
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(9);
@@ -759,7 +771,7 @@ function exportPDF() {
 
     // --- BADGES ---
     newPageIfNeeded(40);
-    doc.setTextColor(...blue);
+    doc.setTextColor(blue[0], blue[1], blue[2]);
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.text('Badges', margin, y);
@@ -809,7 +821,7 @@ function exportPDF() {
         const pct = Math.round((correctCount / answers.length) * 100);
 
         // Bandeau titre chapitre
-        fillRect(0, y, pageW, 12, ...chColors[chId]);
+        const chCol = chColors[chId]; fillRect(0, y, pageW, 12, chCol[0], chCol[1], chCol[2]);
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
@@ -820,7 +832,7 @@ function exportPDF() {
         // Barre de progression
         fillRect(margin, y, contentW, 4, 220, 220, 220);
         const barW = (correctCount / answers.length) * contentW;
-        fillRect(margin, y, barW, 4, ...green);
+        fillRect(margin, y, barW, 4, green[0], green[1], green[2]);
         y += 8;
 
         // Questions
@@ -864,7 +876,7 @@ function exportPDF() {
 
             // Bonne réponse si incorrect
             if (!isOk && cLines.length > 0) {
-                doc.setTextColor(...green);
+                doc.setTextColor(green[0], green[1], green[2]);
                 cLines.forEach((line, li) => {
                     doc.text(line, margin + 10, innerY + li * 3.5);
                 });
@@ -894,7 +906,7 @@ function exportPDF() {
     const totalPages = doc.internal.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
         doc.setPage(p);
-        fillRect(0, pageH - 10, pageW, 10, ...blue);
+        fillRect(0, pageH - 10, pageW, 10, blue[0], blue[1], blue[2]);
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(7.5);
         doc.setFont('helvetica', 'normal');
@@ -1014,35 +1026,17 @@ function showScreen(id) { hideAllScreens(); document.getElementById(id).classLis
 
 function showHome() {
     showScreen('homeScreen');
-    updateHeader('main');
-    // Afficher le nom du joueur dans la bannière
-    const banner = document.querySelector('#homeScreen .info-banner');
+    const banner = document.getElementById('homeBanner');
     if (banner) {
         const name = getPlayerDisplayName();
-        banner.innerHTML = `🔓 Tous les chapitres sont accessibles librement !<br><span style="font-weight:400;font-size:12px;">Connecté(e) en tant que <strong>${name}</strong></span>`;
+        banner.innerHTML = '🔓 Tous les chapitres sont accessibles librement !<br><span style="font-weight:400;font-size:12px;">Connecté(e) en tant que <strong>' + name + '</strong></span>';
     }
     updateHomeUI();
 }
-function showScores() { showScreen('scoresScreen'); updateHeader('main'); renderScores(); }
+function showScores() { showScreen('scoresScreen'); renderScores(); }
 
 function updateHeader(type) {
-    const header = document.getElementById('mainHeader');
-    if (type === 'main') {
-        header.innerHTML = `
-            <div class="header-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1904.42 963.08" width="120" height="60">
-                <path fill="#fff" d="M1281.38,290.16v93h75v83h-75v146.5c0,4.54,4.98,14.31,8.51,17.49,5.2,4.7,19.17,9.01,25.99,9.01h40.5v77c-16.53,1.49-33.91,3.18-50.54,3.04-74.73-.62-107.93-30.49-110.51-105.49-1.68-48.82,1.35-98.64.05-147.55h-58v250h-85v-37c-1.77-.26-2.19-.06-3.46,1.04-3.28,2.84-7.21,8.57-11.01,11.99-47.15,42.34-123.19,43.71-176.05,10.99-110.23-68.23-108.12-247.89,6.5-310.54,55.44-30.3,130.87-25.02,176.05,20.99,2.18,2.22,3.48,6.38,6.97,6.53v-35.5l1.5-1.5h142.5v-68l86-25h0ZM946.17,456.46c-92.05,8.86-107.58,144.55-26.15,179.56,57.71,24.82,126.22-9.75,131.34-74.37,5.23-65.92-38.7-111.59-105.19-105.19h0Z"/>
-                <polygon fill="#fff" points="383.38 250.16 383.38 435.16 556.38 435.16 556.38 384.16 648.38 384.16 648.38 716.16 556.38 716.16 556.38 523.16 383.38 523.16 383.38 716.16 291.38 716.16 291.38 250.16 383.38 250.16"/>
-                <path fill="#fff" d="M1518.17,374.46c122.63-6.83,213.97,99.76,184.13,220.13-37.26,150.32-245.86,179.21-323.73,45.88-65.91-112.85,7.59-258.66,139.6-266.01h0ZM1519.17,458.46c-57.91,5.89-88.64,64.09-74.51,117.92,22.76,86.7,149.5,87.03,173.43,1,18.55-66.68-29.62-125.98-98.92-118.92h0Z"/>
-                <rect fill="#fff" x="684.38" y="383.16" width="85" height="333"/>
-                <path fill="#028fd0" d="M719.15,237.44c45.71-5.23,76.87,44.84,51.45,83.45-23.56,35.79-79.14,30.53-94.99-9.47-12.93-32.63,8.66-69.99,43.54-73.98h0Z"/>
-                <path fill="#028fd0" d="M592.13,238.42c41.61-5.63,74.75,28.66,61.7,69.7-14.75,46.36-81.29,49.41-100.64,4.72-13.07-30.19,5.15-69.84,38.94-74.42Z"/>
-            </svg></div>
-            <h1>Compta Game</h1>
-            <p>Apprends la comptabilité en t'amusant</p>`;
-        header.style.display = 'block';
-    } else {
-        header.style.display = 'none';
-    }
+    // Plus de mainHeader fixe — les headers sont intégrés dans chaque écran
 }
 
 // ============================================
