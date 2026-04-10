@@ -221,6 +221,16 @@
         .badge-item-name { font-weight:600; font-size:12px; line-height:1.3; }
         .badge-item-chapter { font-size:10px; opacity:0.8; margin-top:4px; }
         .info-banner { background:linear-gradient(135deg,#E8F5E9,#F1F8E9); border:2px solid #4CAF50; border-radius:10px; padding:12px 16px; margin-bottom:16px; font-size:13px; color:#2E7D32; text-align:center; font-weight:600; }
+        /* Formulaire joueur */
+        .player-form-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; }
+        .player-form-card { background:white; border-radius:20px; padding:32px 24px; width:100%; }
+        .player-form-card h2 { color:#0095D0; font-size:22px; font-weight:700; margin-bottom:8px; text-align:center; }
+        .player-form-card p { color:#666; font-size:14px; text-align:center; margin-bottom:28px; }
+        .form-group { margin-bottom:16px; }
+        .form-group label { display:block; font-size:13px; font-weight:600; color:#555; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px; }
+        .form-group input, .form-group select { width:100%; padding:14px 16px; border:2px solid #e0e0e0; border-radius:12px; font-size:15px; color:#333; outline:none; transition:border-color 0.3s; font-family:inherit; }
+        .form-group input:focus, .form-group select:focus { border-color:#25CCF6; }
+        .form-group input::placeholder { color:#bbb; }
     </style>
 </head>
 <body>
@@ -242,8 +252,49 @@
         <p>Apprends la comptabilité en t'amusant</p>
     </div>
 
+    <!-- ÉCRAN SAISIE JOUEUR -->
+    <div class="screen active" id="playerFormScreen">
+        <div class="header">
+            <div class="header-logo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1904.42 963.08" width="120" height="60">
+                    <path fill="#fff" d="M1281.38,290.16v93h75v83h-75v146.5c0,4.54,4.98,14.31,8.51,17.49,5.2,4.7,19.17,9.01,25.99,9.01h40.5v77c-16.53,1.49-33.91,3.18-50.54,3.04-74.73-.62-107.93-30.49-110.51-105.49-1.68-48.82,1.35-98.64.05-147.55h-58v250h-85v-37c-1.77-.26-2.19-.06-3.46,1.04-3.28,2.84-7.21,8.57-11.01,11.99-47.15,42.34-123.19,43.71-176.05,10.99-110.23-68.23-108.12-247.89,6.5-310.54,55.44-30.3,130.87-25.02,176.05,20.99,2.18,2.22,3.48,6.38,6.97,6.53v-35.5l1.5-1.5h142.5v-68l86-25h0ZM946.17,456.46c-92.05,8.86-107.58,144.55-26.15,179.56,57.71,24.82,126.22-9.75,131.34-74.37,5.23-65.92-38.7-111.59-105.19-105.19h0Z"/>
+                    <polygon fill="#fff" points="383.38 250.16 383.38 435.16 556.38 435.16 556.38 384.16 648.38 384.16 648.38 716.16 556.38 716.16 556.38 523.16 383.38 523.16 383.38 716.16 291.38 716.16 291.38 250.16 383.38 250.16"/>
+                    <path fill="#fff" d="M1518.17,374.46c122.63-6.83,213.97,99.76,184.13,220.13-37.26,150.32-245.86,179.21-323.73,45.88-65.91-112.85,7.59-258.66,139.6-266.01h0ZM1519.17,458.46c-57.91,5.89-88.64,64.09-74.51,117.92,22.76,86.7,149.5,87.03,173.43,1,18.55-66.68-29.62-125.98-98.92-118.92h0Z"/>
+                    <rect fill="#fff" x="684.38" y="383.16" width="85" height="333"/>
+                    <path fill="#028fd0" d="M719.15,237.44c45.71-5.23,76.87,44.84,51.45,83.45-23.56,35.79-79.14,30.53-94.99-9.47-12.93-32.63,8.66-69.99,43.54-73.98h0Z"/>
+                    <path fill="#028fd0" d="M592.13,238.42c41.61-5.63,74.75,28.66,61.7,69.7-14.75,46.36-81.29,49.41-100.64,4.72-13.07-30.19,5.15-69.84,38.94-74.42Z"/>
+                </svg>
+            </div>
+            <h1>Compta Game</h1>
+            <p>Apprends la comptabilité en t'amusant</p>
+        </div>
+        <div class="content">
+            <div class="player-form-card">
+                <h2>👋 Bienvenue !</h2>
+                <p>Renseigne tes informations avant de commencer.<br>Elles apparaîtront sur ton rapport PDF.</p>
+                <div class="form-group">
+                    <label>Prénom *</label>
+                    <input type="text" id="playerFirstName" placeholder="Ton prénom" maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label>Nom *</label>
+                    <input type="text" id="playerLastName" placeholder="Ton nom" maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label>Établissement / Entreprise</label>
+                    <input type="text" id="playerOrg" placeholder="École, entreprise..." maxlength="80">
+                </div>
+                <div class="form-group">
+                    <label>Niveau / Promotion</label>
+                    <input type="text" id="playerLevel" placeholder="Ex: BTS CG 1ère année" maxlength="60">
+                </div>
+                <button class="btn btn-primary" onclick="validatePlayerForm()" style="margin-top:8px;">Commencer le jeu 🚀</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ÉCRAN ACCUEIL -->
-    <div class="screen active" id="homeScreen">
+    <div class="screen" id="homeScreen">
         <div class="content">
             <div class="info-banner">🔓 Tous les chapitres sont accessibles librement !</div>
 
@@ -516,12 +567,7 @@
             <div class="final-scores-detail" id="finalScoresDetail"></div>
             <div class="final-badges" id="finalBadges"></div>
 
-            <!-- Export dans scores finaux aussi -->
-            <div class="export-section" style="margin-top:24px;">
-                <h3>📄 Exporter mes résultats</h3>
-                <button class="btn btn-export-pdf" onclick="exportPDF()">⬇️ Télécharger le rapport PDF</button>
-                <button class="btn btn-mailto" onclick="sendByEmail()">✉️ Envoyer par e-mail</button>
-            </div>
+            <!-- Export supprimé de cet écran (disponible sur l'accueil) -->
 
             <button class="btn btn-primary" onclick="showHome()" style="margin-top:20px;">← Retour à l'accueil</button>
             <button class="btn btn-danger" style="margin-top:12px;" onclick="confirmReset()">🔄 Recommencer tout le parcours</button>
@@ -549,6 +595,29 @@ const GAME_CONFIG = {
 };
 
 // ============================================
+// INFORMATIONS JOUEUR
+// ============================================
+let playerInfo = { firstName:'', lastName:'', org:'', level:'' };
+
+function validatePlayerForm() {
+    const fn = document.getElementById('playerFirstName').value.trim();
+    const ln = document.getElementById('playerLastName').value.trim();
+    if (!fn || !ln) {
+        alert('Merci de renseigner au minimum ton prénom et ton nom !');
+        return;
+    }
+    playerInfo.firstName = fn;
+    playerInfo.lastName = ln;
+    playerInfo.org = document.getElementById('playerOrg').value.trim();
+    playerInfo.level = document.getElementById('playerLevel').value.trim();
+    showHome();
+}
+
+function getPlayerDisplayName() {
+    return (playerInfo.firstName + ' ' + playerInfo.lastName).trim() || 'Joueur';
+}
+
+// ============================================
 // TRACKING DES RÉPONSES (session courante)
 // ============================================
 // sessionAnswers[chapterId] = [ {question, correct, userAnswer, isCorrect}, ...]
@@ -571,204 +640,270 @@ function exportPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
     const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
     const margin = 15;
     const contentW = pageW - margin * 2;
     let y = margin;
 
-    // Couleurs HIIATO
     const blue = [0, 149, 208];
-    const lightBlue = [37, 204, 246];
-    const green = [76, 175, 80];
-    const red = [244, 67, 54];
-    const grey = [100, 100, 100];
+    const darkBlue = [0, 100, 160];
+    const green = [46, 125, 50];
+    const red = [198, 40, 40];
+    const orange = [230, 81, 0];
+    const grey = [120, 120, 120];
+    const lightGrey = [245, 245, 245];
 
-    function addPageIfNeeded(needed) {
-        if (y + needed > doc.internal.pageSize.getHeight() - margin) {
-            doc.addPage();
-            y = margin;
-        }
+    function newPageIfNeeded(needed) {
+        if (y + needed > pageH - margin) { doc.addPage(); y = margin; }
     }
 
-    function drawRect(x, yy, w, h, r, g, b, fill) {
-        doc.setFillColor(r, g, b);
-        if (fill) doc.rect(x, yy, w, h, 'F');
-        else doc.rect(x, yy, w, h);
-    }
+    function fillRect(x, yy, w, h, r, g, b) { doc.setFillColor(r, g, b); doc.rect(x, yy, w, h, 'F'); }
+    function strokeRect(x, yy, w, h, r, g, b) { doc.setDrawColor(r, g, b); doc.rect(x, yy, w, h, 'S'); }
 
-    // --- EN-TÊTE ---
-    drawRect(0, 0, pageW, 35, ...blue, true);
+    // --- EN-TÊTE PRINCIPAL ---
+    fillRect(0, 0, pageW, 42, ...blue);
+    // Logo texte HIIATO
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(20);
+    doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
-    doc.text('HIIATO - Compta Game', margin, 15);
+    doc.text('HIIATO — Compta Game', margin, 16);
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text('Rapport de performance du joueur', margin, 23);
-    const dateStr = new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
-    doc.text(dateStr, pageW - margin, 23, { align:'right' });
-    y = 45;
+    doc.text('Rapport de performance individuel', margin, 25);
+    const dateStr = new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
+    const timeStr = new Date().toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+    doc.setFontSize(9);
+    doc.text(dateStr + ' à ' + timeStr, pageW - margin, 25, { align:'right' });
+    y = 50;
 
-    // --- SCORES GLOBAUX ---
+    // --- FICHE JOUEUR ---
+    fillRect(margin, y, contentW, 36, 232, 248, 253);
+    strokeRect(margin, y, contentW, 36, ...blue);
+    doc.setTextColor(...blue);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('👤 Informations du joueur', margin + 4, y + 8);
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(50, 50, 50);
+    doc.text('Nom & Prénom :', margin + 4, y + 17);
+    doc.setFont('helvetica', 'normal');
+    doc.text(playerInfo.firstName + ' ' + playerInfo.lastName, margin + 40, y + 17);
+
+    if (playerInfo.org) {
+        doc.setFont('helvetica', 'bold');
+        doc.text('Établissement :', margin + 4, y + 24);
+        doc.setFont('helvetica', 'normal');
+        doc.text(playerInfo.org, margin + 40, y + 24);
+    }
+    if (playerInfo.level) {
+        doc.setFont('helvetica', 'bold');
+        doc.text('Niveau :', margin + 4, y + 31);
+        doc.setFont('helvetica', 'normal');
+        doc.text(playerInfo.level, margin + 40, y + 31);
+    }
+    y += 42;
+
+    // --- TABLEAU SCORES GLOBAUX ---
+    doc.setTextColor(...blue);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Récapitulatif des scores', margin, y);
+    y += 6;
+
     const bestScores = getBestScores();
     const lastScores = getLastScores();
     const progress = getProgress();
-
-    doc.setTextColor(...blue);
-    doc.setFontSize(13);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Résumé des scores', margin, y);
-    y += 6;
-
-    // Tableau des scores
-    const chapterNames = ['Ch.1 - Fondamentaux', 'Ch.2 - La grande structure', 'Ch.3 - Les détails', 'Ch.4 - Les ajustements'];
     const colW = contentW / 3;
 
-    drawRect(margin, y, contentW, 8, ...blue, true);
+    // Header tableau
+    fillRect(margin, y, contentW, 8, ...blue);
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
     doc.setFont('helvetica', 'bold');
     doc.text('Chapitre', margin + 2, y + 5.5);
     doc.text('Meilleur score', margin + colW + 2, y + 5.5);
     doc.text('Dernier score', margin + colW * 2 + 2, y + 5.5);
     y += 8;
 
+    const chapterNames = ['Ch.1 — Fondamentaux', 'Ch.2 — La grande structure', 'Ch.3 — Les détails', 'Ch.4 — Les ajustements'];
+    const maxScores = [800, 1200, 2700, 1200];
     for (let i = 1; i <= 4; i++) {
         const bg = i % 2 === 0 ? [240, 251, 255] : [255, 255, 255];
-        drawRect(margin, y, contentW, 7, ...bg, true);
-        doc.setDrawColor(220, 220, 220);
-        doc.rect(margin, y, contentW, 7);
+        fillRect(margin, y, contentW, 7, ...bg);
+        strokeRect(margin, y, contentW, 7, 220, 220, 220);
         doc.setTextColor(50, 50, 50);
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        const completed = progress[`chapter${i}`];
-        doc.text((completed ? '✓ ' : '○ ') + chapterNames[i-1], margin + 2, y + 5);
+        doc.setFontSize(8.5);
+        const done = progress[`chapter${i}`];
+        doc.text((done ? '✓ ' : '○ ') + chapterNames[i-1], margin + 2, y + 5);
+        const best = bestScores[`chapter${i}`] || 0;
+        const last = lastScores[`chapter${i}`] || 0;
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...(bestScores[`chapter${i}`] > 0 ? green : grey));
-        doc.text((bestScores[`chapter${i}`] || 0) + ' pts', margin + colW + 2, y + 5);
-        doc.setTextColor(...(lastScores[`chapter${i}`] > 0 ? blue : grey));
-        doc.text((lastScores[`chapter${i}`] || 0) + ' pts', margin + colW * 2 + 2, y + 5);
+        const bestColor = best > 0 ? green : grey; doc.setTextColor(bestColor[0], bestColor[1], bestColor[2]);
+        doc.text(best + ' pts', margin + colW + 2, y + 5);
+        const lastColor = last > 0 ? blue : grey; doc.setTextColor(lastColor[0], lastColor[1], lastColor[2]);
+        doc.text(last + ' pts', margin + colW * 2 + 2, y + 5);
         y += 7;
     }
-
-    // Total
-    drawRect(margin, y, contentW, 8, ...blue, true);
+    // Ligne total
+    fillRect(margin, y, contentW, 8, ...darkBlue);
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text('TOTAL', margin + 2, y + 5.5);
-    doc.text(bestScores.total + ' pts (meilleur)', margin + colW + 2, y + 5.5);
-    doc.text(lastScores.total + ' pts (dernier)', margin + colW * 2 + 2, y + 5.5);
+    doc.setFontSize(9);
+    doc.text('SCORE TOTAL', margin + 2, y + 5.5);
+    doc.text(bestScores.total + ' pts', margin + colW + 2, y + 5.5);
+    doc.text(lastScores.total + ' pts', margin + colW * 2 + 2, y + 5.5);
     y += 12;
 
     // --- BADGES ---
-    addPageIfNeeded(40);
+    newPageIfNeeded(40);
     doc.setTextColor(...blue);
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.text('Badges obtenus', margin, y);
+    doc.text('Badges', margin, y);
     y += 5;
 
     const badgeData = [
-        { name:'Détective Comptable', ch:1, threshold:600, icon:'Bilan vs Résultat' },
-        { name:'Architecte Comptable', ch:2, threshold:900, icon:'Structure' },
-        { name:'Expert Comptable', ch:3, threshold:2000, icon:'Postes' },
-        { name:'Maître Comptable', ch:4, threshold:900, icon:'Ajustements' }
+        { name:'Détective Comptable', ch:1, threshold:600 },
+        { name:'Architecte Comptable', ch:2, threshold:900 },
+        { name:'Expert Comptable', ch:3, threshold:2000 },
+        { name:'Maître Comptable', ch:4, threshold:900 }
     ];
-    const badgeW = (contentW - 6) / 2;
+    const badgeW = (contentW - 4) / 2;
     for (let i = 0; i < badgeData.length; i += 2) {
-        addPageIfNeeded(18);
+        newPageIfNeeded(14);
         for (let j = 0; j < 2; j++) {
             if (i + j >= badgeData.length) break;
             const bd = badgeData[i + j];
-            const unlocked = (bestScores[`chapter${bd.ch}`] || 0) >= bd.threshold;
-            const bx = margin + j * (badgeW + 3);
-            drawRect(bx, y, badgeW, 14, ...(unlocked ? [255, 215, 0] : [200, 200, 200]), true);
-            doc.setTextColor(unlocked ? 80 : 130, unlocked ? 60 : 130, 0);
+            const score = bestScores[`chapter${bd.ch}`] || 0;
+            const unlocked = score >= bd.threshold;
+            const bx = margin + j * (badgeW + 4);
+            const badgeBg = unlocked ? [255, 248, 200] : [240, 240, 240]; fillRect(bx, y, badgeW, 12, badgeBg[0], badgeBg[1], badgeBg[2]);
+            const badgeBorder = unlocked ? [230, 180, 0] : [200, 200, 200]; strokeRect(bx, y, badgeW, 12, badgeBorder[0], badgeBorder[1], badgeBorder[2]);
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(9);
-            doc.text((unlocked ? '🏆 ' : '🔒 ') + bd.name, bx + 3, y + 6);
+            doc.setFontSize(8.5);
+            doc.setTextColor(unlocked ? 120 : 150, unlocked ? 80 : 150, unlocked ? 0 : 150);
+            doc.text((unlocked ? '★ ' : '○ ') + bd.name, bx + 3, y + 5);
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(8);
+            doc.setFontSize(7.5);
             doc.setTextColor(80, 80, 80);
-            doc.text(unlocked ? 'DÉBLOQUÉ (' + (bestScores[`chapter${bd.ch}`] || 0) + ' pts)' : 'Requis : ' + bd.threshold + ' pts', bx + 3, y + 11);
+            doc.text(unlocked ? 'DÉBLOQUÉ — ' + score + ' pts' : 'Requis : ' + bd.threshold + ' pts', bx + 3, y + 10);
         }
-        y += 17;
+        y += 15;
     }
-    y += 5;
+    y += 4;
 
     // --- DÉTAIL DES RÉPONSES PAR CHAPITRE ---
-    const ch4Questions = getCh4QuestionsForReport();
+    const chTitles = ['', 'Chapitre 1 — Fondamentaux : À quoi ça sert ?', 'Chapitre 2 — La grande structure', 'Chapitre 3 — Les détails', 'Chapitre 4 — Les ajustements'];
+    const chColors = [[], [0,149,208], [46,125,50], [230,81,0], [123,31,162]];
 
     for (let chId = 1; chId <= 4; chId++) {
         const answers = sessionAnswers[chId];
         if (!answers || answers.length === 0) continue;
 
-        addPageIfNeeded(20);
+        newPageIfNeeded(24);
 
-        // Titre chapitre
-        drawRect(0, y, pageW, 10, ...blue, true);
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'bold');
-        const chTitles = ['', 'Ch.1 : Fondamentaux', 'Ch.2 : La grande structure', 'Ch.3 : Les détails', 'Ch.4 : Les ajustements'];
         const correctCount = answers.filter(a => a.isCorrect).length;
-        doc.text(chTitles[chId] + '  —  ' + correctCount + '/' + answers.length + ' correct(s)', margin, y + 7);
-        y += 14;
+        const pct = Math.round((correctCount / answers.length) * 100);
 
+        // Bandeau titre chapitre
+        fillRect(0, y, pageW, 12, ...chColors[chId]);
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text(chTitles[chId], margin, y + 8);
+        doc.text(correctCount + '/' + answers.length + ' (' + pct + '%)', pageW - margin, y + 8, { align:'right' });
+        y += 16;
+
+        // Barre de progression
+        fillRect(margin, y, contentW, 4, 220, 220, 220);
+        const barW = (correctCount / answers.length) * contentW;
+        fillRect(margin, y, barW, 4, ...green);
+        y += 8;
+
+        // Questions
         answers.forEach((ans, idx) => {
-            addPageIfNeeded(30);
             const isOk = ans.isCorrect;
-            const rowBg = isOk ? [232, 245, 233] : [255, 235, 238];
-            drawRect(margin, y, contentW, 5, ...rowBg, true);
-            doc.setDrawColor(200, 200, 200);
-            doc.rect(margin, y, contentW, 5);
-            doc.setFontSize(8);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(isOk ? 46 : 198, isOk ? 125 : 40, isOk ? 50 : 40);
-            doc.text((isOk ? '✓' : '✗') + ' Q' + (idx + 1), margin + 2, y + 3.5);
-            y += 5;
+            const rowH = 8;
 
-            // Question
-            doc.setTextColor(50, 50, 50);
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(8);
-            const qLines = doc.splitTextToSize('Question : ' + ans.questionText, contentW - 4);
-            addPageIfNeeded(qLines.length * 4 + 8);
-            doc.text(qLines, margin + 3, y + 4);
-            y += qLines.length * 4 + 2;
+            // Estimer hauteur nécessaire
+            const qLines = doc.splitTextToSize('Q' + (idx+1) + '. ' + ans.questionText, contentW - 8);
+            const uLines = doc.splitTextToSize((isOk ? '✓ ' : '✗ ') + 'Votre réponse : ' + stripHTML(ans.userAnswer), contentW - 12);
+            const cLines = isOk ? [] : doc.splitTextToSize('✓ Bonne réponse : ' + stripHTML(ans.correctAnswer), contentW - 12);
+            const totalH = qLines.length * 4 + uLines.length * 3.5 + cLines.length * 3.5 + 10;
+            newPageIfNeeded(totalH);
+
+            // Fond coloré selon résultat
+            const rowBg = isOk ? [232, 245, 233] : [255, 235, 238]; fillRect(margin, y, contentW, totalH, rowBg[0], rowBg[1], rowBg[2]);
+            const rowBorder = isOk ? [165, 214, 167] : [239, 154, 154]; strokeRect(margin, y, contentW, totalH, rowBorder[0], rowBorder[1], rowBorder[2]);
+
+            // Icône résultat
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            const iconColor = isOk ? green : red; doc.setTextColor(iconColor[0], iconColor[1], iconColor[2]);
+
+            // Texte question
+            doc.setTextColor(30, 30, 30);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8.5);
+            qLines.forEach((line, li) => {
+                doc.text(line, margin + 8, y + 5 + li * 4);
+            });
+            let innerY = y + 5 + qLines.length * 4 + 1;
 
             // Réponse joueur
-            doc.setTextColor(isOk ? 46 : 198, isOk ? 125 : 40, isOk ? 50 : 40);
-            const uLines = doc.splitTextToSize((isOk ? '✓ ' : '✗ ') + 'Votre réponse : ' + stripHTML(ans.userAnswer), contentW - 4);
-            addPageIfNeeded(uLines.length * 4 + 4);
-            doc.text(uLines, margin + 3, y + 3);
-            y += uLines.length * 4 + 1;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            const ansColor = isOk ? green : red; doc.setTextColor(ansColor[0], ansColor[1], ansColor[2]);
+            uLines.forEach((line, li) => {
+                doc.text(line, margin + 10, innerY + li * 3.5);
+            });
+            innerY += uLines.length * 3.5 + 1;
 
             // Bonne réponse si incorrect
-            if (!isOk) {
+            if (!isOk && cLines.length > 0) {
                 doc.setTextColor(...green);
-                const cLines = doc.splitTextToSize('✓ Bonne réponse : ' + stripHTML(ans.correctAnswer), contentW - 4);
-                addPageIfNeeded(cLines.length * 4 + 4);
-                doc.text(cLines, margin + 3, y + 3);
-                y += cLines.length * 4 + 1;
+                cLines.forEach((line, li) => {
+                    doc.text(line, margin + 10, innerY + li * 3.5);
+                });
+                innerY += cLines.length * 3.5;
             }
-            y += 3;
+
+            y += totalH + 2;
         });
-        y += 5;
+        y += 6;
     }
 
-    // Footer sur chaque page
+    // Note si aucune réponse enregistrée
+    let anyAnswers = false;
+    for (let i = 1; i <= 4; i++) { if (sessionAnswers[i] && sessionAnswers[i].length > 0) { anyAnswers = true; break; } }
+    if (!anyAnswers) {
+        newPageIfNeeded(20);
+        fillRect(margin, y, contentW, 14, 255, 243, 205);
+        strokeRect(margin, y, contentW, 14, 255, 193, 7);
+        doc.setTextColor(133, 100, 4);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'italic');
+        doc.text('Aucune réponse enregistrée dans cette session. Jouez un chapitre pour voir le détail ici.', margin + 3, y + 9);
+        y += 18;
+    }
+
+    // --- FOOTER sur chaque page ---
     const totalPages = doc.internal.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
         doc.setPage(p);
-        doc.setFontSize(8);
-        doc.setTextColor(150, 150, 150);
-        doc.text('HIIATO - Compta Game | Rapport généré le ' + dateStr + ' | Page ' + p + '/' + totalPages, pageW / 2, doc.internal.pageSize.getHeight() - 8, { align:'center' });
+        fillRect(0, pageH - 10, pageW, 10, ...blue);
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'normal');
+        doc.text('HIIATO — Compta Game  |  ' + getPlayerDisplayName() + '  |  Généré le ' + dateStr + '  |  Page ' + p + '/' + totalPages, pageW / 2, pageH - 3.5, { align:'center' });
     }
 
-    doc.save('rapport_compta_game_hiiato.pdf');
+    const safeName = (playerInfo.lastName || 'joueur').toLowerCase().replace(/\s+/g, '_');
+    doc.save('rapport_compta_game_' + safeName + '.pdf');
 }
-
 // ============================================
 // ENVOI PAR E-MAIL (mailto)
 // ============================================
@@ -777,37 +912,48 @@ function sendByEmail() {
     const progress = getProgress();
     const dateStr = new Date().toLocaleDateString('fr-FR');
 
-    let body = 'Bonjour,\n\nVoici mes résultats sur Compta Game (HIIATO) du ' + dateStr + ' :\n\n';
-    body += '=== SCORES ===\n';
+    let body = 'Bonjour,\n\n';
+    body += '=== INFORMATIONS DU JOUEUR ===\n';
+    body += 'Nom & Prénom : ' + playerInfo.firstName + ' ' + playerInfo.lastName + '\n';
+    if (playerInfo.org)   body += 'Établissement : ' + playerInfo.org + '\n';
+    if (playerInfo.level) body += 'Niveau : ' + playerInfo.level + '\n';
+    body += '\n';
+
+    body += '=== SCORES — Compta Game (HIIATO) du ' + dateStr + ' ===\n';
+    const chapterNames = ['Fondamentaux', 'La grande structure', 'Les détails', 'Les ajustements'];
     for (let i = 1; i <= 4; i++) {
         const done = progress[`chapter${i}`] ? '✓' : '○';
-        body += done + ' Chapitre ' + i + ' : ' + (bestScores[`chapter${i}`] || 0) + ' points\n';
+        body += done + ' Chapitre ' + i + ' (' + chapterNames[i-1] + ') : ' + (bestScores[`chapter${i}`] || 0) + ' points\n';
     }
     body += '\nSCORE TOTAL : ' + bestScores.total + ' points\n\n';
 
-    // Détail session
+    // Détail session par chapitre
     let hasDetails = false;
+    const chTitles = ['', 'Ch.1 — Fondamentaux', 'Ch.2 — La grande structure', 'Ch.3 — Les détails', 'Ch.4 — Les ajustements'];
     for (let chId = 1; chId <= 4; chId++) {
         const answers = sessionAnswers[chId];
         if (!answers || answers.length === 0) continue;
-        if (!hasDetails) { body += '=== DÉTAIL DES RÉPONSES (session) ===\n\n'; hasDetails = true; }
+        if (!hasDetails) { body += '=== DÉTAIL DES RÉPONSES (session en cours) ===\n\n'; hasDetails = true; }
         const correct = answers.filter(a => a.isCorrect).length;
-        body += '--- Chapitre ' + chId + ' (' + correct + '/' + answers.length + ') ---\n';
+        body += chTitles[chId] + ' — ' + correct + '/' + answers.length + ' correct(s)\n';
+        body += '─'.repeat(40) + '\n';
         answers.forEach((a, i) => {
-            body += (a.isCorrect ? '✓' : '✗') + ' Q' + (i+1) + ': ' + a.questionText + '\n';
-            if (!a.isCorrect) body += '  → Votre réponse : ' + stripHTML(a.userAnswer) + '\n  → Bonne réponse : ' + stripHTML(a.correctAnswer) + '\n';
+            body += (a.isCorrect ? '✓' : '✗') + ' Q' + (i+1) + ' : ' + a.questionText + '\n';
+            if (!a.isCorrect) {
+                body += '   Votre réponse  : ' + stripHTML(a.userAnswer) + '\n';
+                body += '   Bonne réponse  : ' + stripHTML(a.correctAnswer) + '\n';
+            }
+            body += '\n';
         });
-        body += '\n';
     }
 
-    body += '\nBonne journée !';
+    if (!hasDetails) body += '(Aucune réponse enregistrée cette session — jouez un chapitre d\'abord)\n\n';
+    body += 'Bonne journée !';
 
-    const subject = encodeURIComponent('[Compta Game] Mes résultats - ' + dateStr);
+    const subject = encodeURIComponent('[Compta Game] Résultats de ' + playerInfo.firstName + ' ' + playerInfo.lastName + ' — ' + dateStr);
     const encodedBody = encodeURIComponent(body);
     window.location.href = 'mailto:?subject=' + subject + '&body=' + encodedBody;
 }
-
-function getCh4QuestionsForReport() { return ch4Questions; }
 
 // ============================================
 // LOCALSTORAGE
@@ -869,6 +1015,12 @@ function showScreen(id) { hideAllScreens(); document.getElementById(id).classLis
 function showHome() {
     showScreen('homeScreen');
     updateHeader('main');
+    // Afficher le nom du joueur dans la bannière
+    const banner = document.querySelector('#homeScreen .info-banner');
+    if (banner) {
+        const name = getPlayerDisplayName();
+        banner.innerHTML = `🔓 Tous les chapitres sont accessibles librement !<br><span style="font-weight:400;font-size:12px;">Connecté(e) en tant que <strong>${name}</strong></span>`;
+    }
     updateHomeUI();
 }
 function showScores() { showScreen('scoresScreen'); updateHeader('main'); renderScores(); }
@@ -1393,20 +1545,17 @@ function handleCh2MouseUp(e) {
 
 function validateCh2Placement(dropZone, expectedZone, actualZone, term) {
     const isCorrect = expectedZone === actualZone;
-    dropZone.classList.add('filled', ...(isCorrect ? [] : ['error']));
+    dropZone.classList.add('filled');
+    if (!isCorrect) dropZone.classList.add('error');
     dropZone.innerHTML = `<div class="dropped-term${isCorrect ? '' : ' error'}">${term}</div>`;
     ch2FilledZones.add(actualZone);
     if (isCorrect) { ch2CorrectPlacements++; ch2Score += 100; }
     else { setTimeout(() => { dropZone.classList.remove('error'); const dt = dropZone.querySelector('.dropped-term'); if (dt) dt.classList.remove('error'); }, 500); }
 
-    // Trouver la bonne zone hint pour "bonne réponse"
-    const phase = ch2GamePhases[ch2CurrentPhase];
-    const correctTermObj = phase.terms.find(t => t.zone === expectedZone);
+    // Enregistrer la réponse pour le rapport
     const dropZoneEl = document.querySelector(`.ch2-drop-zone[data-zone="${expectedZone}"]`);
-    const hint = dropZoneEl?.querySelector('.ch2-drop-zone-hint')?.textContent || expectedZone;
-    recordAnswer(2, `Placer "${term}" (indice: ${hint})`, `Zone: ${expectedZone}`, `Zone: ${actualZone}`, isCorrect);
-
-    if (!isCorrect) setTimeout(() => { dropZone.classList.remove('error'); }, 500);
+    const hint = dropZoneEl ? (dropZoneEl.querySelector('.ch2-drop-zone-hint') ? dropZoneEl.querySelector('.ch2-drop-zone-hint').textContent : expectedZone) : expectedZone;
+    recordAnswer(2, 'Placer "' + term + '" (indice: ' + hint + ')', 'Zone correcte : ' + expectedZone, 'Zone choisie : ' + actualZone, isCorrect);
     const cardIndex = parseInt(ch2DraggedElement.dataset.index);
     ch2RemainingTerms.splice(cardIndex, 1);
     ch2DraggedElement.classList.add('used');
@@ -1671,7 +1820,8 @@ function handleCh3MouseUp(e) {
 
 function validateCh3Placement(dropZone, expectedZone, actualZone, term) {
     const isCorrect = expectedZone === actualZone;
-    dropZone.classList.add('filled', ...(isCorrect ? [] : ['error']));
+    dropZone.classList.add('filled');
+    if (!isCorrect) dropZone.classList.add('error');
     dropZone.innerHTML = `<div class="dropped-term${isCorrect ? '' : ' error'}">${term}</div>`;
     if (isCorrect) { ch3CorrectPlacements++; ch3Score += 100; }
     else { setTimeout(() => { dropZone.classList.remove('error'); const dt = dropZone.querySelector('.dropped-term'); if (dt) dt.classList.remove('error'); }, 500); }
@@ -1905,7 +2055,10 @@ function renderFinalScores() {
 // ============================================
 // INIT
 // ============================================
-document.addEventListener('DOMContentLoaded', function() { updateHomeUI(); });
+document.addEventListener('DOMContentLoaded', function() {
+    // Démarrer sur le formulaire joueur
+    showScreen('playerFormScreen');
+});
 </script>
 </body>
 </html>
