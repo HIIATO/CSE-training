@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quiz CSE - Les ressources (moins de 50 salariés)</title>
+    <style>
+        /* --- DESIGN SYSTEM --- */
+        :root {
+            --primary-dark: #0d47a1;
+            --primary: #1976d2;
+            --primary-light: #bbdefb;
+            --accent: #00e5ff;
+            --white: #ffffff;
+            --bg: #f0f4f8;
+            --text: #263238;
+            --success: #4caf50;
+            --success-bg: #e8f5e9;
+            --danger: #f44336;
+            --danger-bg: #ffebee;
+            --warning: #ff9800;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+            color: var(--text);
+        }
+
+        /* --- MODE JEU : layout full-screen --- */
+        body.game-active {
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg);
+        }
+
+        /* --- PAGE MENU --- */
+        .menu-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            overflow-y: auto;
+        }
+
+        body.game-active .menu-container {
+            display: none;
+        }
+
+        .menu-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .game-title {
+            text-align: center;
+            color: var(--primary-dark);
+            font-size: 1.8rem;
+            margin: 0 0 8px;
+            font-weight: 800;
+        }
+
+        .game-subtitle {
+            text-align: center;
+            color: var(--primary);
+            font-size: 0.95rem;
+            margin: 0 0 25px;
+            opacity: 0.8;
+        }
+
+        .rules-section {
+            background: var(--bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .rules-title {
+            color: var(--primary-dark);
+            font-size: 1.1rem;
+            margin: 0 0 12px;
+            font-weight: 600;
+        }
+
+        .rule-item {
+            margin-bottom: 12px;
+            padding-left: 22px;
+            position: relative;
+            line-height: 1.5;
+            font-size: 0.9rem;
+        }
+
+        .rule-item::before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .themes-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .theme-chip {
+            background: var(--white);
+            border: 2px solid var(--primary-light);
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            border: none;
+            padding: 16px 36px;
+            border-radius: 30px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
+        }
+
+        .btn-start:active {
+            transform: translateY(0);
+        }
+
+        /* --- HEADER JEU (Score + Progression) --- */
+        .app-header {
+            background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
+            color: var(--white);
+            padding: 8px 16px 10px;
+            border-bottom-left-radius: 14px;
+            border-bottom-right-radius: 14px;
+            box-shadow: 0 4px 10px rgba(13, 71, 161, 0.3);
+            z-index: 10;
+            display: none;
+            flex-shrink: 0;
+        }
+
+        body.game-active .app-header {
+            display: block;
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 6px;
+            gap: 8px;
+        }
+
+        .stat-item {
+            text-align: center;
+            font-size: 0.8rem;
+            opacity: 0.9;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 800;
+            display: block;
+        }
+
+        .progress-track {
+            background-color: rgba(255,255,255,0.2);
+            height: 5px;
+            border-radius: 3px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background-color: var(--accent);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* --- ZONE DE JEU SCROLLABLE --- */
+        .game-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            display: none;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        body.game-active .game-scroll-area {
+            display: flex;
+        }
+
+        .game-inner {
+            padding: 12px 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .step-badge {
+            align-self: center;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+        }
+
+        .card-dialogue {
+            background-color: var(--white);
+            border-radius: 12px;
+            padding: 12px 14px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--primary);
+            flex-shrink: 0;
+        }
+
+        .speaker {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 4px;
+            font-size: 0.8rem;
+        }
+
+        .message {
+            line-height: 1.45;
+            font-size: 0.95rem;
+        }
+
+        /* Feedback */
+        .feedback-card {
+            background-color: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 0.82rem;
+            display: none;
+            animation: slideUp 0.3s ease;
+            flex-shrink: 0;
+            line-height: 1.4;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(15px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Boutons de choix */
+        .buttons-area {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding-top: 4px;
+        }
+
+        .btn {
+            background-color: var(--white);
+            color: var(--primary);
+            border: 2px solid var(--primary-light);
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 0.84rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            position: relative;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            line-height: 1.3;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-light);
+            transform: translateX(4px);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+            background-color: var(--primary-light);
+        }
+
+        .btn.correct {
+            background-color: var(--success);
+            color: var(--white);
+            border-color: var(--success);
+            transform: none;
+        }
+
+        .btn.wrong {
+            background-color: var(--danger);
+            color: var(--white);
+            border-color: var(--danger);
+            transform: none;
+        }
+
+        .btn.disabled {
+            pointer-events: none;
+            opacity: 0.65;
+        }
+
+        .btn-next {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            text-align: center;
+            justify-content: center;
+            margin-top: 4px;
+        }
+
+        /* --- ÉCRAN DE FIN --- */
+        .end-screen {
+            text-align: center;
+            padding: 15px 5px;
+        }
+
+        .final-score-value {
+            font-size: 2.4rem;
+            font-weight: bold;
+            margin: 8px 0;
+        }
+
+        .final-message {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            padding: 15px;
+            background: var(--primary-light);
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 400px) {
+            .menu-card { padding: 25px 18px; }
+            .game-title { font-size: 1.5rem; }
+            .rule-item { font-size: 0.85rem; }
+            .btn-start { padding: 14px 28px; font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PAGE MENU -->
+    <div class="menu-container" id="menu-page">
+        <div class="menu-card">
+            <h1 class="game-title">📚 Quiz CSE</h1>
+            <p class="game-subtitle">Les ressources et moyens du CSE — entreprises de moins de 50 salariés</p>
+
+            <div class="rules-section">
+                <h2 class="rules-title">📖 Comment jouer ?</h2>
+
+                <div class="rule-item">
+                    <strong>Le principe :</strong> Pour chaque question, choisissez la bonne réponse. Une explication s'affiche aussitôt pour apprendre au fil du jeu.
+                </div>
+
+                <div class="rule-item">
+                    <strong>Votre score :</strong> +1 point par bonne réponse. Votre progression et votre score sont affichés en haut de l'écran.
+                </div>
+
+                <div class="rule-item">
+                    <strong>Les thèmes abordés :</strong>
+                    <div class="themes-list">
+                        <span class="theme-chip">🏠 Le local</span>
+                        <span class="theme-chip">🎓 Les formations</span>
+                        <span class="theme-chip">📌 L'affichage</span>
+                        <span class="theme-chip">🕑 Les permanences</span>
+                        <span class="theme-chip">📨 La communication</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-start" onclick="startGame()">Commencer le quiz</button>
+        </div>
+    </div>
+
+    <!-- HEADER DU JEU -->
+    <div class="app-header" id="game-header">
+        <div class="stats-container">
+            <div class="stat-item">
+                <span class="stat-value" id="score-value">0</span>
+                Score
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="progress-value">1 / 27</span>
+                Question
+            </div>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progress-bar"></div>
+        </div>
+    </div>
+
+    <!-- ZONE DE JEU -->
+    <div class="game-scroll-area" id="game-scroll">
+        <div class="game-inner" id="game-inner">
+            <div class="step-badge" id="theme-badge">Thème</div>
+
+            <div class="card-dialogue">
+                <div class="speaker" id="question-number">Question</div>
+                <div class="message" id="question-text">Chargement...</div>
+            </div>
+
+            <div class="feedback-card" id="feedback-box"></div>
+
+            <div class="buttons-area" id="buttons-area"></div>
+        </div>
+    </div>
+
+<script>
+    // --- DONNÉES DU QUIZ (CSE entreprises de MOINS DE 50 salariés) ---
+    // Contenu vérifié au regard du Code du travail (art. L2315-15, L2315-18, L2315-20,
+    // L2315-21, L2315-22, L2315-63) et de la jurisprudence applicable.
+    const quizData = [
+        // ============ THÈME 1 : LE LOCAL ============
+        {
+            theme: "🏠 Le local",
+            question: "L'employeur est-il tenu de mettre un local à la disposition du CSE dans une entreprise de moins de 50 salariés ?",
+            options: [
+                { text: "Oui : il met à disposition le local nécessaire à l'accomplissement des missions, mais la loi n'impose pas son aménagement détaillé.", correct: true },
+                { text: "Non, aucune obligation de local dans les entreprises de moins de 50 salariés.", correct: false },
+                { text: "Oui, mais uniquement si un accord d'entreprise le prévoit.", correct: false }
+            ],
+            explanation: "L'article L2315-20 prévoit que l'employeur met à disposition le local nécessaire pour permettre aux élus d'accomplir leur mission, notamment de se réunir. L'aménagement détaillé n'est pas imposé par la loi pour les moins de 50 salariés."
+        },
+        {
+            theme: "🏠 Le local",
+            question: "À quoi sert le local mis à la disposition du CSE ?",
+            options: [
+                { text: "À l'accomplissement des missions du CSE, notamment pour se réunir.", correct: true },
+                { text: "Uniquement aux réunions mensuelles avec l'employeur.", correct: false },
+                { text: "À l'organisation d'activités sociales et culturelles financées par l'employeur.", correct: false }
+            ],
+            explanation: "Le local sert à l'exercice des missions du CSE. Dans les entreprises de moins de 50 salariés, le CSE n'a pas de budget pour des activités sociales et culturelles : sa mission principale est de présenter les réclamations des salariés."
+        },
+        {
+            theme: "🏠 Le local",
+            question: "La loi fixe-t-elle une surface ou un aménagement précis pour le local ?",
+            options: [
+                { text: "Oui, une surface minimale est fixée selon l'effectif.", correct: false },
+                { text: "Non, mais le local doit permettre au CSE de fonctionner normalement.", correct: true },
+                { text: "Oui, l'aménagement est détaillé par décret.", correct: false }
+            ],
+            explanation: "Aucune surface minimale n'est fixée par la loi. En cas de litige, le juge vérifie simplement que le local permet, par ses dimensions, un fonctionnement normal du CSE (réunions, accueil)."
+        },
+        {
+            theme: "🏠 Le local",
+            question: "L'employeur peut-il changer le local affecté au CSE ?",
+            options: [
+                { text: "Oui, à condition que le nouveau local permette au CSE de fonctionner normalement.", correct: true },
+                { text: "Non, jamais sans l'accord écrit préalable du CSE.", correct: false },
+                { text: "Oui, sans aucune condition.", correct: false }
+            ],
+            explanation: "La jurisprudence admet que le changement de local n'est pas subordonné à l'accord des élus, dès lors que le nouveau local permet au CSE de fonctionner normalement."
+        },
+        {
+            theme: "🏠 Le local",
+            question: "L'employeur peut-il encadrer l'accès au local (badge, procédure) ?",
+            options: [
+                { text: "Oui, s'il le justifie, sans porter atteinte à la liberté de circulation ni au libre accès des élus.", correct: true },
+                { text: "Non, l'accès est totalement libre et sans aucune règle possible.", correct: false },
+                { text: "Oui, et il peut même en interdire purement et simplement l'accès quand il le souhaite.", correct: false }
+            ],
+            explanation: "L'employeur peut prévoir des modalités d'accès justifiées, mais sans porter atteinte à la liberté de circulation des élus ni conditionner le libre accès au local à une autorisation préalable."
+        },
+        {
+            theme: "🏠 Le local",
+            question: "L'accès des élus au local peut-il être limité aux heures d'ouverture de l'entreprise ?",
+            options: [
+                { text: "Oui, la jurisprudence l'admet, sauf accord plus favorable.", correct: true },
+                { text: "Non, les élus y ont accès 24h/24 de plein droit.", correct: false },
+                { text: "Oui, mais seulement avec l'autorisation de l'inspection du travail.", correct: false }
+            ],
+            explanation: "La jurisprudence admet que l'accès au local soit limité aux heures et périodes d'ouverture de l'entreprise, sauf accord particulier prévoyant un accès plus large."
+        },
+
+        // ============ THÈME 2 : LES FORMATIONS ============
+        {
+            theme: "🎓 Les formations",
+            question: "Les membres du CSE de moins de 50 salariés ont-ils droit à la formation santé, sécurité et conditions de travail (SSCT) ?",
+            options: [
+                { text: "Oui, c'est une obligation légale, sans condition d'effectif.", correct: true },
+                { text: "Non, uniquement dans les entreprises d'au moins 50 salariés.", correct: false },
+                { text: "Oui, mais à la seule discrétion de l'employeur.", correct: false }
+            ],
+            explanation: "L'article L2315-18 ouvre la formation SSCT à tous les membres de la délégation du personnel du CSE, sans condition d'effectif."
+        },
+        {
+            theme: "🎓 Les formations",
+            question: "La formation économique est-elle ouverte aux membres du CSE de moins de 50 salariés ?",
+            options: [
+                { text: "Oui, comme dans toutes les entreprises.", correct: false },
+                { text: "Non, elle est réservée aux CSE des entreprises d'au moins 50 salariés.", correct: true },
+                { text: "Oui, mais sans financement possible.", correct: false }
+            ],
+            explanation: "La formation économique (art. L2315-63) ne concerne que les CSE des entreprises d'au moins 50 salariés. Pour les moins de 50, c'est la formation SSCT qui s'applique."
+        },
+        {
+            theme: "🎓 Les formations",
+            question: "Quelle est la durée minimale de la formation SSCT lors d'un premier mandat ?",
+            options: [
+                { text: "3 jours.", correct: false },
+                { text: "5 jours.", correct: true },
+                { text: "Aucune durée n'est prévue par la loi.", correct: false }
+            ],
+            explanation: "Depuis la loi du 2 août 2021, la formation SSCT est d'au moins 5 jours lors d'un premier mandat (pour tous les CSE), et d'au moins 3 jours en cas de renouvellement de mandat."
+        },
+        {
+            theme: "🎓 Les formations",
+            question: "Qui prend en charge le coût de la formation SSCT des membres du CSE de moins de 50 salariés ?",
+            options: [
+                { text: "L'employeur.", correct: true },
+                { text: "Les membres du CSE eux-mêmes.", correct: false },
+                { text: "Personne, la formation est gratuite.", correct: false }
+            ],
+            explanation: "Le financement de la formation SSCT incombe à l'employeur, dans les conditions prévues par le Code du travail (la prise en charge peut, en pratique, être facilitée par l'OPCO)."
+        },
+        {
+            theme: "🎓 Les formations",
+            question: "Le temps passé en formation SSCT est-il rémunéré ?",
+            options: [
+                { text: "Oui : c'est du temps de travail effectif, rémunéré, non déduit des heures de délégation.", correct: true },
+                { text: "Non, il s'agit de bénévolat.", correct: false },
+                { text: "Oui, mais il est déduit du crédit d'heures de délégation.", correct: false }
+            ],
+            explanation: "Le temps consacré à la formation SSCT est pris sur le temps de travail, rémunéré comme tel, et n'est pas déduit du crédit d'heures de délégation."
+        },
+        {
+            theme: "🎓 Les formations",
+            question: "Qui choisit l'organisme de formation SSCT ?",
+            options: [
+                { text: "L'employeur seul, puisqu'il finance.", correct: false },
+                { text: "Les bénéficiaires de la formation.", correct: true },
+                { text: "L'inspection du travail.", correct: false }
+            ],
+            explanation: "Le choix de l'organisme appartient aux bénéficiaires de la formation. L'obligation d'agrément des organismes a par ailleurs été supprimée."
+        },
+        {
+            theme: "🎓 Les formations",
+            question: "L'employeur a-t-il un droit de regard sur le programme de la formation ?",
+            options: [
+                { text: "Oui, il peut demander la modification du programme.", correct: false },
+                { text: "Non, il peut seulement en être informé.", correct: true },
+                { text: "Oui, il peut convoquer le formateur.", correct: false }
+            ],
+            explanation: "L'employeur ne peut pas modifier le contenu de la formation. Il en est seulement informé : le programme relève de l'organisme et des bénéficiaires."
+        },
+
+        // ============ THÈME 3 : L'AFFICHAGE ============
+        {
+            theme: "📌 L'affichage",
+            question: "Où le CSE peut-il afficher ses communications à destination des salariés ?",
+            options: [
+                { text: "Sur les emplacements prévus à cet effet, accessibles aux salariés (notamment aux portes d'entrée des lieux de travail).", correct: true },
+                { text: "Uniquement dans le bureau de la direction.", correct: false },
+                { text: "Uniquement à l'extérieur de l'entreprise.", correct: false }
+            ],
+            explanation: "L'article L2315-15 permet aux élus d'afficher les renseignements qu'ils ont pour rôle de porter à la connaissance du personnel, sur les emplacements prévus et aux portes d'entrée des lieux de travail."
+        },
+        {
+            theme: "📌 L'affichage",
+            question: "Que peut contenir l'affichage du CSE de moins de 50 salariés ?",
+            options: [
+                { text: "Les renseignements que les élus ont pour rôle de porter à la connaissance du personnel (réclamations, santé-sécurité…).", correct: true },
+                { text: "De la publicité commerciale.", correct: false },
+                { text: "Tout sujet, sans aucune limite.", correct: false }
+            ],
+            explanation: "L'affichage doit rester dans le périmètre des missions du CSE : informations liées aux réclamations, à la santé-sécurité et aux conditions de travail."
+        },
+        {
+            theme: "📌 L'affichage",
+            question: "Le CSE peut-il afficher des communications de nature syndicale ?",
+            options: [
+                { text: "Oui, librement.", correct: false },
+                { text: "Non : le CSE n'est pas un syndicat ; l'affichage syndical relève des sections syndicales.", correct: true },
+                { text: "Oui, sur le panneau de la direction.", correct: false }
+            ],
+            explanation: "Le CSE et les organisations syndicales sont des instances distinctes. L'affichage syndical relève des sections syndicales (art. L2142-3 et suivants), pas des panneaux du CSE."
+        },
+        {
+            theme: "📌 L'affichage",
+            question: "Qui peut consulter le tableau d'affichage du CSE ?",
+            options: [
+                { text: "Uniquement les membres du CSE.", correct: false },
+                { text: "L'ensemble des salariés.", correct: true },
+                { text: "Seulement les salariés syndiqués.", correct: false }
+            ],
+            explanation: "L'affichage du CSE a vocation à informer l'ensemble du personnel : tous les salariés peuvent en prendre connaissance."
+        },
+        {
+            theme: "📌 L'affichage",
+            question: "La loi fixe-t-elle la taille ou l'emplacement précis des panneaux d'affichage ?",
+            options: [
+                { text: "Oui, selon l'effectif de l'entreprise.", correct: false },
+                { text: "Non, mais l'affichage doit permettre une bonne communication avec le personnel.", correct: true },
+                { text: "Oui, c'est fixé précisément par décret.", correct: false }
+            ],
+            explanation: "Aucune disposition ne fixe la dimension ou l'emplacement exact des panneaux. L'essentiel est qu'ils permettent une communication effective avec les salariés."
+        },
+
+        // ============ THÈME 4 : LES PERMANENCES ============
+        {
+            theme: "🕑 Les permanences",
+            question: "Le CSE de moins de 50 salariés est-il obligé d'organiser des permanences ?",
+            options: [
+                { text: "Oui, au moins une permanence par semaine.", correct: false },
+                { text: "Non, ce n'est pas une obligation légale.", correct: true },
+                { text: "Oui, mais uniquement sur demande des salariés.", correct: false }
+            ],
+            explanation: "Aucun texte n'impose au CSE d'organiser des permanences. C'est une pratique utile, mais facultative (à ne pas confondre avec la réunion mensuelle avec l'employeur, qui, elle, est obligatoire)."
+        },
+        {
+            theme: "🕑 Les permanences",
+            question: "Existe-t-il une fréquence minimale de permanence imposée par la loi ?",
+            options: [
+                { text: "Une fois par semaine.", correct: false },
+                { text: "Une fois par mois.", correct: false },
+                { text: "Aucune fréquence minimale n'est imposée.", correct: true }
+            ],
+            explanation: "La loi ne fixe aucune fréquence de permanence : le CSE s'organise librement selon ses besoins et ses moyens."
+        },
+        {
+            theme: "🕑 Les permanences",
+            question: "Où peuvent se tenir les permanences du CSE ?",
+            options: [
+                { text: "Dans le local du CSE ou un autre espace adapté.", correct: true },
+                { text: "Uniquement à l'extérieur de l'entreprise.", correct: false },
+                { text: "Au domicile des élus.", correct: false }
+            ],
+            explanation: "Les permanences se tiennent naturellement dans le local du CSE ou tout autre espace permettant d'accueillir les salariés dans de bonnes conditions."
+        },
+        {
+            theme: "🕑 Les permanences",
+            question: "Le temps passé en permanence par un élu relève de quoi ?",
+            options: [
+                { text: "Des heures de délégation.", correct: true },
+                { text: "Du bénévolat non rémunéré.", correct: false },
+                { text: "D'heures supplémentaires systématiques.", correct: false }
+            ],
+            explanation: "Tenir une permanence s'impute sur le crédit d'heures de délégation de l'élu (10 heures par mois et par titulaire dans les entreprises de moins de 50 salariés)."
+        },
+        {
+            theme: "🕑 Les permanences",
+            question: "Un salarié peut-il se rendre à une permanence pendant son temps de travail ?",
+            options: [
+                { text: "Oui, librement et sans aucune condition.", correct: false },
+                { text: "Pas de droit automatique : cela suppose l'accord de l'employeur ou un usage/accord d'entreprise.", correct: true },
+                { text: "Non, jamais.", correct: false }
+            ],
+            explanation: "Il n'existe pas de droit automatique pour le salarié de quitter son poste pour aller voir le CSE. En pratique, c'est organisé par accord ou usage, sans désorganiser le travail."
+        },
+
+        // ============ THÈME 5 : LES MOYENS DE COMMUNICATION ============
+        {
+            theme: "📨 La communication",
+            question: "Quels sont les moyens de communication courants du CSE pour informer les salariés ?",
+            options: [
+                { text: "L'affichage, les messages internes et les réunions d'information.", correct: true },
+                { text: "La publicité télévisée.", correct: false },
+                { text: "Le courrier recommandé individuel obligatoire.", correct: false }
+            ],
+            explanation: "Le CSE informe les salariés par des moyens de proximité : affichage sur les panneaux, messages internes et réunions ou échanges d'information."
+        },
+        {
+            theme: "📨 La communication",
+            question: "Le CSE peut-il utiliser la messagerie ou l'intranet de l'entreprise pour communiquer ?",
+            options: [
+                { text: "Oui, librement et sans aucune autorisation.", correct: false },
+                { text: "Avec l'accord de l'employeur : le CSE n'a pas de droit automatique à ces outils.", correct: true },
+                { text: "Non, c'est strictement interdit.", correct: false }
+            ],
+            explanation: "Contrairement à une idée répandue, le CSE n'a pas de droit légal automatique à l'intranet ou à la messagerie de l'entreprise : leur usage suppose l'accord de l'employeur (ou un accord/usage plus favorable)."
+        },
+        {
+            theme: "📨 La communication",
+            question: "Le CSE peut-il communiquer sur les réseaux sociaux ?",
+            options: [
+                { text: "Oui, dans le respect de la confidentialité et sans dénigrement.", correct: true },
+                { text: "Non, c'est totalement interdit.", correct: false },
+                { text: "Oui, sans aucune limite.", correct: false }
+            ],
+            explanation: "Aucune interdiction de principe : le CSE peut communiquer en externe, mais reste tenu à la discrétion sur les informations confidentielles, au respect de la vie privée et à l'absence de dénigrement."
+        },
+        {
+            theme: "📨 La communication",
+            question: "Un élu du CSE, par ailleurs syndiqué, peut-il utiliser les moyens du CSE pour des communications syndicales ?",
+            options: [
+                { text: "Non : CSE et organisations syndicales sont des instances distinctes, aux moyens distincts.", correct: true },
+                { text: "Oui, librement.", correct: false },
+                { text: "Oui, dès lors que le local est disponible.", correct: false }
+            ],
+            explanation: "Les moyens du CSE (panneaux, local, budget) et ceux des organisations syndicales sont régis par des textes différents. Les moyens du CSE ne peuvent pas servir à une communication syndicale."
+        }
+    ];
+
+    // --- VARIABLES GLOBALES ---
+    let currentIndex = 0;
+    let score = 0;
+    let hasAnswered = false;
+    let currentOptions = [];          // options de la question en cours, dans l'ordre affiché
+    let correctPositions = [];        // position cible de la bonne réponse pour chaque question
+    const total = quizData.length;
+
+    // Mélange aléatoire (Fisher-Yates)
+    function shuffleArray(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    // Positions cibles ÉQUILIBRÉES de la bonne réponse sur tout le quiz :
+    // chaque position (0..k-1) reçoit le même nombre de bonnes réponses, puis on
+    // mélange l'ordre des questions. On évite ainsi les grappes du hasard pur.
+    function buildBalancedPositions(n, k) {
+        const arr = [];
+        for (let i = 0; i < n; i++) arr.push(i % k);
+        return shuffleArray(arr);
+    }
+
+    // Réordonne les options : la bonne réponse à la position cible,
+    // les distracteurs (mélangés) sur les autres positions.
+    function orderOptions(options, targetPos) {
+        const correct = options.filter(o => o.correct);
+        if (correct.length !== 1) return shuffleArray(options); // repli de sécurité
+        const others = shuffleArray(options.filter(o => !o.correct));
+        const pos = ((targetPos % options.length) + options.length) % options.length;
+        const result = [];
+        let oi = 0;
+        for (let i = 0; i < options.length; i++) {
+            result.push(i === pos ? correct[0] : others[oi++]);
+        }
+        return result;
+    }
+
+    // --- FONCTIONS ---
+    function startGame() {
+        correctPositions = buildBalancedPositions(total, 3); // 3 options par question
+        document.body.classList.add('game-active');
+        loadQuestion(0);
+    }
+
+    function scrollToTop() {
+        const scrollArea = document.getElementById('game-scroll');
+        if (scrollArea) scrollArea.scrollTop = 0;
+    }
+
+    function loadQuestion(index) {
+        hasAnswered = false;
+
+        const progressPercent = (index / total) * 100;
+        document.getElementById('progress-bar').style.width = progressPercent + '%';
+        document.getElementById('progress-value').innerText = (index + 1) + ' / ' + total;
+        document.getElementById('score-value').innerText = score;
+
+        if (index >= total) {
+            showEndScreen();
+            return;
+        }
+
+        const q = quizData[index];
+
+        document.getElementById('theme-badge').innerText = q.theme;
+        document.getElementById('question-number').innerText = 'Question ' + (index + 1);
+        document.getElementById('question-text').innerText = q.question;
+
+        const feedbackBox = document.getElementById('feedback-box');
+        feedbackBox.style.display = 'none';
+        feedbackBox.innerHTML = '';
+
+        const btnsArea = document.getElementById('buttons-area');
+        btnsArea.innerHTML = '';
+
+        currentOptions = orderOptions(q.options, correctPositions[index]);
+        currentOptions.forEach((option) => {
+            const btn = document.createElement('div');
+            btn.className = 'btn';
+            btn.innerText = option.text;
+            btn.onclick = () => {
+                if (!hasAnswered) {
+                    handleAnswer(option, btn, q);
+                }
+            };
+            btnsArea.appendChild(btn);
+        });
+
+        scrollToTop();
+    }
+
+    function handleAnswer(option, clickedBtn, q) {
+        hasAnswered = true;
+
+        const btnsArea = document.getElementById('buttons-area');
+        const allBtns = Array.from(btnsArea.children);
+
+        // Révéler la bonne réponse et marquer le choix (selon l'ordre affiché)
+        allBtns.forEach((btn, i) => {
+            btn.classList.add('disabled');
+            if (currentOptions[i].correct) {
+                btn.classList.add('correct');
+            }
+        });
+        if (!option.correct) {
+            clickedBtn.classList.add('wrong');
+        }
+
+        if (option.correct) {
+            score++;
+            document.getElementById('score-value').innerText = score;
+        }
+
+        // Feedback pédagogique
+        const feedbackBox = document.getElementById('feedback-box');
+        const intro = option.correct ? "✅ Bonne réponse ! " : "❌ Réponse incorrecte. ";
+        feedbackBox.innerHTML = "<strong>" + intro + "</strong>" + q.explanation;
+        feedbackBox.style.display = 'block';
+        if (option.correct) {
+            feedbackBox.style.borderColor = 'var(--success)';
+            feedbackBox.style.backgroundColor = 'var(--success-bg)';
+        } else {
+            feedbackBox.style.borderColor = 'var(--danger)';
+            feedbackBox.style.backgroundColor = 'var(--danger-bg)';
+        }
+
+        // Bouton suivant
+        const nextBtn = document.createElement('div');
+        nextBtn.className = 'btn btn-next';
+        nextBtn.innerText = (currentIndex + 1 < total) ? '→ Question suivante' : '🏁 Voir mon résultat';
+        nextBtn.onclick = () => {
+            currentIndex++;
+            loadQuestion(currentIndex);
+        };
+        btnsArea.appendChild(nextBtn);
+
+        setTimeout(() => {
+            feedbackBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+    }
+
+    function showEndScreen() {
+        document.getElementById('progress-bar').style.width = '100%';
+        document.getElementById('progress-value').innerText = total + ' / ' + total;
+
+        const ratio = score / total;
+        let gradeLabel, gradeColor, message;
+
+        if (ratio >= 0.9) {
+            gradeLabel = "Expert des ressources du CSE 🏆";
+            gradeColor = "#4caf50";
+            message = "Bravo ! Vous maîtrisez les moyens et ressources du CSE de moins de 50 salariés. Vos collègues élus peuvent compter sur vous.";
+        } else if (ratio >= 0.7) {
+            gradeLabel = "Bon niveau 👍";
+            gradeColor = "#8bc34a";
+            message = "Solide ! Vous connaissez l'essentiel. Quelques points de détail à revoir et ce sera parfait.";
+        } else if (ratio >= 0.5) {
+            gradeLabel = "À consolider 📚";
+            gradeColor = "#ff9800";
+            message = "Des bases présentes, mais plusieurs règles méritent d'être révisées (local, formation, registre des moyens du CSE).";
+        } else {
+            gradeLabel = "À approfondir 🎓";
+            gradeColor = "#f44336";
+            message = "Pas de panique : ces notions s'acquièrent vite avec un peu de formation. Recommencez le quiz pour progresser !";
+        }
+
+        document.getElementById('theme-badge').style.display = 'none';
+        document.getElementById('question-number').innerText = "🏁 Quiz terminé";
+
+        document.getElementById('question-text').innerHTML = `
+            <div class="end-screen">
+                <div style="background: ${gradeColor}15; border: 2px solid ${gradeColor}; border-radius: 12px; padding: 18px; margin-bottom: 15px;">
+                    <div style="font-size: 0.85rem; color: #666;">VOTRE SCORE</div>
+                    <div class="final-score-value" style="color: ${gradeColor};">${score} / ${total}</div>
+                    <div style="font-size: 1.15rem; font-weight: 700; color: ${gradeColor};">${gradeLabel}</div>
+                </div>
+                <div class="final-message">${message}</div>
+            </div>
+        `;
+
+        document.getElementById('feedback-box').style.display = 'none';
+        document.getElementById('buttons-area').innerHTML = `
+            <div class="btn btn-next" onclick="location.reload()">
+                🔄 Recommencer le quiz
+            </div>
+        `;
+
+        scrollToTop();
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CSE Training - Simulateur de Réunions (moins de 50 salariés)</title>
+    <style>
+        /* --- DESIGN SYSTEM --- */
+        :root {
+            --primary-dark: #0d47a1;
+            --primary: #1976d2;
+            --primary-light: #bbdefb;
+            --accent: #00e5ff;
+            --white: #ffffff;
+            --bg: #f0f4f8;
+            --text: #263238;
+            --success: #4caf50;
+            --danger: #f44336;
+            --warning: #ff9800;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+            color: var(--text);
+        }
+
+        /* --- MODE JEU : layout full-screen --- */
+        body.game-active {
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg);
+        }
+
+        /* --- PAGE MENU --- */
+        .menu-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            overflow-y: auto;
+        }
+
+        body.game-active .menu-container {
+            display: none;
+        }
+
+        .menu-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .game-title {
+            text-align: center;
+            color: var(--primary-dark);
+            font-size: 1.8rem;
+            margin: 0 0 8px;
+            font-weight: 800;
+        }
+
+        .game-subtitle {
+            text-align: center;
+            color: var(--primary);
+            font-size: 0.95rem;
+            margin: 0 0 25px;
+            opacity: 0.8;
+        }
+
+        .rules-section {
+            background: var(--bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .rules-title {
+            color: var(--primary-dark);
+            font-size: 1.1rem;
+            margin: 0 0 12px;
+            font-weight: 600;
+        }
+
+        .rule-item {
+            margin-bottom: 12px;
+            padding-left: 22px;
+            position: relative;
+            line-height: 1.5;
+            font-size: 0.9rem;
+        }
+
+        .rule-item::before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .scoring-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .score-card {
+            background: var(--white);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            border: 2px solid var(--primary-light);
+        }
+
+        .score-card-title {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+
+        .score-threshold {
+            font-size: 0.8rem;
+            color: var(--text);
+            margin: 3px 0;
+        }
+
+        .score-danger { color: var(--danger); font-weight: bold; }
+        .score-warning { color: var(--warning); }
+        .score-success { color: var(--success); }
+
+        .btn-start {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            border: none;
+            padding: 16px 36px;
+            border-radius: 30px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
+        }
+
+        .btn-start:active {
+            transform: translateY(0);
+        }
+
+        /* --- HEADER JEU (Jauges + Progression) --- */
+        .app-header {
+            background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
+            color: var(--white);
+            padding: 8px 16px 10px;
+            border-bottom-left-radius: 14px;
+            border-bottom-right-radius: 14px;
+            box-shadow: 0 4px 10px rgba(13, 71, 161, 0.3);
+            z-index: 10;
+            display: none;
+            flex-shrink: 0;
+        }
+
+        body.game-active .app-header {
+            display: block;
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 6px;
+            gap: 8px;
+        }
+
+        .stat-item {
+            text-align: center;
+            font-size: 0.8rem;
+            opacity: 0.9;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 800;
+            display: block;
+        }
+
+        .stat-value.danger {
+            color: #ffcdd2;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .progress-track {
+            background-color: rgba(255,255,255,0.2);
+            height: 5px;
+            border-radius: 3px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background-color: var(--accent);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* ==============================================
+           ZONE DE JEU — UN SEUL BLOC SCROLLABLE
+           ============================================== */
+        .game-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            display: none;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        body.game-active .game-scroll-area {
+            display: flex;
+        }
+
+        .game-inner {
+            padding: 12px 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .step-badge {
+            align-self: center;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+        }
+
+        .card-dialogue {
+            background-color: var(--white);
+            border-radius: 12px;
+            padding: 12px 14px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--primary);
+            flex-shrink: 0;
+        }
+
+        .speaker {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 4px;
+            font-size: 0.8rem;
+        }
+
+        .message {
+            line-height: 1.45;
+            font-size: 0.88rem;
+        }
+
+        /* Feedback */
+        .feedback-card {
+            background-color: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 0.82rem;
+            display: none;
+            animation: slideUp 0.3s ease;
+            flex-shrink: 0;
+            line-height: 1.4;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(15px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Boutons de choix — dans le flux */
+        .buttons-area {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding-top: 4px;
+        }
+
+        .btn {
+            background-color: var(--white);
+            color: var(--primary);
+            border: 2px solid var(--primary-light);
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 0.84rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            position: relative;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            line-height: 1.3;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-light);
+            transform: translateX(4px);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+            background-color: var(--primary-light);
+        }
+
+        .btn-next {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            text-align: center;
+            justify-content: center;
+            margin-top: 4px;
+        }
+
+        /* --- ÉCRAN DE FIN --- */
+        .end-screen {
+            text-align: center;
+            padding: 15px 5px;
+        }
+
+        .final-scores {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .final-score-card {
+            padding: 15px 10px;
+            border-radius: 12px;
+            background: var(--white);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 0.85rem;
+        }
+
+        .final-score-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 8px 0;
+        }
+
+        .final-message {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            padding: 15px;
+            background: var(--primary-light);
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 400px) {
+            .menu-card { padding: 25px 18px; }
+            .game-title { font-size: 1.5rem; }
+            .rule-item { font-size: 0.85rem; }
+            .score-card { padding: 10px 6px; }
+            .score-card-title { font-size: 0.78rem; }
+            .score-threshold { font-size: 0.75rem; }
+            .btn-start { padding: 14px 28px; font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PAGE MENU -->
+    <div class="menu-container" id="menu-page">
+        <div class="menu-card">
+            <h1 class="game-title">📋 CSE Training</h1>
+            <p class="game-subtitle">Simulateur de Réunions du CSE — entreprises de moins de 50 salariés</p>
+
+            <div class="rules-section">
+                <h2 class="rules-title">📖 Règles du jeu</h2>
+
+                <div class="rule-item">
+                    <strong>Votre rôle :</strong> Vous incarnez un élu titulaire du CSE dans une entreprise de moins de 50 salariés, reçu chaque mois par l'employeur.
+                </div>
+
+                <div class="rule-item">
+                    <strong>Votre mission :</strong> Gérer 12 situations du cycle d'une réunion mensuelle en faisant les bons choix juridiques et relationnels.
+                </div>
+
+                <div class="rule-item">
+                    <strong>Le défi :</strong> Chaque décision impacte deux jauges : la <strong>Légalité</strong> (conformité juridique) et le <strong>Climat Social</strong> (qualité du dialogue avec la direction et les salariés).
+                </div>
+
+                <div class="scoring-grid">
+                    <div class="score-card">
+                        <div class="score-card-title">⚖️ LÉGALITÉ</div>
+                        <div class="score-threshold score-success">80+ pts : Excellent</div>
+                        <div class="score-threshold score-warning">40-79 pts : À améliorer</div>
+                        <div class="score-threshold score-danger">&lt; 40 pts : Conformité fragile</div>
+                    </div>
+
+                    <div class="score-card">
+                        <div class="score-card-title">🤝 CLIMAT SOCIAL</div>
+                        <div class="score-threshold score-success">55+ pts : Constructif</div>
+                        <div class="score-threshold score-warning">40-54 pts : Tendu</div>
+                        <div class="score-threshold score-danger">&lt; 40 pts : Dialogue rompu</div>
+                    </div>
+                </div>
+
+                <div class="rule-item" style="margin-top: 15px;">
+                    <strong>Objectif :</strong> Les jauges démarrent à 0. Chaque bonne décision fait progresser votre score vers 100. La rigueur juridique peut parfois tendre le climat social : à vous de trouver le bon équilibre !
+                </div>
+            </div>
+
+            <button class="btn-start" onclick="startGame()">Commencer la simulation</button>
+        </div>
+    </div>
+
+    <!-- HEADER DU JEU -->
+    <div class="app-header" id="game-header">
+        <div class="stats-container">
+            <div class="stat-item">
+                <span class="stat-value" id="score-legal">0</span>
+                Légalité
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="score-social">0</span>
+                Climat
+            </div>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progress-bar"></div>
+        </div>
+    </div>
+
+    <!-- ZONE DE JEU UNIQUE SCROLLABLE -->
+    <div class="game-scroll-area" id="game-scroll">
+        <div class="game-inner" id="game-inner">
+            <div class="step-badge" id="step-title">Étape 1/12</div>
+
+            <div class="card-dialogue">
+                <div class="speaker" id="speaker-name">Le Système</div>
+                <div class="message" id="scenario-text">Chargement...</div>
+            </div>
+
+            <div class="feedback-card" id="feedback-box"></div>
+
+            <div class="buttons-area" id="buttons-area"></div>
+        </div>
+    </div>
+
+<script>
+    // --- DONNÉES DU JEU (CSE entreprises de MOINS DE 50 salariés) ---
+    const scenarios = [
+        {
+            title: "Étape 1 : Périodicité & Obligation",
+            speaker: "L'Employeur",
+            text: "« C'est un mois chargé et il n'y a pas de gros sujet urgent. Je propose d'annuler la réunion de ce mois-ci, on se verra le mois prochain. Ça vous va ? »",
+            choices: [
+                { text: "Je propose plutôt une réunion courte de 30 minutes pour respecter la loi.", correct: false, legal: -7, social: +5, feedback: "⚠️ Compromis risqué. La rencontre doit permettre de présenter réellement les réclamations, pas seulement de cocher une case." },
+                { text: "D'accord, s'il n'y a pas de réclamation, c'est inutile de se réunir.", correct: false, legal: -14, social: +4, feedback: "❌ Erreur ! Dans une entreprise de moins de 50 salariés, l'employeur doit recevoir collectivement les élus AU MOINS une fois par mois (art. L2315-21). Cette obligation existe même s'il y a peu de sujets." },
+                { text: "Reportons à la fin du mois, on aura plus de temps.", correct: false, legal: -8, social: +2, feedback: "⚠️ Un léger décalage de date reste possible, mais l'obligation d'une rencontre mensuelle doit être tenue. Mieux vaut conserver une date régulière." },
+                { text: "La loi prévoit que vous nous receviez collectivement chaque mois.", correct: true, legal: +8, social: +3, feedback: "✅ Exact ! L'employeur reçoit collectivement les membres du CSE au moins une fois par mois (art. L2315-21). L'initiative d'organiser la rencontre lui revient." }
+            ]
+        },
+        {
+            title: "Étape 2 : Recueil des réclamations",
+            speaker: "Un élu suppléant",
+            text: "Nous sommes à quelques jours de la réunion mensuelle. Comment recueille-t-on les réclamations individuelles et collectives des salariés ?",
+            choices: [
+                { text: "On délègue le recueil aux managers de proximité pour gagner du temps.", correct: false, legal: -6, social: -6, feedback: "❌ Peu pertinent : les managers représentent la direction. Les salariés ne s'exprimeront pas librement par leur intermédiaire." },
+                { text: "On attend que les salariés viennent nous voir spontanément.", correct: false, legal: 0, social: -4, feedback: "⚠️ Trop passif. Le rôle d'élu invite à aller activement au contact pour capter les vraies difficultés du terrain." },
+                { text: "On fait le tour des services et on envoie un message d'appel aux réclamations.", correct: true, legal: +8, social: +10, feedback: "✅ Parfait ! Présenter les réclamations individuelles et collectives est l'attribution centrale du CSE de moins de 50 salariés. Un recueil actif et multicanal est la bonne pratique." },
+                { text: "On met une boîte à idées anonyme qu'on dépouille avant la réunion.", correct: false, legal: 0, social: -2, feedback: "⚠️ Utile mais insuffisant. L'anonymat complique le suivi individuel et le dialogue direct avec le salarié concerné." }
+            ]
+        },
+        {
+            title: "Étape 3 : La note écrite des demandes",
+            speaker: "L'Employeur",
+            text: "« Pour préparer la réunion, envoyez-moi vos questions. Vous pouvez me les transmettre la veille au soir, ça me laissera le temps d'y jeter un œil. »",
+            choices: [
+                { text: "D'accord, la veille au soir nous laisse encore le temps de tout regrouper.", correct: false, legal: -8, social: +4, feedback: "❌ Trop tard. La note écrite exposant l'objet des demandes se remet 2 jours OUVRABLES avant la réunion (art. L2315-22)." },
+                { text: "Nous vous remettrons la note écrite des demandes 2 jours ouvrables avant la réunion.", correct: true, legal: +8, social: +4, feedback: "✅ Exact ! Les élus remettent à l'employeur une note écrite exposant l'objet des demandes, 2 jours ouvrables avant la date de la réunion (art. L2315-22), sauf circonstances exceptionnelles." },
+                { text: "On vous donnera les réclamations directement à l'oral en début de réunion.", correct: false, legal: -6, social: +2, feedback: "⚠️ La note écrite préalable est prévue par le texte : elle structure les échanges et permet une réponse motivée." },
+                { text: "Pas besoin de note, on improvise selon les sujets du jour.", correct: false, legal: -9, social: +1, feedback: "❌ La note écrite remise 2 jours ouvrables avant est la règle (art. L2315-22). Elle sécurise le suivi des demandes." }
+            ]
+        },
+        {
+            title: "Étape 4 : Réunion préparatoire des élus",
+            speaker: "Un élu suppléant",
+            text: "Pour préparer la réunion de demain entre nous, on invite le DRH pour gagner du temps et avoir ses éclairages ?",
+            choices: [
+                { text: "Non, ce temps de préparation est réservé aux élus.", correct: true, legal: +6, social: +6, feedback: "✅ Tout à fait ! La préparation entre élus permet de coordonner vos positions et de hiérarchiser les réclamations, librement et sans pression." },
+                { text: "On l'invite, mais seulement pour les questions techniques.", correct: false, legal: -3, social: -2, feedback: "⚠️ Même partielle, sa présence oriente vos échanges. Les questions techniques se posent pendant la rencontre officielle." },
+                { text: "Oui, comme ça on discute directement des sujets avec lui.", correct: false, legal: -6, social: +3, feedback: "❌ Mieux vaut préparer entre élus : c'est le moment de définir votre approche commune avant la rencontre avec l'employeur." },
+                { text: "On fait deux temps : une préparation entre nous, puis un échange avec lui.", correct: false, legal: -2, social: -1, feedback: "⚠️ La préparation reste entre élus. Si un éclairage est utile, sollicitez-le séparément, sans mélanger les deux temps." }
+            ]
+        },
+        {
+            title: "Étape 5 : Réception collective ou individuelle ?",
+            speaker: "L'Employeur",
+            text: "« Plutôt que de tous vous réunir, je vais vous recevoir un par un dans mon bureau, ce sera plus rapide et plus simple à gérer. »",
+            choices: [
+                { text: "Le principe est la réception collective ; l'individuel ne se fait qu'à notre demande.", correct: true, legal: +8, social: +4, feedback: "✅ Exact ! L'employeur reçoit les élus COLLECTIVEMENT au moins une fois par mois. La réception individuelle, par catégorie ou par atelier n'a lieu que sur la demande des élus, selon les questions à traiter (art. L2315-21)." },
+                { text: "D'accord, un par un c'est effectivement plus rapide.", correct: false, legal: -10, social: +4, feedback: "❌ Non : la réunion mensuelle est par principe COLLECTIVE. C'est aux élus, et non à l'employeur, de demander éventuellement une réception individuelle." },
+                { text: "On accepte si vous nous recevez ensuite tous ensemble aussi.", correct: false, legal: -4, social: +2, feedback: "⚠️ La rencontre collective mensuelle reste due. La recevoir « en plus » de l'individuel imposé par l'employeur n'efface pas l'irrégularité de départ." },
+                { text: "Recevez-nous par atelier, ce sera un bon compromis.", correct: false, legal: -5, social: +1, feedback: "❌ La réception par atelier ou catégorie est une faculté ouverte À LA DEMANDE des élus, pas un substitut décidé par l'employeur à la réunion collective." }
+            ]
+        },
+        {
+            title: "Étape 6 : Absence d'un titulaire",
+            speaker: "Un élu titulaire",
+            text: "Notre collègue titulaire est en arrêt maladie le jour de la réunion. Que fait-on côté représentation des élus ?",
+            choices: [
+                { text: "Le suppléant le remplace pour cette réunion.", correct: true, legal: +8, social: +5, feedback: "✅ Exact ! Le suppléant n'assiste aux réunions qu'en l'absence d'un titulaire, qu'il remplace alors. Pensez à informer l'employeur pour qu'il soit convoqué." },
+                { text: "On siège sans lui, le suppléant n'a rien à faire ici.", correct: false, legal: -7, social: -2, feedback: "❌ Justement, c'est le rôle du suppléant : il remplace le titulaire absent. Le laisser de côté prive le CSE d'une voix." },
+                { text: "On reporte toute la réunion à son retour.", correct: false, legal: -6, social: -1, feedback: "⚠️ Inutile de tout reporter : le suppléant assure le remplacement. La rencontre mensuelle doit se tenir." },
+                { text: "On invite un salarié volontaire pour le remplacer.", correct: false, legal: -9, social: 0, feedback: "❌ Non : seul un suppléant élu peut remplacer un titulaire absent, pas un salarié non élu." }
+            ]
+        },
+        {
+            title: "Étape 7 : Présidence de la rencontre",
+            speaker: "Un collaborateur de la direction",
+            text: "« Le dirigeant est absent aujourd'hui. Je n'ai pas reçu de délégation de pouvoir, mais je connais les dossiers : je vous reçois à sa place pour ne pas perdre la réunion. »",
+            choices: [
+                { text: "Sans délégation de pouvoir, vous ne pouvez pas nous recevoir valablement.", correct: true, legal: +9, social: +3, feedback: "✅ Exact ! L'employeur reçoit le CSE, ou son représentant disposant d'une délégation de pouvoir. Sans présidence valable, la rencontre et ses réponses seraient fragilisées juridiquement." },
+                { text: "D'accord, vous connaissez les dossiers, recevez-nous exceptionnellement.", correct: false, legal: -12, social: +4, feedback: "❌ Sans délégation de pouvoir formelle, ce collaborateur ne représente pas valablement l'employeur. Les engagements pris seraient fragiles." },
+                { text: "On fait une réunion informelle, on officialisera plus tard.", correct: false, legal: -7, social: +2, feedback: "⚠️ Une rencontre « officieuse » crée de l'ambiguïté sur la valeur des réponses données. À éviter." },
+                { text: "Un élu peut présider à la place de l'employeur en attendant.", correct: false, legal: -10, social: +2, feedback: "❌ Non : c'est l'employeur (ou son représentant délégataire) qui reçoit le CSE. Un élu ne se substitue pas à lui." }
+            ]
+        },
+        {
+            title: "Étape 8 : Accompagnement de l'employeur",
+            speaker: "L'Employeur",
+            text: "« Vous êtes 2 élus aujourd'hui. De mon côté, je viens accompagné de 4 collaborateurs pour couvrir tous les sujets. »",
+            choices: [
+                { text: "Vos accompagnants ne peuvent pas être plus nombreux que nos titulaires présents.", correct: true, legal: +8, social: +3, feedback: "✅ Exact ! L'employeur peut se faire assister de collaborateurs, mais ensemble ils ne peuvent être en nombre supérieur à celui des représentants titulaires (art. L2315-21)." },
+                { text: "Aucun problème, venez avec qui vous voulez.", correct: false, legal: -8, social: +4, feedback: "❌ La loi encadre cet accompagnement : le nombre de collaborateurs de l'employeur ne peut dépasser celui des élus titulaires présents (art. L2315-21)." },
+                { text: "Alors nous aussi on fait venir des salariés pour rééquilibrer.", correct: false, legal: -5, social: -2, feedback: "⚠️ Ce n'est pas la bonne réponse : la règle plafonne le camp de l'employeur, elle ne s'équilibre pas en ajoutant des non-élus côté CSE." },
+                { text: "On refuse catégoriquement toute présence de collaborateurs.", correct: false, legal: -3, social: -4, feedback: "⚠️ Trop rigide : l'employeur PEUT se faire assister. La seule limite est le nombre, pas le principe." }
+            ]
+        },
+        {
+            title: "Étape 9 : Situation d'urgence",
+            speaker: "Un élu titulaire",
+            text: "Un risque sérieux pour la sécurité vient d'apparaître dans un atelier, et la prochaine réunion mensuelle est dans 3 semaines. Que fait-on ?",
+            choices: [
+                { text: "On demande à être reçus en urgence, sans attendre la réunion mensuelle.", correct: true, legal: +9, social: +6, feedback: "✅ Exact ! En cas d'urgence, les élus sont reçus sur leur demande, sans attendre la rencontre mensuelle (art. L2315-21). La sécurité justifie pleinement cette demande." },
+                { text: "On attend la réunion mensuelle pour aborder le sujet.", correct: false, legal: -8, social: -5, feedback: "❌ Trop tard face à un risque sérieux. La possibilité d'être reçus en urgence existe précisément pour ces situations." },
+                { text: "On règle ça directement avec le chef d'atelier, sans la direction.", correct: false, legal: -5, social: -2, feedback: "⚠️ Le dialogue de terrain est utile, mais un risque sérieux justifie de saisir l'employeur via la demande de réception en urgence." },
+                { text: "On envoie juste un mail d'information, sans demander de rencontre.", correct: false, legal: -4, social: 0, feedback: "⚠️ Mieux vaut demander explicitement à être reçus en urgence : un simple mail ne déclenche pas la rencontre prévue par l'art. L2315-21." }
+            ]
+        },
+        {
+            title: "Étape 10 : La réponse de l'employeur",
+            speaker: "L'Employeur",
+            text: "« Bonne réunion. Pour les réponses à vos demandes, je vous dirai ça oralement la prochaine fois qu'on se croise, d'ici un mois ou deux. »",
+            choices: [
+                { text: "Vous devez répondre par écrit dans les 6 jours ouvrables suivant la réunion.", correct: true, legal: +9, social: +4, feedback: "✅ Exact ! L'employeur répond par écrit aux demandes, au plus tard dans les 6 jours ouvrables suivant la réunion (art. L2315-22). Une réponse orale différée ne suffit pas." },
+                { text: "D'accord, une réponse orale plus tard nous convient.", correct: false, legal: -10, social: +4, feedback: "❌ Non : la loi impose une réponse ÉCRITE dans les 6 jours ouvrables suivant la réunion (art. L2315-22)." },
+                { text: "Répondez quand vous pourrez, il n'y a pas de délai précis.", correct: false, legal: -8, social: +2, feedback: "❌ Il existe bien un délai : la réponse écrite est due dans les 6 jours ouvrables suivant la réunion (art. L2315-22)." },
+                { text: "On veut une réponse écrite, mais le jour même de la réunion.", correct: false, legal: -2, social: -1, feedback: "⚠️ La réponse écrite est due dans les 6 jours ouvrables, pas nécessairement le jour même. Exiger l'immédiateté n'est pas la règle." }
+            ]
+        },
+        {
+            title: "Étape 11 : Le registre des demandes",
+            speaker: "Un élu titulaire",
+            text: "Maintenant que l'employeur a répondu à nos demandes, où ces demandes et ces réponses doivent-elles être conservées ?",
+            choices: [
+                { text: "Sur un registre spécial qui regroupe les demandes et les réponses motivées.", correct: true, legal: +9, social: +4, feedback: "✅ Exact ! Les demandes des élus et les réponses motivées de l'employeur sont transcrites sur un registre spécial, ou annexées à celui-ci (art. L2315-22). C'est la mémoire écrite du dialogue, à la place d'un procès-verbal." },
+                { text: "Chacun garde ses notes dans son coin, ça suffit.", correct: false, legal: -9, social: -1, feedback: "❌ Non : la loi prévoit un registre spécial regroupant demandes et réponses motivées (art. L2315-22). Des notes éparses n'ont pas cette valeur." },
+                { text: "Dans un procès-verbal officiel comme dans les grandes entreprises.", correct: false, legal: -5, social: 0, feedback: "⚠️ Le procès-verbal n'est pas l'outil prévu ici. Pour les CSE de moins de 50 salariés, c'est le registre spécial des demandes et réponses (art. L2315-22)." },
+                { text: "Uniquement dans la messagerie de l'employeur.", correct: false, legal: -6, social: 0, feedback: "❌ Le support prévu est le registre spécial (art. L2315-22), accessible et conservé, et non une simple boîte mail." }
+            ]
+        },
+        {
+            title: "Étape 12 : Consultation du registre",
+            speaker: "Un salarié",
+            text: "« J'aimerais lire les réponses de la direction à nos réclamations. Où et quand puis-je consulter le registre ? »",
+            choices: [
+                { text: "Le registre est tenu à disposition des salariés un jour ouvrable par quinzaine, hors temps de travail.", correct: true, legal: +9, social: +8, feedback: "✅ Parfait ! Le registre (et ses annexes) est tenu à la disposition des salariés qui souhaitent le consulter, pendant un jour ouvrable par quinzaine et en dehors de leur temps de travail (art. L2315-22). Il est aussi accessible à l'inspection du travail." },
+                { text: "Il faut une autorisation de la direction pour y accéder.", correct: false, legal: -7, social: +1, feedback: "❌ Non : la consultation du registre est un droit des salariés (art. L2315-22), pas une faveur soumise à autorisation." },
+                { text: "Désolé, ce registre est confidentiel, réservé aux élus.", correct: false, legal: -8, social: -5, feedback: "❌ Faux : le registre est précisément tenu à la disposition des salariés qui veulent le consulter (art. L2315-22)." },
+                { text: "Je te le montre quand tu veux, même en pleine production.", correct: false, legal: -3, social: +1, feedback: "⚠️ L'intention est bonne, mais le texte prévoit une consultation un jour ouvrable par quinzaine et en dehors du temps de travail (art. L2315-22)." }
+            ]
+        }
+    ];
+
+    // --- VARIABLES GLOBALES ---
+    let currentStep = 0;
+    let stats = { legal: 0, social: 0 };   // jauges affichées pendant le jeu (progression visuelle)
+    let rawLegal = 0;                       // cumul brut des points de légalité (non borné)
+    let rawSocial = 0;                      // cumul brut des points de climat social (non borné)
+    let correctCount = 0;
+    let wrongCount = 0;
+    let hasAnswered = false;
+
+    // Bornes théoriques sur l'ensemble du parcours : somme du meilleur et du pire
+    // choix possible à chaque étape. Sert à recalculer un score final PROPORTIONNEL
+    // à la qualité des réponses (toutes bonnes réponses = 100, toutes mauvaises = 0).
+    const scoreBounds = scenarios.reduce((acc, s) => {
+        const legals = s.choices.map(c => c.legal);
+        const socials = s.choices.map(c => c.social);
+        acc.bestLegal += Math.max(...legals);
+        acc.worstLegal += Math.min(...legals);
+        acc.bestSocial += Math.max(...socials);
+        acc.worstSocial += Math.min(...socials);
+        return acc;
+    }, { bestLegal: 0, worstLegal: 0, bestSocial: 0, worstSocial: 0 });
+
+    // Mélange aléatoire (Fisher-Yates)
+    function shuffleArray(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    // Positions cibles ÉQUILIBRÉES de la bonne réponse sur tout le parcours :
+    // chaque position (0..k-1) reçoit le même nombre de bonnes réponses, puis on
+    // mélange l'ordre des étapes. On évite ainsi les grappes du hasard pur.
+    let correctPositions = [];
+    function buildBalancedPositions(n, k) {
+        const arr = [];
+        for (let i = 0; i < n; i++) arr.push(i % k);
+        return shuffleArray(arr);
+    }
+
+    // Réordonne les choix d'une étape : la bonne réponse à la position cible,
+    // les distracteurs (mélangés) sur les autres positions.
+    function orderChoices(choices, targetPos) {
+        const correct = choices.filter(c => c.correct);
+        if (correct.length !== 1) return shuffleArray(choices); // repli de sécurité
+        const others = shuffleArray(choices.filter(c => !c.correct));
+        const pos = ((targetPos % choices.length) + choices.length) % choices.length;
+        const result = [];
+        let oi = 0;
+        for (let i = 0; i < choices.length; i++) {
+            result.push(i === pos ? correct[0] : others[oi++]);
+        }
+        return result;
+    }
+
+    function normalizePct(raw, worst, best) {
+        if (best === worst) return 50;
+        return Math.max(0, Math.min(100, Math.round((raw - worst) / (best - worst) * 100)));
+    }
+
+    // --- FONCTIONS ---
+    function startGame() {
+        correctPositions = buildBalancedPositions(scenarios.length, 4); // 4 choix par étape
+        document.body.classList.add('game-active');
+        loadStep(0);
+    }
+
+    function scrollToTop() {
+        const scrollArea = document.getElementById('game-scroll');
+        if (scrollArea) scrollArea.scrollTop = 0;
+    }
+
+    function loadStep(index) {
+        hasAnswered = false;
+
+        const progressPercent = ((index) / scenarios.length) * 100;
+        document.getElementById('progress-bar').style.width = progressPercent + '%';
+
+        if (index >= scenarios.length) {
+            showEndScreen();
+            return;
+        }
+
+        const step = scenarios[index];
+
+        document.getElementById('step-title').innerText = step.title;
+        document.getElementById('speaker-name').innerText = step.speaker;
+        document.getElementById('scenario-text').innerText = step.text;
+
+        const feedbackBox = document.getElementById('feedback-box');
+        feedbackBox.style.display = 'none';
+        feedbackBox.innerHTML = '';
+
+        const btnsArea = document.getElementById('buttons-area');
+        btnsArea.innerHTML = '';
+
+        orderChoices(step.choices, correctPositions[index]).forEach((choice, idx) => {
+            const btn = document.createElement('div');
+            btn.className = 'btn';
+            btn.innerHTML = choice.text;
+            btn.onclick = () => {
+                if (!hasAnswered) {
+                    handleChoice(choice);
+                }
+            };
+            btnsArea.appendChild(btn);
+        });
+
+        scrollToTop();
+    }
+
+    function handleChoice(choice) {
+        hasAnswered = true;
+
+        if (choice.correct) {
+            correctCount++;
+        } else {
+            wrongCount++;
+        }
+
+        // Cumul brut (sert au score final proportionnel)
+        rawLegal += choice.legal;
+        rawSocial += choice.social;
+
+        // Jauges visuelles pendant le jeu (bornées 0-100)
+        stats.legal += choice.legal;
+        stats.social += choice.social;
+        stats.legal = Math.max(0, Math.min(100, stats.legal));
+        stats.social = Math.max(0, Math.min(100, stats.social));
+
+        const legalElement = document.getElementById('score-legal');
+        const socialElement = document.getElementById('score-social');
+
+        legalElement.innerText = stats.legal;
+        socialElement.innerText = stats.social;
+
+        if (stats.legal < 30) {
+            legalElement.classList.add('danger');
+        } else {
+            legalElement.classList.remove('danger');
+        }
+
+        if (stats.social < 30) {
+            socialElement.classList.add('danger');
+        } else {
+            socialElement.classList.remove('danger');
+        }
+
+        const feedbackBox = document.getElementById('feedback-box');
+        feedbackBox.innerHTML = choice.feedback;
+        feedbackBox.style.display = 'block';
+
+        if (choice.correct) {
+            feedbackBox.style.borderColor = 'var(--success)';
+            feedbackBox.style.backgroundColor = '#e8f5e9';
+        } else {
+            feedbackBox.style.borderColor = 'var(--danger)';
+            feedbackBox.style.backgroundColor = '#ffebee';
+        }
+
+        const btnsArea = document.getElementById('buttons-area');
+        btnsArea.innerHTML = '';
+
+        const nextBtn = document.createElement('div');
+        nextBtn.className = 'btn btn-next';
+        nextBtn.innerText = (currentStep + 1 < scenarios.length) ? '→ Étape Suivante' : '🏁 Voir le bilan';
+        nextBtn.onclick = () => {
+            currentStep++;
+            loadStep(currentStep);
+        };
+        btnsArea.appendChild(nextBtn);
+
+        setTimeout(() => {
+            feedbackBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+    }
+
+    function showEndScreen() {
+        document.getElementById('progress-bar').style.width = '100%';
+
+        const totalQuestions = scenarios.length;
+
+        // Scores FINAUX proportionnels à la qualité des réponses (et non aux jauges
+        // bornées du jeu, qui pénalisaient trop lourdement les mauvaises réponses).
+        const finalLegal = normalizePct(rawLegal, scoreBounds.worstLegal, scoreBounds.bestLegal);
+        const finalSocial = normalizePct(rawSocial, scoreBounds.worstSocial, scoreBounds.bestSocial);
+
+        // On aligne aussi l'en-tête sur ces scores finaux pour rester cohérent.
+        document.getElementById('score-legal').innerText = finalLegal;
+        document.getElementById('score-social').innerText = finalSocial;
+        document.getElementById('score-legal').classList.remove('danger');
+        document.getElementById('score-social').classList.remove('danger');
+
+        let gradeLabel = "";
+        let gradeColor = "";
+
+        // Mention fondée directement sur le nombre de bonnes réponses (bandes équilibrées
+        // sur 12 questions) et cohérente avec le message global plus bas.
+        if (correctCount >= 11) {            // 11-12
+            gradeLabel = "A — Maître Jedi du CSE";
+            gradeColor = "#4caf50";
+        } else if (correctCount >= 9) {      // 9-10
+            gradeLabel = "B — Padawan prometteur";
+            gradeColor = "#8bc34a";
+        } else if (correctCount >= 7) {      // 7-8
+            gradeLabel = "C — Peut mieux faire (le prof l'a dit)";
+            gradeColor = "#ff9800";
+        } else if (correctCount >= 5) {      // 5-6
+            gradeLabel = "D — L'inspecteur du travail vous surveille";
+            gradeColor = "#ff5722";
+        } else {                             // 0-4
+            gradeLabel = "E — Seul Hiiato peut vous venir en aide !";
+            gradeColor = "#f44336";
+        }
+
+        let legalStatus = "";
+        if (finalLegal >= 80) {
+            legalStatus = "✅ Excellente maîtrise juridique";
+        } else if (finalLegal >= 60) {
+            legalStatus = "👍 Bonne conformité juridique";
+        } else if (finalLegal >= 40) {
+            legalStatus = "⚠️ Conformité fragile, des lacunes à combler";
+        } else {
+            legalStatus = "🚨 Vigilance : plusieurs règles non respectées";
+        }
+
+        let socialStatus = "";
+        if (finalSocial >= 55) {
+            socialStatus = "✅ Climat social constructif";
+        } else if (finalSocial >= 42) {
+            socialStatus = "⚠️ Climat social tendu mais gérable";
+        } else if (finalSocial >= 30) {
+            socialStatus = "😤 Relations sociales dégradées";
+        } else {
+            socialStatus = "🚨 Dialogue social en panne";
+        }
+
+        let globalMessage = "";
+        if (correctCount >= 11) {
+            globalMessage = "🏆 EXCELLENT MANDAT ! Même l'inspecteur du travail vous applaudirait (et croyez-nous, c'est rare). Vous maîtrisez parfaitement l'équilibre entre rigueur juridique et dialogue social. Le Code du travail n'a plus de secrets pour vous… ou presque. 😏";
+        } else if (correctCount >= 9) {
+            globalMessage = "👍 Bon mandat ! Quelques hésitations, mais vous avez des bases solides. Il reste à peaufiner les réflexes. Un ou deux cafés avec le Code du travail et vous serez au top. ☕";
+        } else if (correctCount >= 7) {
+            globalMessage = "⚠️ Pas mal, mais quelques règles essentielles vous échappent encore. Un petit tour par la formation s'impose. 📚";
+        } else if (correctCount >= 5) {
+            globalMessage = "🚨 Attention : plusieurs fondamentaux du CSE de moins de 50 salariés sont à revoir. Le registre, les délais et la réunion mensuelle méritent un sérieux rafraîchissement ! 🆘";
+        } else {
+            globalMessage = "💥 Houston, on a un problème ! Si c'était un vrai mandat, le dialogue social aurait quelques sueurs froides. Bonne nouvelle : c'est un jeu, et tout s'apprend. 🎓";
+        }
+
+        document.getElementById('step-title').style.display = 'none';
+        document.getElementById('speaker-name').innerText = "🏁 Simulation Terminée";
+
+        document.getElementById('scenario-text').innerHTML = `
+            <div class="end-screen">
+                <div style="background: ${gradeColor}15; border: 2px solid ${gradeColor}; border-radius: 12px; padding: 15px; margin-bottom: 15px; text-align: center;">
+                    <div style="font-size: 0.85rem; color: #666; margin-bottom: 5px;">NOTE GLOBALE</div>
+                    <div style="font-size: 1.6rem; font-weight: 800; color: ${gradeColor};">${gradeLabel}</div>
+                    <div style="font-size: 1rem; margin-top: 8px; color: var(--text);">
+                        ✅ ${correctCount} bonne${correctCount > 1 ? 's' : ''} réponse${correctCount > 1 ? 's' : ''}
+                        &nbsp;·&nbsp;
+                        ❌ ${wrongCount} erreur${wrongCount > 1 ? 's' : ''}
+                        &nbsp;sur ${totalQuestions} questions
+                    </div>
+                </div>
+                <div class="final-scores">
+                    <div class="final-score-card">
+                        <div>⚖️ LÉGALITÉ</div>
+                        <div class="final-score-value" style="color: ${finalLegal >= 70 ? 'var(--success)' : finalLegal >= 45 ? 'var(--warning)' : 'var(--danger)'}">
+                            ${finalLegal}/100
+                        </div>
+                        <div>${legalStatus}</div>
+                    </div>
+                    <div class="final-score-card">
+                        <div>🤝 CLIMAT SOCIAL</div>
+                        <div class="final-score-value" style="color: ${finalSocial >= 55 ? 'var(--success)' : finalSocial >= 40 ? 'var(--warning)' : 'var(--danger)'}">
+                            ${finalSocial}/100
+                        </div>
+                        <div>${socialStatus}</div>
+                    </div>
+                </div>
+                <div class="final-message">
+                    ${globalMessage}
+                </div>
+            </div>
+        `;
+
+        document.getElementById('feedback-box').style.display = 'none';
+        document.getElementById('buttons-area').innerHTML = `
+            <div class="btn btn-next" onclick="location.reload()">
+                🔄 Recommencer la simulation
+            </div>
+        `;
+
+        scrollToTop();
+    }
+</script>
+
+</body>
+</html>
