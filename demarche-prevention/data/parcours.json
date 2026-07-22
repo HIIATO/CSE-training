@@ -1,0 +1,43 @@
+{
+  "titre": "La démarche de prévention",
+  "surTitre": "Formation CSE / SSCT",
+  "accroche": "Quatre étapes, un seul document : le vôtre. Tout ce que vous décidez s'inscrit dans votre DUERP.",
+  "etapes": [
+    {
+      "num": 2,
+      "cle": "preparation",
+      "nom": "Préparer",
+      "titre": "Préparer la démarche",
+      "resume": "Découper l'entreprise en unités de travail et composer les groupes d'acteurs.",
+      "ecran": "preparation",
+      "disponible": false
+    },
+    {
+      "num": 3,
+      "cle": "identification",
+      "nom": "Identifier",
+      "titre": "Identifier les risques",
+      "resume": "Explorer une scène de travail et questionner le salarié pour débusquer ce qui ne se voit pas.",
+      "ecran": "identification",
+      "disponible": false
+    },
+    {
+      "num": 4,
+      "cle": "analyse",
+      "nom": "Analyser",
+      "titre": "Analyser et coter",
+      "resume": "Distinguer le danger du risque, puis coter fréquence et gravité.",
+      "ecran": "analyse",
+      "disponible": false
+    },
+    {
+      "num": 5,
+      "cle": "mesure",
+      "nom": "Agir",
+      "titre": "Choisir une mesure",
+      "resume": "Trancher entre deux mesures, à la lumière des neuf principes généraux de prévention.",
+      "ecran": "mesure",
+      "disponible": false
+    }
+  ]
+}
