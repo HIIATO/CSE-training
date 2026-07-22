@@ -260,7 +260,9 @@ body{
   overflow-x:hidden;
 }
 
-.marque{height:30px;width:auto;display:block;flex:0 0 auto;}
+/* align-self est indispensable : sans lui l'image s'etire sur toute la largeur
+   de la colonne et le logo parait centre. */
+.marque{height:30px;width:auto;display:block;flex:0 0 auto;align-self:flex-start;}
 
 .accueil h1{
   margin:0;

@@ -18,7 +18,7 @@
    coquille en cache.
    ========================================================================= */
 
-var VERSION = 'v1';
+var VERSION = 'v2';
 var CACHE = 'demarche-prevention-' + VERSION;
 
 /* Ce qui est mis en cache des l'installation. */
