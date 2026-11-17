@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Les procédures collectives</title>
+<style>
+:root{--cyan:#25CCF6;--bleu:#0095D0;--navy:#0B2E4F;--noir:#0B0B0B;--gris:#666;--bord:#D6EEF8;--fond:#F3FAFD;--r:12px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:Calibri,Carlito,"Segoe UI",Roboto,Arial,sans-serif;color:#1d1d1d;background:#fff;line-height:1.4}
+.progress{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.96);border-bottom:1px solid var(--bord)}
+.progress .in{max-width:760px;margin:0 auto;padding:8px 14px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.step{font-family:Arial,sans-serif;font-size:11px;color:#9aa7b0;text-align:center;line-height:1.2}
+.step i{display:block;height:5px;border-radius:3px;background:#E5F4FA;margin-bottom:5px}
+.step.on{color:var(--bleu);font-weight:700}.step.on i,.step.done i{background:linear-gradient(90deg,var(--cyan),var(--bleu))}
+.step.done{color:var(--navy)}
+.hero{background:linear-gradient(135deg,#25CCF6 0%,#0095D0 70%);color:#fff;padding:32px 20px 74px}
+.hero .in{max-width:760px;margin:0 auto}
+.kick{font-family:Arial,sans-serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.9;margin:0 0 10px;font-weight:700}
+.hero h1{font-family:Arial,sans-serif;font-size:32px;line-height:1.12;margin:0 0 10px}
+.hero p{margin:0;font-size:18px;opacity:.95}
+.wrap{max-width:760px;margin:-48px auto 0;padding:0 14px 32px}
+@media(max-width:400px){.card{padding:18px}.scale .bar div{font-size:9.5px;letter-spacing:-.2px}}
+.card{background:#fff;border:1px solid var(--bord);border-radius:16px;padding:22px;margin-bottom:18px;box-shadow:0 8px 24px rgba(0,110,160,.08)}
+.head{display:grid;grid-template-columns:48px 1fr;column-gap:14px;align-items:center;margin-bottom:16px}
+.pastille{width:48px;height:48px;border-radius:50%;background:var(--bleu);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 12px rgba(0,149,208,.28)}
+.pastille svg{width:26px;height:26px}
+.head h2{font-family:Arial,sans-serif;font-size:21px;margin:0;line-height:1.2}
+.head p{margin:3px 0 0;color:var(--gris);font-size:15px}
+h3{font-family:Arial,sans-serif;font-size:17px;margin:22px 0 10px;color:var(--navy)}
+.lead{font-size:17px;margin:0 0 14px}
+.rules{margin:4px 0 16px;padding:0;list-style:none}
+.rules li{position:relative;padding-left:22px;margin:8px 0;font-size:16px}
+.rules li:before{content:"";position:absolute;left:4px;top:8px;width:8px;height:8px;border-radius:50%;background:var(--cyan)}
+.btn{font-family:Arial,sans-serif;border:none;border-radius:30px;min-height:52px;padding:0 24px;font-size:16px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:10px;-webkit-appearance:none}
+.btn.p{background:var(--bleu);color:#fff;box-shadow:0 6px 14px rgba(0,149,208,.3)}
+.btn.s{background:#fff;color:var(--bleu);border:2px solid var(--bleu)}
+.btn[disabled]{opacity:.45;cursor:default;box-shadow:none}
+.full{width:100%}
+.tag{display:inline-block;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--bleu);background:var(--fond);border-radius:20px;padding:5px 12px;margin-bottom:12px}
+/* Méli-mélo (glisser-déposer) : tout tient sur un écran */
+#s1{padding:12px 12px 14px}
+.mmkick{font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--bleu);margin:0}
+.mmtitle{font-family:Arial,sans-serif;font-size:20px;margin:0 0 2px}
+.mmsub{font-size:14px;color:var(--gris);margin:0 0 10px;line-height:1.3}
+.mmgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mm{border:1px solid var(--bord);border-radius:12px;padding:9px;display:flex;flex-direction:column;gap:7px;background:#fff}
+.mm .lt{font-family:Arial,sans-serif;font-weight:700;color:var(--bleu);font-size:10.5px;letter-spacing:.08em}
+.mm .d{font-size:14px;line-height:1.28;margin:0;flex:1}
+.slot{min-height:38px;border:2px dashed #BFE3F2;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:3px;color:#8aa3b2;font-size:12.5px;cursor:pointer;transition:background .12s,border-color .12s;text-align:center}
+.slot.full{border-style:solid;border-color:var(--bord)}
+.slot.hover{border-color:var(--bleu);background:#EAF7FD;color:var(--bleu)}
+.slot.target{border-color:var(--cyan)}
+.fix{font-size:12px;color:var(--navy);font-family:Arial,sans-serif;font-weight:700;text-align:center;margin-top:-2px}
+.tray{margin:10px 0;padding:8px;border-radius:12px;background:var(--fond);display:grid;grid-template-columns:1fr 1fr;gap:8px;min-height:62px;align-items:center}
+.tray .empty{grid-column:1/-1;font-size:13px;color:var(--gris);text-align:center}
+.tray.hover{background:#E1F4FC}
+.chip{touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 10px;border-radius:22px;border:none;background:var(--bleu);color:#fff;font-family:Arial,sans-serif;font-size:14px;font-weight:700;box-shadow:0 4px 10px rgba(0,149,208,.28);-webkit-appearance:none;white-space:nowrap}
+.chip:before{content:"";width:14px;height:14px;flex:0 0 14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cg fill='%23fff' fill-opacity='.75'%3E%3Ccircle cx='4.5' cy='3' r='1.3'/%3E%3Ccircle cx='9.5' cy='3' r='1.3'/%3E%3Ccircle cx='4.5' cy='7' r='1.3'/%3E%3Ccircle cx='9.5' cy='7' r='1.3'/%3E%3Ccircle cx='4.5' cy='11' r='1.3'/%3E%3Ccircle cx='9.5' cy='11' r='1.3'/%3E%3C/g%3E%3C/svg%3E") center/14px no-repeat}
+.slot .chip{width:100%;min-height:30px;font-size:13px;padding:0 6px;box-shadow:none}
+.slot .chip:before{display:none}
+.chip.sel{outline:3px solid var(--cyan);outline-offset:2px}
+.chip.dragging{opacity:.25}
+.chip.ghost{position:fixed;z-index:100;pointer-events:none;transform:translate(-50%,-60%) scale(1.06) rotate(-2deg);box-shadow:0 12px 26px rgba(0,60,100,.35);cursor:grabbing;width:auto!important}
+.chip.ok{background:var(--bleu);cursor:default}
+.chip.ko{background:#B8C2C9;cursor:default;text-decoration:line-through}
+.mmscore{text-align:center;font-family:Arial,sans-serif;font-size:18px;font-weight:700;color:var(--bleu);margin:14px 0 10px}
+#mmLaw{margin:0 0 14px}
+.law{display:grid;grid-template-columns:26px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--bord);font-size:14.5px}
+.law i{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.law b{font-family:Arial,sans-serif;font-size:14px}
+.verdict{display:flex;align-items:center;gap:10px;font-family:Arial,sans-serif;font-weight:700;font-size:16px;margin:0 0 6px}
+.verdict i{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 26px}
+body.s1 .hero{display:none}
+body.s1 .wrap{margin-top:8px}
+@media(min-width:700px){#s1{padding:24px 26px}.mm{padding:14px}.mm .d{font-size:16.5px}.mmtitle{font-size:26px}.mmsub{font-size:15.5px}.tray{grid-template-columns:repeat(4,1fr)}.chip{font-size:15px}.slot .chip{font-size:15px}.slot{min-height:50px}}
+/* Échelle */
+.scale{margin:6px 0 4px}
+.scale .bar{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.scale .bar div{font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#fff;text-align:center;padding:10px 0;border-radius:8px;min-width:0;overflow:hidden}
+.scale .lim{position:relative;height:30px;margin-top:4px}
+.scale .lim span{position:absolute;left:50%;transform:translateX(-50%);top:0;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:var(--navy);white-space:nowrap}
+.scale .lim:before{content:"";position:absolute;left:50%;top:-56px;height:54px;border-left:2px dashed var(--navy)}
+.scale .ax{display:flex;justify-content:space-between;font-size:13px;color:var(--gris);margin-top:2px}
+/* Onglets procédures */
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:18px 0 8px}
+.tabs button{min-height:44px;border:2px solid var(--bord);border-radius:12px;background:var(--fond);font-family:Arial,sans-serif;font-size:13.5px;font-weight:700;color:var(--navy);cursor:pointer;-webkit-appearance:none;padding:4px 2px}
+.tabs button.on{background:var(--bleu);border-color:var(--bleu);color:#fff}
+.panel{border:2px solid var(--bleu);border-radius:14px;padding:16px}
+.panel .goal{font-size:17px;margin:0 0 6px}
+.panel .nat{font-size:14px;color:var(--gris);margin:0 0 4px}
+.row{border-top:1px solid var(--bord);padding:12px 0 4px}
+.row .k{display:flex;align-items:center;gap:8px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--bleu);margin-bottom:6px}
+.row .k svg{width:18px;height:18px;flex:0 0 18px}
+.row ul{margin:0;padding:0;list-style:none}
+.row li{position:relative;padding-left:18px;margin:6px 0;font-size:15.5px}
+.row li:before{content:"";position:absolute;left:3px;top:8px;width:7px;height:7px;border-radius:50%;background:var(--cyan)}
+.row.cse{background:var(--fond);border-radius:10px;border-top:none;padding:12px;margin-top:8px}
+.ref{font-size:13px;color:var(--gris);margin-top:10px}
+/* Matrice */
+.mx{width:100%;border-collapse:separate;border-spacing:0 6px;font-size:14px}
+.mx th{font-family:Arial,sans-serif;font-size:11.5px;color:var(--navy);font-weight:700;padding:0 2px 2px;text-align:center}
+.mx th:first-child{text-align:left}
+.mx td{background:var(--fond);padding:9px 4px;text-align:center}
+.mx td:first-child{text-align:left;border-radius:10px 0 0 10px;padding-left:10px;font-size:14px}
+.mx td:last-child{border-radius:0 10px 10px 0}
+.o,.x{display:inline-flex;width:24px;height:24px;border-radius:50%;align-items:center;justify-content:center}
+.o{background:var(--bleu)}.x{background:#DCE2E6}
+.mxnote{font-size:13px;color:var(--gris);margin:4px 0 0}
+.keep{background:var(--navy);color:#fff;border-radius:14px;padding:18px;margin-top:18px}
+.keep .kt{font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--cyan);margin:0 0 8px}
+.keep ol{margin:0;padding:0;list-style:none;counter-reset:k}
+.keep li{counter-increment:k;position:relative;padding-left:40px;margin:12px 0;font-size:16px}
+.keep li:before{content:counter(k);position:absolute;left:0;top:-1px;width:28px;height:28px;border-radius:50%;background:var(--bleu);color:#fff;font-family:Arial,sans-serif;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center}
+.keep li b{color:#fff}
+.keep li span{display:block;font-size:14px;opacity:.8;margin-top:2px}
+/* Cessation des paiements */
+.formula{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;text-align:center;margin:8px 0 6px}
+.formula div{border-radius:12px;padding:14px 6px;font-family:Arial,sans-serif;font-weight:700;font-size:16px}
+.formula .a{background:#E3F6FD;color:var(--bleu)}.formula .pp{background:var(--navy);color:#fff}
+.formula .lt{font-size:30px;color:var(--navy);padding:0 2px}
+.formula small{display:block;font-weight:400;font-size:12.5px;margin-top:4px;opacity:.85}
+.def{font-size:15px;color:var(--gris);text-align:center;margin:0 0 6px}
+.two{display:grid;grid-template-columns:1fr;gap:10px}
+.box{border:1px solid var(--bord);border-radius:12px;padding:12px 14px}
+.box .bt{font-family:Arial,sans-serif;font-size:13px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.box ul{margin:0;padding:0;list-style:none}
+.box li{font-size:15px;margin:5px 0;padding-left:16px;position:relative}
+.box li:before{content:"";position:absolute;left:2px;top:8px;width:6px;height:6px;border-radius:50%}
+.box.in li:before{background:var(--bleu)}.box.out li:before{background:#B8C2C9}
+.box.in .bt{color:var(--bleu)}.box.out .bt{color:var(--gris)}
+.exits{display:grid;grid-template-columns:1fr;gap:10px}
+.exit{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:start;background:var(--fond);border-radius:12px;padding:12px}
+.exit .ic{width:40px;height:40px;border-radius:50%;background:var(--bleu);display:flex;align-items:center;justify-content:center}
+.exit .ic svg{width:22px;height:22px}
+.exit b{font-family:Arial,sans-serif;font-size:15px;display:block}
+.exit p{margin:2px 0 0;font-size:15px}
+.not{border-left:4px solid var(--cyan);padding:4px 0 4px 14px;margin:16px 0 0;font-size:16px}
+/* Cas pratique */
+.situ{font-size:19px;line-height:1.45;margin:0 0 12px;color:#111}
+.facts{margin:0 0 14px;padding:0;list-style:none;border-top:1px solid var(--bord)}
+.facts li{display:flex;justify-content:space-between;gap:12px;padding:8px 2px;border-bottom:1px solid var(--bord);font-size:15.5px}
+.facts li b{font-family:Arial,sans-serif;white-space:nowrap;font-variant-numeric:tabular-nums}
+.q{font-family:Arial,sans-serif;font-weight:700;font-size:17px;margin:0 0 14px}
+.yn{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.yn button{height:62px;border-radius:14px;border:2px solid var(--bord);background:#fff;font-family:Arial,sans-serif;font-size:20px;font-weight:700;color:var(--noir);cursor:pointer;-webkit-appearance:none}
+.yn button.on{background:var(--bleu);border-color:var(--bleu);color:#fff}
+.yn button.ok{background:#E3F6FD;border-color:var(--bleu);color:var(--bleu)}
+.yn button[disabled]{cursor:default}
+.fb{display:none;margin-top:16px;padding:16px;border-radius:var(--r);background:var(--fond)}
+.fb.show{display:block}
+.fb p{margin:0 0 8px;font-size:16px}
+.src{font-size:13.5px;color:var(--gris);border-top:1px solid var(--bord);padding-top:9px;margin-top:9px}
+.src b{font-family:Arial,sans-serif;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--bleu);display:block;margin-bottom:2px}
+.next{margin-top:14px}
+.score{text-align:center;padding:6px 0 0}
+.score .big{font-family:Arial,sans-serif;font-size:56px;font-weight:700;color:var(--bleu);line-height:1}
+.score p{margin:8px 0 0;color:var(--gris);font-size:16px}
+.sub{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 0}
+.sub div{background:var(--fond);border-radius:12px;padding:12px;text-align:center;font-size:14px;color:var(--gris)}
+.sub b{display:block;font-family:Arial,sans-serif;font-size:22px;color:var(--navy)}
+.actions{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+footer{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:26px;padding-top:20px;border-top:1px solid var(--bord)}
+footer img{height:38px}
+footer .copy{font-family:Arial,sans-serif;font-size:10.5px;font-weight:700;color:#444;text-align:center;line-height:1.45;max-width:520px}
+.lg{display:none}
+[hidden]{display:none!important}
+@media(min-width:700px){.lg{display:inline}.hero h1{font-size:40px}.card{padding:30px}.two,.exits{grid-template-columns:1fr 1fr}.actions{flex-direction:row}.actions .btn{flex:1}.tabs{grid-template-columns:repeat(4,1fr)}.tabs button{font-size:15px}.scale .bar div{font-size:12.5px}.step{font-size:12.5px}}
+</style>
+</head>
+<body>
+<div class="progress"><div class="in" id="steps">
+  <div class="step"><i></i>Méli-mélo</div><div class="step"><i></i>Procédures</div><div class="step"><i></i>Cessation <span class="lg">des paiements</span></div><div class="step"><i></i>Cas pratique</div>
+</div></div>
+<header class="hero"><div class="in">
+  <p class="kick">Formation CSE</p>
+  <h1>Les procédures collectives</h1>
+  <p>Remettre de l'ordre, comprendre le rôle du CSE, puis repérer la cessation des paiements.</p>
+</div></header>
+
+<main class="wrap">
+
+<!-- ===== Étape 1 : méli-mélo ===== -->
+<section class="card" id="s1">
+  <h2 class="mmtitle">Méli-mélo des procédures</h2>
+  <p class="mmsub">Glissez chaque étiquette sous sa définition.</p>
+  <div class="mmgrid" id="mmList"></div>
+  <div class="tray" id="tray"></div>
+  <p class="mmscore" id="mmScore" hidden></p>
+  <div id="mmLaw" hidden></div>
+  <button class="btn p full" id="mmCheck" disabled>Vérifier</button>
+  <button class="btn p full" id="mmNext" hidden>Découvrir les procédures</button>
+</section>
+
+<!-- ===== Étape 2 : les procédures ===== -->
+<section class="card" id="s2" hidden>
+  <div class="head">
+    <div class="pastille"><svg viewBox="0 0 26 26"><rect x="3" y="15" width="4" height="7" rx="1" fill="#fff"/><rect x="9" y="11" width="4" height="11" rx="1" fill="#fff"/><rect x="15" y="7" width="4" height="15" rx="1" fill="#fff"/><rect x="21" y="3" width="3" height="19" rx="1" fill="#fff"/></svg></div>
+    <div><h2>Quatre procédures, quatre degrés de gravité</h2><p>Plus la situation se dégrade, plus la procédure est lourde.</p></div>
+  </div>
+  <div class="scale">
+    <div class="bar">
+      <div style="background:#25CCF6">Conciliation</div><div style="background:#0BAFE2">Sauvegarde</div><div style="background:#0095D0">Redressement</div><div style="background:#0B2E4F">Liquidation</div>
+    </div>
+    <div class="lim"><span>Cessation des paiements</span></div>
+    <div class="ax"><span>Difficultés</span><span>Entreprise perdue</span></div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div class="panel" id="panel"></div>
+
+  <h3>Ouvertes ou fermées ?</h3>
+  <table class="mx">
+    <thead><tr><th>Situation de l'entreprise</th><th>Concil.</th><th>Sauveg.</th><th>Redress.</th><th>Liquid.</th></tr></thead>
+    <tbody id="mx"></tbody>
+  </table>
+  <p class="mxnote">Liquidation : seulement si le redressement est manifestement impossible. Sauvegarde : seulement si les difficultés ne peuvent pas être surmontées seul.</p>
+
+  <div class="keep">
+    <p class="kt">Ce qu'il faut retenir</p>
+    <ol>
+      <li><b>En fonction du degré de difficulté, des procédures sont ouvertes ou fermées.</b><span>La cessation des paiements fait la frontière.</span></li>
+      <li><b>Les procédures les plus graves (redressement et liquidation) peuvent être ouvertes par des tiers.</b><span>Un créancier ou le procureur : l'entreprise peut donc les subir. Conciliation et sauvegarde ne s'ouvrent qu'à la demande du dirigeant.</span></li>
+      <li><b>Les procédures sont encadrées par des organes extérieurs à l'entreprise.</b><span>Conciliateur, tribunal et juge-commissaire, mandataire judiciaire et administrateur, liquidateur.</span></li>
+    </ol>
+  </div>
+  <button class="btn p full" id="s2Next" style="margin-top:20px">La notion centrale : la cessation des paiements</button>
+</section>
+
+<!-- ===== Étape 3 : cessation des paiements ===== -->
+<section class="card" id="s3" hidden>
+  <div class="head">
+    <div class="pastille"><svg viewBox="0 0 26 26"><rect x="12" y="3" width="2" height="18" fill="#fff"/><rect x="3" y="6" width="20" height="2" rx="1" fill="#fff"/><path d="M2 14l4-7 4 7zM16 14l4-7 4 7z" fill="#fff"/><rect x="8" y="21" width="10" height="2.4" rx="1.2" fill="#fff"/></svg></div>
+    <div><h2>La cessation des paiements</h2><p>La notion qui ouvre ou ferme les procédures.</p></div>
+  </div>
+  <div class="formula">
+    <div class="a">Actif disponible<small>ce qui peut payer tout de suite</small></div>
+    <div class="lt">&lt;</div>
+    <div class="pp">Passif exigible<small>ce qu'il faut payer maintenant</small></div>
+  </div>
+  <p class="def">L'entreprise ne peut pas faire face à son passif exigible avec son actif disponible (C. com., art. L. 631-1).</p>
+
+  <div class="two" style="margin-top:14px">
+    <div class="box in"><div class="bt">Compte dans l'actif disponible</div><ul><li>La trésorerie en banque et en caisse</li><li>Les placements vendables immédiatement</li><li>Le découvert autorisé non utilisé</li></ul></div>
+    <div class="box out"><div class="bt">Ne compte pas</div><ul><li>Un immeuble pas encore vendu</li><li>Un stock qu'il faut encore vendre</li><li>Les machines, le fonds de commerce</li></ul></div>
+    <div class="box in"><div class="bt">Compte dans le passif exigible</div><ul><li>Les dettes arrivées à échéance : salaires, URSSAF, impôts, fournisseurs, échéances de prêt</li><li>Même si le créancier ne les a pas encore réclamées</li></ul></div>
+    <div class="box out"><div class="bt">N'en fait pas partie</div><ul><li>Les dettes pas encore échues</li><li>Les dettes rééchelonnées par le créancier</li></ul></div>
+  </div>
+
+  <h3>Les deux portes de sortie</h3>
+  <div class="exits">
+    <div class="exit"><div class="ic"><svg viewBox="0 0 22 22"><rect x="2" y="5" width="18" height="12" rx="2" fill="#fff"/><rect x="2" y="8" width="18" height="2.4" fill="#0095D0"/><rect x="5" y="13" width="5" height="1.8" rx=".9" fill="#0095D0"/></svg></div><div><b>Les réserves de crédit</b><p>Un découvert autorisé ou une ligne de crédit encore disponible permet de payer.</p></div></div>
+    <div class="exit"><div class="ic"><svg viewBox="0 0 22 22"><circle cx="11" cy="11" r="8.5" fill="#fff"/><path d="M11 6v5.5l3.5 2" fill="none" stroke="#0095D0" stroke-width="2" stroke-linecap="round"/></svg></div><div><b>Les moratoires</b><p>Le créancier accorde un délai : la dette sort du passif exigible tant que l'échéancier est respecté.</p></div></div>
+  </div>
+  <p class="not"><b>Ce n'est pas</b> une question de pertes. Une entreprise déficitaire qui paie ses dettes n'est pas en cessation des paiements. Une entreprise rentable sans trésorerie peut l'être.</p>
+
+  <h3>Pourquoi c'est central</h3>
+  <ul class="rules">
+    <li>Elle ferme la sauvegarde et ouvre le redressement ou la liquidation.</li>
+    <li>Le dirigeant doit demander l'ouverture d'une procédure dans les <b>45 jours</b>, sauf s'il a demandé une conciliation dans ce délai.</li>
+    <li>Les membres du CSE peuvent signaler au président du tribunal ou au procureur tout fait révélant la cessation des paiements.</li>
+  </ul>
+  <p class="ref">C. com., art. L. 631-1 (définition, réserves de crédit et moratoires), L. 631-4 et L. 640-4 (45 jours), L. 631-6 et L. 640-6 (signalement par le CSE). Immeuble non vendu et dette non réclamée : Cass. com., 27 février 2007, n° 06-10.170, publié au Bulletin.</p>
+  <button class="btn p full" id="s3Next" style="margin-top:18px">Passer au cas pratique</button>
+</section>
+
+<!-- ===== Étape 4 : cas pratique ===== -->
+<section class="card" id="s4" hidden>
+  <span class="tag" id="cnum">Cas 1</span>
+  <p class="situ" id="situ"></p>
+  <ul class="facts" id="facts"></ul>
+  <p class="q">L'entreprise est-elle en cessation des paiements ?</p>
+  <div class="yn"><button type="button" id="bY">Oui</button><button type="button" id="bN">Non</button></div>
+  <div class="fb" id="fb">
+    <p class="verdict" id="verdict"></p>
+    <p id="expl"></p>
+    <div class="src" id="src"></div>
+    <button class="btn p full next" id="next">Cas suivant</button>
+  </div>
+</section>
+
+<!-- ===== Bilan ===== -->
+<section class="card" id="end" hidden>
+  <div class="score"><div class="big" id="sc"></div><p id="scTxt"></p></div>
+  <div class="sub"><div><b id="scMm"></b>Méli-mélo</div><div><b id="scCas"></b>Cas pratique</div></div>
+  <div class="actions"><button class="btn s" id="review">Revoir les procédures</button><button class="btn p" id="again">Recommencer</button></div>
+</section>
+
+<footer>
+  <img src="data:image/png;base64,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" alt="Hiato">
+  <div class="copy">@HIIATO – Toute copie (Totale ou partielle) interdite – Utilisation commerciale interdite si non expressément acceptée dans le cadre d'une convention spécifique rédigée par HIIATO</div>
+</footer>
+</main>
+
+<script>
+const NB=" ";
+const nb=t=>t.replace(/ ([?:;!»%€])/g,NB+"$1").replace(/« /g,"«"+NB).replace(/(\d) (\d)/g,"$1"+NB+"$2");
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const OKI='<svg width="15" height="15" viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const KOI='<svg width="13" height="13" viewBox="0 0 14 14"><path d="M3 3l8 8M11 3l-8 8" fill="none" stroke="#5c6670" stroke-width="2.2" stroke-linecap="round"/></svg>';
+const okB='<i style="background:#0095D0">'+OKI+'</i>', koB='<i style="background:#E3E7EA">'+KOI+'</i>';
+
+/* ---------- Données : procédures ---------- */
+const PROCS=["Conciliation","Sauvegarde","Redressement","Liquidation"];
+/* Méli-mélo : ordre d'affichage volontairement mélangé ; p = index de la bonne procédure */
+const MM=[
+ {d:"Réorganiser l'entreprise en difficulté, alors qu'elle paie encore ses dettes.",p:1},
+ {d:"Mettre fin à l'activité, ou vendre les biens, pour payer les créanciers.",p:3},
+ {d:"Négocier un accord amiable avec les principaux créanciers, aidé par un tiers.",p:0},
+ {d:"Sauver l'activité et les emplois alors que l'entreprise ne paie déjà plus ses dettes.",p:2}
+];
+const GOAL=[
+ "Procédure amiable et confidentielle : un conciliateur aide à négocier un accord avec les principaux créanciers (C. com., art. L. 611-7).",
+ "Faciliter la réorganisation pour permettre la poursuite de l'activité, le maintien de l'emploi et l'apurement du passif, avant la cessation des paiements (C. com., art. L. 620-1).",
+ "Permettre la poursuite de l'activité, le maintien de l'emploi et l'apurement du passif d'une entreprise en cessation des paiements (C. com., art. L. 631-1).",
+ "Mettre fin à l'activité ou réaliser le patrimoine du débiteur par une cession globale ou séparée de ses droits et de ses biens (C. com., art. L. 640-1)."
+];
+const IC={
+ goal:'<svg viewBox="0 0 18 18"><circle cx="9" cy="9" r="7.5" fill="none" stroke="#0095D0" stroke-width="2"/><circle cx="9" cy="9" r="3" fill="#0095D0"/></svg>',
+ cond:'<svg viewBox="0 0 18 18"><rect x="2" y="2" width="14" height="14" rx="3" fill="none" stroke="#0095D0" stroke-width="2"/><path d="M5.5 9.2l2.3 2.3 4.7-5" fill="none" stroke="#0095D0" stroke-width="2" stroke-linecap="round"/></svg>',
+ qui:'<svg viewBox="0 0 18 18"><circle cx="9" cy="5.5" r="3.2" fill="#0095D0"/><path d="M2.5 16.5c.6-3.8 3.2-5.6 6.5-5.6s5.9 1.8 6.5 5.6z" fill="#0095D0"/></svg>',
+ org:'<svg viewBox="0 0 18 18"><path d="M2 7L9 2.5 16 7z" fill="#0095D0"/><rect x="3.5" y="8" width="2" height="6" fill="#0095D0"/><rect x="8" y="8" width="2" height="6" fill="#0095D0"/><rect x="12.5" y="8" width="2" height="6" fill="#0095D0"/><rect x="2" y="14.5" width="14" height="2" fill="#0095D0"/></svg>',
+ cse:'<svg viewBox="0 0 18 18"><circle cx="5.5" cy="5.5" r="2.6" fill="#0095D0"/><circle cx="12.5" cy="5.5" r="2.6" fill="#0095D0"/><path d="M1 15c.4-3.2 2.2-4.8 4.5-4.8S9.6 11.8 10 15z" fill="#0095D0"/><path d="M8 15c.4-3.2 2.2-4.8 4.5-4.8S16.6 11.8 17 15z" fill="#0095D0"/></svg>'
+};
+const P=[
+ {nat:"Procédure amiable et confidentielle. Au sens strict, ce n'est pas une procédure collective : c'est une procédure de prévention.",
+  goal:"Trouver un accord avec les principaux créanciers, avec l'aide d'un conciliateur.",
+  cond:["Une difficulté juridique, économique ou financière, avérée ou prévisible","Pas de cessation des paiements depuis plus de 45 jours","Durée : 4 mois au plus, 5 mois avec la prorogation"],
+  qui:["Le dirigeant seul, par requête au président du tribunal"],
+  org:["Le conciliateur, désigné par le président du tribunal","Le dirigeant reste aux commandes"],
+  cse:["Le dirigeant n'a pas à informer le CSE de l'ouverture de la procédure","Ceux qui y participent, ou qui la connaissent par leurs fonctions, sont tenus à la confidentialité","Si l'accord est soumis à homologation, le CSE est informé de son contenu, et les personnes qu'il désigne sont entendues ou convoquées par le tribunal","Aucun texte ne suspend le droit d'alerte économique du CSE pendant la conciliation (position de la doctrine)"],
+  ref:"C. com., art. L. 611-4 à L. 611-6 (conditions, saisine, durée, pas d'information du CSE à l'ouverture), L. 611-8-1 (information sur l'accord), L. 611-9 (audition des personnes désignées par le CSE), L. 611-15 (confidentialité). Alerte : C. trav., art. L. 2312-63 ; maintien pendant la conciliation, position doctrinale (L'Essentiel Droit des entreprises en difficulté, 2022)."},
+ {nat:"Première procédure collective, judiciaire et publique, ouverte avant la cessation des paiements.",
+  goal:"Réorganiser l'entreprise pour poursuivre l'activité, maintenir l'emploi et apurer les dettes.",
+  cond:["Pas de cessation des paiements","Des difficultés que l'entreprise n'est pas en mesure de surmonter seule","Période d'observation de 6 mois, renouvelable, 18 mois au plus, puis plan de sauvegarde"],
+  qui:["Le dirigeant seul"],
+  org:["Le tribunal et le juge-commissaire","Le mandataire judiciaire, qui représente les créanciers","Un administrateur judiciaire, obligatoire dès 20 salariés ou 3 M€ de chiffre d'affaires : il surveille ou assiste le dirigeant","Le dirigeant reste en place"],
+  cse:["Les personnes qu'il désigne sont entendues ou convoquées par le tribunal avant l'ouverture","Désigne le représentant des salariés","Informé et consulté sur le bilan économique et social et sur le projet de plan"],
+  ref:"C. com., art. L. 620-1 (conditions), L. 621-1 (audition), L. 621-3 (période d'observation), L. 621-4 et R. 621-11 (administrateur, représentant des salariés), L. 623-3 et L. 626-8 (consultation). C. trav., art. L. 2312-53, 2° et L. 2312-54, 1°."},
+ {nat:"Procédure collective ouverte quand l'entreprise est en cessation des paiements, mais encore sauvable.",
+  goal:"Poursuivre l'activité, maintenir l'emploi et apurer les dettes, par un plan de redressement ou une cession.",
+  cond:["La cessation des paiements","Un redressement qui n'est pas manifestement impossible"],
+  qui:["Le dirigeant, obligatoirement dans les 45 jours de la cessation des paiements, sauf s'il a demandé une conciliation dans ce délai","Un créancier, par assignation, s'il n'y a pas de conciliation en cours","Le procureur de la République, par requête, dans les mêmes conditions"],
+  org:["Le tribunal et le juge-commissaire","Le mandataire judiciaire","L'administrateur judiciaire, obligatoire dès 20 salariés ou 3 M€ de chiffre d'affaires : il assiste ou remplace le dirigeant"],
+  cse:["Consulté avant que le dirigeant dépose la demande d'ouverture","Peut signaler au tribunal ou au procureur tout fait révélant la cessation des paiements","Les personnes qu'il désigne sont entendues par le tribunal aux étapes clés : ouverture, plan, cession","Consulté sur les licenciements économiques"],
+  ref:"C. com., art. L. 631-1 (conditions), L. 631-4 et L. 631-5 (saisine), L. 631-6 (signalement par le CSE), L. 631-9 et R. 621-11 (administrateur). C. trav., art. L. 2312-53, 1° et L. 2312-54 (audition), L. 1233-58 (licenciements)."},
+ {nat:"Procédure collective ouverte quand l'entreprise ne peut plus être sauvée.",
+  goal:"Mettre fin à l'activité, ou céder l'entreprise et ses biens, pour payer les créanciers.",
+  cond:["La cessation des paiements","Un redressement manifestement impossible"],
+  qui:["Le dirigeant, obligatoirement dans les 45 jours de la cessation des paiements, sauf s'il a demandé une conciliation dans ce délai","Un créancier, par assignation, s'il n'y a pas de conciliation en cours","Le procureur de la République, par requête, dans les mêmes conditions"],
+  org:["Le tribunal et le juge-commissaire","Le liquidateur, qui remplace le dirigeant : celui-ci est dessaisi"],
+  cse:["Consulté avant que le dirigeant dépose la demande d'ouverture","Peut signaler au tribunal ou au procureur tout fait révélant la cessation des paiements","Les personnes qu'il désigne sont entendues par le tribunal, notamment sur les offres de reprise","Consulté sur les licenciements, que prononce le liquidateur"],
+  ref:"C. com., art. L. 640-1 (conditions), L. 640-4 et L. 640-5 (saisine), L. 640-6 (signalement par le CSE), L. 641-9 (dessaisissement). C. trav., art. L. 2312-53, 1° et 4°, L. 2312-54, L. 1233-58."}
+];
+const MX=[
+ ["Difficultés, mais les dettes sont payées",[1,1,0,0]],
+ ["Cessation des paiements depuis moins de 45 jours",[1,0,1,1]],
+ ["Cessation des paiements depuis plus de 45 jours",[0,0,1,1]]
+];
+
+/* ---------- Données : cas pratique (r = bonne réponse, true = Oui) ---------- */
+const CASES=[
+ {t:"Salaires impayés",s:"Fin du mois : l'entreprise n'a pas pu verser les salaires. La banque refuse tout découvert.",
+  f:[["Trésorerie","15 000 €"],["Salaires échus","80 000 €"],["Cotisations URSSAF échues","40 000 €"]],r:true,
+  e:"La trésorerie ne couvre pas les dettes échues et aucune réserve de crédit n'existe. C'est la situation type de la cessation des paiements.",
+  ref:"C. com., art. L. 631-1, al. 1."},
+ {t:"Trois années de pertes",s:"L'entreprise perd de l'argent depuis trois ans et ses capitaux propres sont négatifs. Elle a pourtant de l'argent en banque et paie toutes ses dettes à l'échéance.",
+  f:[["Trésorerie","2 000 000 €"],["Dettes échues impayées","0 €"],["Résultat des 3 derniers exercices","négatif"]],r:false,
+  e:"Les pertes ne suffisent pas : la cessation des paiements est un test de trésorerie, pas de rentabilité. La situation est grave, mais c'est la sauvegarde, la conciliation ou l'alerte économique du CSE qui sont en jeu.",
+  ref:"C. com., art. L. 631-1, al. 1 (définition) ; L. 620-1 (sauvegarde)."},
+ {t:"Un entrepôt plein",s:"L'entreprise a des factures échues qu'elle ne peut pas régler. Son entrepôt est plein de marchandises qu'elle compte vendre dans les prochains mois.",
+  f:[["Trésorerie","20 000 €"],["Dettes échues","300 000 €"],["Stock de marchandises","1 500 000 €"]],r:true,
+  e:"L'actif disponible ne comprend que ce qui est immédiatement réalisable. Un stock qu'il faut encore vendre ne paie pas les dettes d'aujourd'hui, même s'il vaut cinq fois plus.",
+  ref:"C. com., art. L. 631-1. La Cour de cassation exige un actif immédiatement réalisable (Cass. com., 27 février 2007, n° 06-10.170, à propos d'immeubles) ; le stock relève du même raisonnement."},
+ {t:"Le découvert de secours",s:"Les dettes échues dépassent la trésorerie, mais la banque a accordé une autorisation de découvert que l'entreprise n'a pas encore utilisée.",
+  f:[["Trésorerie","30 000 €"],["Dettes échues","180 000 €"],["Découvert autorisé non utilisé","250 000 €"]],r:false,
+  e:"La loi le dit expressément : le débiteur qui prouve que ses réserves de crédit lui permettent de faire face au passif exigible n'est pas en cessation des paiements. 30 000 + 250 000 couvrent les 180 000.",
+  ref:"C. com., art. L. 631-1, al. 1, 2e phrase (réserves de crédit)."},
+ {t:"Le client qui s'en va",s:"Le principal client, 35 % du chiffre d'affaires, part dans six mois. Pour l'instant, toutes les dettes sont payées à l'échéance.",
+  f:[["Dettes échues impayées","0 €"],["Chiffre d'affaires dans 6 mois","- 35 %"]],r:false,
+  e:"La difficulté est prévisible, pas encore réalisée : aucune dette échue n'est impayée. C'est le moment d'agir tôt : conciliation ou sauvegarde pour l'entreprise, alerte économique pour le CSE.",
+  ref:"C. com., art. L. 611-4 (difficulté prévisible) et L. 631-1. C. trav., art. L. 2312-63 (alerte économique)."},
+ {t:"L'immeuble en vente",s:"L'entreprise possède un immeuble mis en vente. Un acheteur est intéressé, mais rien n'est signé.",
+  f:[["Trésorerie","5 000 €"],["Dettes échues","400 000 €"],["Immeuble en vente","3 000 000 €"]],r:true,
+  e:"Un immeuble non encore vendu n'est pas un actif disponible. Tant que le prix n'est pas encaissé, il ne paie rien.",
+  ref:"Cass. com., 27 février 2007, n° 06-10.170, publié au Bulletin."},
+ {t:"Les fournisseurs patients",s:"Les factures fournisseurs sont échues depuis un mois. Aucun fournisseur n'a encore relancé l'entreprise, et aucun n'a accordé de délai.",
+  f:[["Trésorerie","10 000 €"],["Factures fournisseurs échues","200 000 €"],["Délai accordé par écrit","aucun"]],r:true,
+  e:"Une dette échue fait partie du passif exigible même si le créancier ne l'a pas encore réclamée. Pour y échapper, l'entreprise devrait prouver un moratoire ou une réserve de crédit.",
+  ref:"Cass. com., 27 février 2007, n° 06-10.170 : le juge n'a pas à rechercher si le passif a été effectivement réclamé, faute de réserve de crédit ou de moratoire allégué."},
+ {t:"L'échéancier URSSAF",s:"L'entreprise doit une grosse somme à l'URSSAF, mais l'URSSAF lui a accordé un échéancier sur 24 mois, respecté à ce jour. Les autres dettes sont payées.",
+  f:[["Trésorerie","40 000 €"],["Dette URSSAF étalée sur 24 mois","150 000 €"],["Mensualité du mois","6 250 €"]],r:false,
+  e:"C'est un moratoire : seule la mensualité du mois est exigible, et la trésorerie la couvre. Si l'échéancier n'est plus respecté, toute la dette peut redevenir exigible.",
+  ref:"C. com., art. L. 631-1, al. 1, 2e phrase (moratoires)."}
+];
+const N=CASES.length, NM=MM.length;
+
+/* ---------- État (mémoire de l'appareil) ---------- */
+const KEY="hiato-procol-v1";
+const empty=()=>({st:1,mm:Array(NM).fill(null),mmOk:false,tab:0,i:0,ans:Array(N).fill(null)});
+let S=empty();
+try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.mm&&s.mm.length===NM&&s.ans&&s.ans.length===N)S=s}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const mmScore=()=>S.mm.reduce((n,a,k)=>n+(a===MM[k].p?1:0),0);
+const casScore=()=>S.ans.reduce((n,a,k)=>n+(a!==null&&a===CASES[k].r?1:0),0);
+
+function steps(){[...$("steps").children].forEach((el,k)=>{const n=k+1,cur=S.st===5?5:S.st;el.className="step"+(n===cur?" on":n<cur?" done":"")})}
+function go(st){S.st=st;save();document.body.classList.toggle("s1",st===1);["s1","s2","s3","s4","end"].forEach((id,k)=>$(id).hidden=(k+1!==st));steps();
+ if(st===1)renderMM();if(st===2)renderProc();if(st===4)renderCase();if(st===5)renderEnd();
+ window.scrollTo({top:0,behavior:"smooth"})}
+
+/* ---------- Étape 1 : glisser-déposer (souris et tactile, Pointer Events) ---------- */
+let sel=null, drag=null, dropT=-1e9;
+const chip=(j,cls)=>'<button type="button" class="chip'+(cls?" "+cls:"")+'" data-j="'+j+'">'+PROCS[j]+'</button>';
+function renderMM(){
+ const ok=S.mmOk, free=PROCS.map((p,j)=>j).filter(j=>!S.mm.includes(j));
+ $("tray").hidden=ok;
+ $("tray").innerHTML=free.length?free.map(j=>chip(j,j===sel?"sel":"")).join(""):'<span class="empty">Toutes les étiquettes sont placées. Vous pouvez encore les déplacer.</span>';
+ $("mmList").innerHTML=MM.map((m,k)=>{
+  const a=S.mm[k];
+  const inner=a===null?"Déposez ici":chip(a,ok?(a===m.p?"ok":"ko"):(a===sel?"sel":""));
+  const fix=ok&&a!==m.p?'<div class="fix">Réponse : '+PROCS[m.p]+'</div>':"";
+  return '<div class="mm"><p class="d">'+esc(nb(m.d))+'</p><div class="slot'+(a!==null?" full":"")+(sel!==null&&!ok?" target":"")+'" data-k="'+k+'">'+inner+'</div>'+fix+'</div>'}).join("");
+ $("mmCheck").hidden=ok;$("mmCheck").disabled=S.mm.some(v=>v===null);
+ $("mmNext").hidden=!ok;$("mmScore").hidden=!ok;$("mmLaw").hidden=!ok;
+ if(ok){
+  $("mmScore").textContent=mmScore()+" / "+NM+" bonnes associations";
+  $("mmLaw").innerHTML=PROCS.map((p,j)=>{const k=MM.findIndex(m=>m.p===j),good=S.mm[k]===j;
+   return '<div class="law">'+(good?okB:koB)+'<div><b>'+p+'</b> : '+esc(nb(GOAL[j].charAt(0).toLowerCase()+GOAL[j].slice(1)))+'</div></div>'}).join("");
+ }
+ if(!ok)bindMM();
+}
+function place(j,k){const cur=S.mm[k],from=S.mm.indexOf(j);if(from===k)return;
+ S.mm[k]=j;if(from>=0)S.mm[from]=cur;sel=null;save();renderMM()}
+function unplace(j){const i=S.mm.indexOf(j);if(i>=0){S.mm[i]=null;save()}sel=null;renderMM()}
+function bindMM(){
+ document.querySelectorAll("#s1 .chip").forEach(c=>{
+  c.addEventListener("pointerdown",startDrag);
+  c.addEventListener("click",e=>{e.stopPropagation();if(performance.now()-dropT<60)return;const j=+c.dataset.j;sel=sel===j?null:j;renderMM()});
+ });
+ document.querySelectorAll("#s1 .slot").forEach(sl=>sl.addEventListener("click",()=>{if(performance.now()-dropT<60)return;if(sel!==null)place(sel,+sl.dataset.k)}));
+ $("tray").onclick=()=>{if(sel!==null&&S.mm.includes(sel))unplace(sel)};
+}
+function targetAt(x,y){const el=document.elementFromPoint(x,y);if(!el)return null;
+ return el.closest("#s1 .slot")||el.closest("#tray")}
+function startDrag(e){
+ if(S.mmOk||(e.pointerType==="mouse"&&e.button!==0))return;
+ const c=e.currentTarget;
+ drag={j:+c.dataset.j,c,x0:e.clientX,y0:e.clientY,x:e.clientX,y:e.clientY,moved:false,ghost:null,over:null,id:e.pointerId};
+ try{c.setPointerCapture(e.pointerId)}catch(_){}
+}
+function moveDrag(e){
+ if(!drag||e.pointerId!==drag.id)return;
+ drag.x=e.clientX;drag.y=e.clientY;
+ if(!drag.moved){if(Math.hypot(drag.x-drag.x0,drag.y-drag.y0)<6)return;
+  drag.moved=true;const g=drag.c.cloneNode(true);g.classList.remove("sel");g.classList.add("ghost");document.body.appendChild(g);drag.ghost=g;drag.c.classList.add("dragging");requestAnimationFrame(autoScroll)}
+ e.preventDefault();
+ drag.ghost.style.left=drag.x+"px";drag.ghost.style.top=drag.y+"px";
+ hover();
+}
+function hover(){const t=targetAt(drag.x,drag.y);if(t===drag.over)return;
+ if(drag.over)drag.over.classList.remove("hover");drag.over=t;if(t)t.classList.add("hover")}
+function autoScroll(){if(!drag||!drag.moved)return;
+ const edge=90,h=window.innerHeight;let v=0;
+ if(drag.y<edge+40)v=-Math.ceil((edge+40-drag.y)/6);else if(drag.y>h-edge)v=Math.ceil((drag.y-(h-edge))/6);
+ if(v){window.scrollBy(0,v);hover()}
+ requestAnimationFrame(autoScroll)}
+function endDrag(e){
+ if(!drag||e.pointerId!==drag.id)return;
+ const d=drag;drag=null;
+ if(d.ghost)d.ghost.remove();
+ if(d.over)d.over.classList.remove("hover");
+ if(!d.moved)return;           // simple toucher : géré par le clic
+ dropT=performance.now();
+ const t=e.type==="pointercancel"?null:targetAt(d.x,d.y);
+ if(t&&t.classList.contains("slot"))place(d.j,+t.dataset.k);
+ else if(t&&t.id==="tray")unplace(d.j);
+ else renderMM();
+}
+window.addEventListener("pointermove",moveDrag,{passive:false});
+window.addEventListener("pointerup",endDrag);
+window.addEventListener("pointercancel",endDrag);
+$("mmCheck").onclick=()=>{S.mmOk=true;sel=null;save();renderMM();$("mmScore").scrollIntoView({behavior:"smooth",block:"center"})};
+$("mmNext").onclick=()=>go(2);
+
+/* ---------- Étape 2 ---------- */
+function li(a){return "<ul>"+a.map(x=>"<li>"+esc(nb(x))+"</li>").join("")+"</ul>"}
+function renderProc(){
+ $("tabs").innerHTML=PROCS.map((p,j)=>'<button type="button" data-j="'+j+'" class="'+(j===S.tab?"on":"")+'">'+p+'</button>').join("");
+ $("tabs").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.tab=+b.dataset.j;save();renderProc()});
+ const p=P[S.tab];
+ $("panel").innerHTML='<p class="nat">'+esc(nb(p.nat))+'</p>'+
+  '<div class="row"><div class="k">'+IC.goal+'Objectif</div><p class="goal">'+esc(nb(p.goal))+'</p></div>'+
+  '<div class="row"><div class="k">'+IC.cond+"Conditions d'ouverture</div>"+li(p.cond)+'</div>'+
+  '<div class="row"><div class="k">'+IC.qui+'Qui peut la demander</div>'+li(p.qui)+'</div>'+
+  '<div class="row"><div class="k">'+IC.org+'Qui encadre</div>'+li(p.org)+'</div>'+
+  '<div class="row cse"><div class="k">'+IC.cse+'Le rôle du CSE</div>'+li(p.cse)+'</div>'+
+  '<p class="ref">'+esc(nb(p.ref))+'</p>';
+ const O='<span class="o" title="ouverte">'+OKI+'</span>',X='<span class="x" title="fermée">'+KOI+'</span>';
+ $("mx").innerHTML=MX.map(r=>'<tr><td>'+esc(nb(r[0]))+'</td>'+r[1].map(v=>'<td>'+(v?O:X)+'</td>').join("")+'</tr>').join("");
+}
+$("s2Next").onclick=()=>go(3);
+$("s3Next").onclick=()=>{if(S.ans.every(a=>a!==null))go(5);else{S.i=S.ans.findIndex(a=>a===null);go(4)}};
+
+/* ---------- Étape 4 ---------- */
+function renderCase(){
+ const c=CASES[S.i],a=S.ans[S.i];
+ $("cnum").textContent="Cas "+(S.i+1)+" / "+N+"  ·  "+c.t;
+ $("situ").textContent=nb(c.s);
+ $("facts").innerHTML=c.f.map(x=>"<li><span>"+esc(nb(x[0]))+"</span><b>"+esc(nb(x[1]))+"</b></li>").join("");
+ const bY=$("bY"),bN=$("bN");
+ [bY,bN].forEach(b=>{b.className="";b.disabled=a!==null});
+ if(a!==null){
+  (a?bY:bN).classList.add("on");
+  if(a!==c.r)(c.r?bY:bN).classList.add("ok");
+  $("verdict").innerHTML=(a===c.r?okB+"Bonne réponse":koB+"Pas tout à fait")+" : "+(c.r?"oui, cessation des paiements":"non, pas de cessation des paiements");
+  $("expl").textContent=nb(c.e);
+  $("src").innerHTML="<b>Fondement</b>"+esc(nb(c.ref));
+  $("next").textContent=S.i<N-1?"Cas suivant":"Voir mon bilan";
+  $("fb").classList.add("show");
+ }else $("fb").classList.remove("show");
+}
+function answer(v){if(S.ans[S.i]!==null)return;S.ans[S.i]=v;save();renderCase();
+ setTimeout(()=>$("fb").scrollIntoView({behavior:"smooth",block:"nearest"}),60)}
+$("bY").onclick=()=>answer(true);$("bN").onclick=()=>answer(false);
+$("next").onclick=()=>{if(S.i<N-1){S.i++;save();renderCase();window.scrollTo({top:0,behavior:"smooth"})}else go(5)};
+
+/* ---------- Bilan ---------- */
+function renderEnd(){
+ const m=mmScore(),c=casScore(),t=m+c,T=NM+N;
+ $("sc").textContent=t+" / "+T;$("scMm").textContent=m+" / "+NM;$("scCas").textContent=c+" / "+N;
+ $("scTxt").textContent=t>=Math.ceil(T*.8)?"Excellent : vous savez lire la situation d'une entreprise en difficulté.":t>=Math.ceil(T*.55)?"Bonne base. Relisez ce qui compte, ou non, dans l'actif disponible.":"On reprend ensemble les procédures et la cessation des paiements.";
+}
+$("review").onclick=()=>go(2);
+$("again").onclick=()=>{S=empty();save();go(1)};
+
+/* Reprise là où le stagiaire s'était arrêté */
+go(S.st||1);
+</script>
+</body>
+</html>
